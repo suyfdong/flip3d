@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flip3D
 
-## Getting Started
+> Free 3D File Converter, Viewer & Repair Tools — runs 100% in your browser.
 
-First, run the development server:
+[![Built with Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![Three.js](https://img.shields.io/badge/three.js-0.184-orange)](https://threejs.org/)
+[![Tailwind v4](https://img.shields.io/badge/tailwind-v4-38bdf8)](https://tailwindcss.com/)
+
+## What is this
+
+Flip3D is a 3D file Swiss army knife built for 3D printing enthusiasts, CAD engineers and Web3D developers. Convert, view, repair and optimize STL / OBJ / GLB / 3MF / STEP / FBX **without uploading anything** — all processing happens in your browser via WebAssembly.
+
+## Differentiating features (roadmap)
+
+- 🔄 Convert between 20+ 3D formats (client-side WASM)
+- 👁️ Universal 3D viewer (STL/OBJ/GLB/3MF/STEP)
+- 🛠️ STL repair (manifold + holes)
+- 🖨️ G-code simulator
+- ⚙️ **Bambu 3MF ↔ Prusa 3MF** (unique compatibility tool)
+- 📐 Engineering reference charts
+- 🪞 Image → 3D lithophane
+- 🧩 Embeddable iframe widgets
+
+## Tech stack
+
+- **Next.js 16** (App Router, webpack dev mode)
+- **React 19**
+- **Tailwind v4**
+- **three.js 0.184** — main 3D renderer
+- **TypeScript**
+- **Cloudflare Pages** — deployment
+
+## Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Start dev server (uses webpack, not Turbopack)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Production build
+npm run build
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+⚠️ **Important**: This project intentionally uses `next dev --webpack` (not Turbopack) due to a known Turbopack bug in recent Next.js versions. Keep the `--webpack` flag in `package.json`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/                      # Next.js App Router pages
+├── layout.tsx            # Root layout + global metadata/SEO
+├── page.tsx              # Homepage (Dropzone + StlViewer demo)
+├── globals.css           # Tailwind v4 entry
+components/               # React components
+├── Dropzone.tsx          # Drag-and-drop file input
+└── StlViewer.tsx         # three.js STL renderer
+lib/                      # Pure functions (converters, parsers)
+public/                   # Static assets
+```
 
-## Learn More
+## Project documents
 
-To learn more about Next.js, take a look at the following resources:
+This project has accompanying research/strategy docs in the parent directory:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `../RESEARCH.md` — Competitor research (10 sites analyzed)
+- `../STRATEGY.md` — Strategy distillation
+- `../PROPOSAL.md` — Fusion strategy proposal
+- `../PLAN.md` — 12-week execution plan
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+TBD
