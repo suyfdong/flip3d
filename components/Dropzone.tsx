@@ -7,9 +7,24 @@ type Props = {
   accept?: string[];
 };
 
+export const SUPPORTED_FORMATS = [
+  ".stl",
+  ".obj",
+  ".glb",
+  ".gltf",
+  ".3mf",
+  ".ply",
+  ".fbx",
+  ".dae",
+  ".step",
+  ".stp",
+  ".iges",
+  ".igs",
+] as const;
+
 export default function Dropzone({
   onFileLoaded,
-  accept = [".stl"],
+  accept = [...SUPPORTED_FORMATS],
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,8 +89,8 @@ export default function Dropzone({
           transition-all duration-200 px-6 py-12
           ${
             isDragging
-              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30"
-              : "border-zinc-300 dark:border-zinc-700 hover:border-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
+              : "border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
           }
         `}
       >
@@ -94,10 +109,13 @@ export default function Dropzone({
         </svg>
         <p className="text-base font-medium text-zinc-700 dark:text-zinc-300 mb-1">
           Drop your 3D file here, or{" "}
-          <span className="text-indigo-600 dark:text-indigo-400">browse</span>
+          <span className="text-blue-600 dark:text-blue-400">browse</span>
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Supports {accept.join(", ").toUpperCase()} · Max 200MB
+          {accept.length > 4
+            ? `Supports 12 formats: STL, OBJ, GLB, 3MF, STEP, FBX & more`
+            : `Supports ${accept.join(", ").toUpperCase()}`}{" "}
+          · Max 200MB
         </p>
         <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-3">
           🔒 Files never leave your browser. 100% local.

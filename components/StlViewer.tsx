@@ -137,7 +137,7 @@ export default function StlViewer({ fileBuffer, fileName }: Props) {
       const maxDim = Math.max(size.x, size.y, size.z);
 
       const material = new THREE.MeshStandardMaterial({
-        color: 0x6366f1,
+        color: 0x3b82f6,
         metalness: 0.1,
         roughness: 0.6,
       });
