@@ -1,0 +1,54 @@
+import * as THREE from "three";
+import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { ThreeMFLoader } from "three/examples/jsm/loaders/3MFLoader.js";
+import type { Format } from "./formats";
+
+const DEFAULT_MATERIAL = new THREE.MeshStandardMaterial({
+  color: 0x3b82f6,
+  metalness: 0.1,
+  roughness: 0.6,
+});
+
+export async function parseToObject(
+  buffer: ArrayBuffer,
+  format: Format,
+): Promise<THREE.Object3D> {
+  switch (format) {
+    case "stl": {
+      const geometry = new STLLoader().parse(buffer);
+      geometry.computeVertexNormals();
+      return new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
+    }
+    case "obj": {
+      const text = new TextDecoder("utf-8").decode(buffer);
+      const group = new OBJLoader().parse(text);
+      applyDefaultMaterial(group);
+      return group;
+    }
+    case "glb": {
+      return new Promise<THREE.Object3D>((resolve, reject) => {
+        new GLTFLoader().parse(
+          buffer,
+          "",
+          (gltf) => resolve(gltf.scene),
+          (event) => reject(new Error(event.message || "Failed to parse GLB")),
+        );
+      });
+    }
+    case "3mf": {
+      const group = new ThreeMFLoader().parse(buffer);
+      applyDefaultMaterial(group);
+      return group;
+    }
+  }
+}
+
+function applyDefaultMaterial(root: THREE.Object3D): void {
+  root.traverse((child) => {
+    if (child instanceof THREE.Mesh && !child.material) {
+      child.material = DEFAULT_MATERIAL.clone();
+    }
+  });
+}
