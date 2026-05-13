@@ -244,6 +244,21 @@ export default function ConverterPage({ from, to }: Props) {
             <div className="h-[60vh] sm:h-[480px] lg:h-[560px]">
               <MeshViewer object={object} />
             </div>
+
+            <div className="mt-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-4 flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  Want to embed a viewer on your site?
+                </span>{" "}
+                One line of iframe HTML, 4 themes, free forever.
+              </div>
+              <Link
+                href="/embed/"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 whitespace-nowrap"
+              >
+                Embed viewer →
+              </Link>
+            </div>
           </>
         )}
       </section>

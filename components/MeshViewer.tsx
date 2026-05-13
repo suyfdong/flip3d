@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { computeStats, type ModelStats } from "@/lib/converters";
+import { THEME_SPECS, type EmbedTheme } from "@/lib/embed-themes";
 
 type Props = {
   object: THREE.Object3D | null;
   compact?: boolean;
+  theme?: EmbedTheme;
 };
 
 function fitCamera(
@@ -38,16 +40,19 @@ function fitCamera(
   controls.update();
 }
 
-export default function MeshViewer({ object, compact = false }: Props) {
+export default function MeshViewer({ object, compact = false, theme }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const currentObjectRef = useRef<THREE.Object3D | null>(null);
+  const gridHelperRef = useRef<THREE.GridHelper | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   const [stats, setStats] = useState<ModelStats | null>(null);
+
+  const themeSpec = theme ? THEME_SPECS[theme] : null;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -56,8 +61,12 @@ export default function MeshViewer({ object, compact = false }: Props) {
     const width = container.clientWidth || 1;
     const height = container.clientHeight || 1;
 
+    const initialBg = themeSpec ? themeSpec.background : 0xf4f4f5;
+    const initialMajor = themeSpec ? themeSpec.gridMajor : 0xd4d4d8;
+    const initialMinor = themeSpec ? themeSpec.gridMinor : 0xe4e4e7;
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf4f4f5);
+    scene.background = new THREE.Color(initialBg);
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100000);
@@ -78,8 +87,9 @@ export default function MeshViewer({ object, compact = false }: Props) {
     dir2.position.set(-100, -100, -100);
     scene.add(dir2);
 
-    const gridHelper = new THREE.GridHelper(200, 20, 0xd4d4d8, 0xe4e4e7);
+    const gridHelper = new THREE.GridHelper(200, 20, initialMajor, initialMinor);
     scene.add(gridHelper);
+    gridHelperRef.current = gridHelper;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -125,6 +135,40 @@ export default function MeshViewer({ object, compact = false }: Props) {
     };
   }, []);
 
+  // Apply theme changes after init.
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || !themeSpec) return;
+    scene.background = new THREE.Color(themeSpec.background);
+    if (gridHelperRef.current) {
+      const grid = gridHelperRef.current;
+      grid.material.dispose();
+      const newGrid = new THREE.GridHelper(
+        200,
+        20,
+        themeSpec.gridMajor,
+        themeSpec.gridMinor,
+      );
+      scene.remove(grid);
+      scene.add(newGrid);
+      gridHelperRef.current = newGrid;
+    }
+    // Re-tint the current object's materials so the theme covers the mesh too.
+    if (currentObjectRef.current) {
+      currentObjectRef.current.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        const mat = child.material;
+        const apply = (m: THREE.Material) => {
+          if ("color" in m && m.color instanceof THREE.Color) {
+            m.color.setHex(themeSpec.meshColor);
+          }
+        };
+        if (Array.isArray(mat)) mat.forEach(apply);
+        else if (mat) apply(mat);
+      });
+    }
+  }, [themeSpec]);
+
   useEffect(() => {
     const scene = sceneRef.current;
     const camera = cameraRef.current;
@@ -140,6 +184,21 @@ export default function MeshViewer({ object, compact = false }: Props) {
     if (!object) {
       setStats(null);
       return;
+    }
+
+    // Apply theme mesh color to the freshly-added object too.
+    if (themeSpec) {
+      object.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        const mat = child.material;
+        const apply = (m: THREE.Material) => {
+          if ("color" in m && m.color instanceof THREE.Color) {
+            m.color.setHex(themeSpec.meshColor);
+          }
+        };
+        if (Array.isArray(mat)) mat.forEach(apply);
+        else if (mat) apply(mat);
+      });
     }
 
     const box = new THREE.Box3().setFromObject(object);

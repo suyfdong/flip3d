@@ -11,6 +11,12 @@ import {
   isFormat,
   type Format,
 } from "@/lib/converters";
+import {
+  DEFAULT_THEME,
+  THEME_SPECS,
+  isTheme,
+  type EmbedTheme,
+} from "@/lib/embed-themes";
 
 const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
   ssr: false,
@@ -27,6 +33,10 @@ export default function EmbedViewer() {
   const params = useSearchParams();
   const url = params.get("url");
   const formatParam = params.get("format");
+  const themeParam = params.get("theme");
+  const theme: EmbedTheme =
+    themeParam && isTheme(themeParam) ? themeParam : DEFAULT_THEME;
+  const themeSpec = THEME_SPECS[theme];
 
   const [object, setObject] = useState<THREE.Object3D | null>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -77,7 +87,10 @@ export default function EmbedViewer() {
   }, [url, formatParam]);
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-zinc-50 dark:bg-zinc-950">
+    <div
+      className="fixed inset-0 flex flex-col"
+      style={{ background: `#${themeSpec.background.toString(16).padStart(6, "0")}` }}
+    >
       {!url && <NoUrlNotice />}
       {url && status === "loading" && (
         <div className="flex-1 flex items-center justify-center">
@@ -99,17 +112,26 @@ export default function EmbedViewer() {
       )}
       {url && status === "idle" && object && (
         <div className="flex-1 min-h-0">
-          <MeshViewer object={object} compact />
+          <MeshViewer object={object} compact theme={theme} />
         </div>
       )}
 
       <a
-        href="https://flip3d.app/?utm_source=embed&utm_medium=iframe"
+        href={`https://flip3d.app/?utm_source=embed&utm_medium=iframe&utm_content=${theme}`}
         target="_blank"
         rel="noopener"
-        className="absolute bottom-2 right-2 text-xs px-2.5 py-1 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm transition-colors"
+        className="absolute bottom-2 right-2 text-xs px-2.5 py-1 rounded-full backdrop-blur shadow-sm transition-opacity hover:opacity-100"
+        style={{
+          background: themeSpec.badgeBg,
+          border: `1px solid ${themeSpec.badgeBorder}`,
+          color: themeSpec.badgeText,
+          opacity: 0.85,
+        }}
       >
-        Powered by <span className="font-semibold">Flip3D</span>
+        Powered by{" "}
+        <span className="font-semibold" style={{ color: themeSpec.badgeAccent }}>
+          Flip3D
+        </span>
       </a>
     </div>
   );
