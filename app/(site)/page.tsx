@@ -68,9 +68,9 @@ const QUICK_TOOLS: ToolCard[] = [
   },
   {
     title: "STL Repair",
-    desc: "Fix non-manifold edges, holes, and self-intersections",
-    status: "soon",
-    badge: "Coming W6",
+    desc: "Weld duplicate vertices, remove degenerate triangles, detect holes",
+    status: "live",
+    badge: "Live now",
   },
 ];
 

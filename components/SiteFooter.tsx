@@ -45,7 +45,14 @@ export default function SiteFooter() {
                   G-code Simulator ⭐
                 </Link>
               </li>
-              <li className="text-zinc-400 dark:text-zinc-600">STL Repair <span className="text-xs">(W6)</span></li>
+              <li>
+                <Link
+                  href="/tools/stl-repair/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+                >
+                  STL Repair ⭐
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

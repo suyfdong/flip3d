@@ -92,4 +92,8 @@ export const TOOL_ROUTES: Array<{ slug: string; title: string }> = [
     slug: "gcode-simulator",
     title: "G-code Simulator",
   },
+  {
+    slug: "stl-repair",
+    title: "STL Repair",
+  },
 ];
