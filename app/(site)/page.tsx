@@ -16,6 +16,9 @@ import {
   isExportable,
   type Format,
 } from "@/lib/converters";
+import { JsonLd } from "@/components/JsonLd";
+import { softwareAppSchema } from "@/lib/schema";
+import { SITE_URL } from "@/lib/seo";
 import {
   trackFileUploaded,
   trackSampleLoaded,
@@ -185,6 +188,14 @@ export default function Home() {
 
   return (
     <>
+      <JsonLd
+        data={softwareAppSchema({
+          name: "Flip3D",
+          description:
+            "Free online 3D file converter, viewer and repair tools. STL, OBJ, GLB, 3MF, PLY, STEP, IGES, FBX, DAE — all in the browser.",
+          url: SITE_URL,
+        })}
+      />
         <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-16 sm:pb-12">
           {!hasFile ? (
             <>
@@ -197,8 +208,9 @@ export default function Home() {
                   </span>
                 </h1>
                 <p className="text-lg text-zinc-600 dark:text-zinc-400">
-                  Convert STL, OBJ, GLB and 3MF in your browser. No signup. No
-                  upload. 100% local.
+                  Convert, view and repair 3D files in your browser — STL, OBJ,
+                  GLB, 3MF, PLY, STEP, IGES, FBX, DAE. Bambu ↔ Prusa 3MF,
+                  G-code preview, STL repair. No signup. No upload. 100% local.
                 </p>
               </div>
 
@@ -391,7 +403,9 @@ export default function Home() {
 
                 <p className="text-center text-xs text-zinc-500 dark:text-zinc-400 mt-10">
                   Powered by <code className="font-mono">three.js</code> ·{" "}
-                  <code className="font-mono">jszip</code> · all running in your browser
+                  <code className="font-mono">occt-import-js</code> ·{" "}
+                  <code className="font-mono">jszip</code> · all running in
+                  your browser
                 </p>
               </div>
             </section>

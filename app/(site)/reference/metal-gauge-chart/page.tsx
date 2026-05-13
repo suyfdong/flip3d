@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/seo";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema, faqPageSchema } from "@/lib/schema";
 
 const TITLE =
   "Sheet Metal Gauge to mm/inch Chart — Steel, Aluminum, Stainless";
@@ -114,6 +116,14 @@ const FAQ: FaqItem[] = [
 export default function Page() {
   return (
     <article className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <JsonLd data={faqPageSchema(FAQ)} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: `${SITE_URL}/` },
+          { name: "Reference", url: `${SITE_URL}/reference/metal-gauge-chart/` },
+          { name: "Metal Gauge Chart", url: URL },
+        ])}
+      />
       <header className="mb-10">
         <p className="text-sm font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-3">
           Engineering Reference
