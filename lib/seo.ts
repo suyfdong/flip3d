@@ -78,3 +78,14 @@ export const LEGAL_ROUTES: Array<{ slug: string }> = [
   { slug: "privacy" },
   { slug: "terms" },
 ];
+
+export const TOOL_ROUTES: Array<{ slug: string; title: string }> = [
+  {
+    slug: "bambu-3mf-to-prusa",
+    title: "Bambu 3MF to Prusa 3MF Converter",
+  },
+  {
+    slug: "prusa-3mf-to-bambu",
+    title: "Prusa 3MF to Bambu 3MF Converter",
+  },
+];

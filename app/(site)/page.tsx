@@ -56,9 +56,9 @@ const QUICK_TOOLS: ToolCard[] = [
   },
   {
     title: "Bambu 3MF ↔ Prusa 3MF",
-    desc: "Convert between Bambu Studio and PrusaSlicer's quirky 3MF dialects",
+    desc: "Strip vendor-private metadata so the file opens in the other slicer",
     status: "highlight",
-    badge: "Coming W4 ⭐",
+    badge: "Live now ⭐",
   },
   {
     title: "G-code Simulator",

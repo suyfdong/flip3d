@@ -4,6 +4,7 @@ import {
   LEGAL_ROUTES,
   REFERENCE_ROUTES,
   SITE_URL,
+  TOOL_ROUTES,
 } from "@/lib/seo";
 
 export const dynamic = "force-static";
@@ -42,5 +43,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
   ];
-  return [home, ...converters, ...references, ...legal, ...embed];
+  const tools = TOOL_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/tools/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.9, // Differentiated tools = highest priority
+  }));
+  return [home, ...converters, ...references, ...legal, ...embed, ...tools];
 }

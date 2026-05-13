@@ -21,7 +21,22 @@ export default function SiteFooter() {
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
               <li><Link href="/stl-to-3mf/" className="hover:text-blue-600 dark:hover:text-blue-400">STL to 3MF</Link></li>
               <li><Link href="/3mf-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">3MF to STL</Link></li>
-              <li className="text-zinc-400 dark:text-zinc-600">Bambu ↔ Prusa <span className="text-xs">(W4)</span></li>
+              <li>
+                <Link
+                  href="/tools/bambu-3mf-to-prusa/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+                >
+                  Bambu 3MF → Prusa ⭐
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/tools/prusa-3mf-to-bambu/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  Prusa 3MF → Bambu
+                </Link>
+              </li>
               <li className="text-zinc-400 dark:text-zinc-600">STL Repair <span className="text-xs">(W6)</span></li>
             </ul>
           </div>
