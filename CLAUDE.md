@@ -21,28 +21,53 @@
 
 ```
 app/
-├── layout.tsx          根布局 + 全局 SEO metadata
-├── page.tsx            首页（Dropzone + Quick Tools + Why + How + Formats）
-├── globals.css         Tailwind v4 入口
-└── (未来)
-    ├── step-to-stl/    # 单格式转换 landing
-    ├── view/           # 通用 3D viewer
-    ├── tools/          # 差异化工具（bambu-3mf-to-prusa / gcode-simulator / stl-repair）
-    ├── reference/      # 工程参考表（抗 AI Overviews 内容）
-    └── embed/          # iframe 嵌入码生成器（反链战术）
+├── layout.tsx           根布局：<html><body>{children}</body></html> + GA + WebSite JSON-LD
+├── (site)/              route group：带 SiteHeader/Footer 的所有正常页面
+│   ├── layout.tsx       注入 chrome
+│   ├── page.tsx         首页
+│   ├── (converters)/    40 个 X-to-Y/page.tsx（复用 ConverterPage 模板）
+│   ├── tools/           差异化工具：bambu-3mf-to-prusa, prusa-3mf-to-bambu,
+│   │                                 gcode-simulator, stl-repair
+│   ├── reference/       evergreen：stl-vs-obj-vs-3mf, bambu-vs-prusa, metal-gauge-chart
+│   ├── embed/page.tsx   embed 主页（marketing + code generator）
+│   └── about|privacy|terms/
+├── embed/               chrome-less route：iframe target
+│   ├── layout.tsx       极简 pass-through
+│   └── stl-viewer/      接 ?url=&format=&theme= 实际嵌入页
+├── opengraph-image.tsx  build-time 静态生成 1200×630 PNG
+├── icon.tsx + apple-icon.tsx  品牌渐变 favicon
+├── sitemap.ts + robots.ts     都 export const dynamic = "force-static"
 
-components/             # 复用 UI 组件
-├── Dropzone.tsx        # 拖拽上传，接受 12 格式
-└── StlViewer.tsx       # three.js STL 渲染
+components/   ConverterPage / BambuPrusaTool / GcodeSimulator / StlRepairTool /
+              EmbedViewer / EmbedCodeGenerator / GcodeViewer / MeshViewer /
+              SiteHeader / SiteFooter / Dropzone / JsonLd
 
-lib/                    # 纯函数：解析器 / 转换器（W2 起加）
+lib/
+├── converters/  formats.ts (Format enum + SOURCE_ONLY) · parse.ts · export.ts
+│                stats.ts · step.ts (occt-import-js dynamic) · 3mf-writer.ts
+│                3mf-sanitizer.ts · 3mf-sample.ts
+├── repair/      analyze.ts · repair.ts
+├── gcode/       parser.ts · stats.ts · sample.ts
+├── schema.ts    JSON-LD 工厂（WebSite/SoftwareApplication/FAQPage/Breadcrumb）
+├── embed-themes.ts  light/dark/paper/neon 主题色
+├── analytics.ts     window.gtag 直接调用（不用 sendGAEvent）
+└── seo.ts       SITE_URL + CONVERTER_ROUTES + REFERENCE/LEGAL/TOOL_ROUTES + buildConverterMetadata
+
+public/
+├── _headers           Cloudflare Pages：opengraph-image / icon / wasm 的 Content-Type
+└── wasm/occt-import-js.wasm  7.3MB，lazy-load
 ```
 
 **关键决策**：
-- App Router（不是 Pages Router）
-- `params` / `searchParams` 是 **Promise**（Next.js 15+，必须 `await`）
-- 客户端组件用 `"use client"`；three.js 用 `dynamic import` + `ssr: false`
-- `Dropzone` 是受控组件，文件 → ArrayBuffer → 父组件状态 → Viewer 消费
+- App Router；`params/searchParams` 是 **Promise**（Next.js 15+）必须 `await`
+- 客户端组件 `"use client"`；three.js / WASM 用 `dynamic import` + `ssr: false`
+- **Route group `(site)`** vs **`embed/`**：embed 是 chrome-less iframe target，logo/footer 不该出现
+- **SiteHeader logo 用 `<a href="/">`** 不用 `<Link>`：full reload 强制释放 WebGL context，避免页面切换后旧 viewer 残留 GPU 资源造成卡顿
+- **THREE.Object3D 必须 dispose**：所有持有 object state 的组件加 `useEffect(() => () => disposeObject(object), [object])`，否则切页累积内存爆炸
+- **Dropzone** 是受控组件：文件 → ArrayBuffer → 父组件 state → Viewer 消费
+- **MeshViewer props**：`object` + `compact?`（embed 模式去 border/min-h/stats）+ `theme?`（4 主题）
+- **SOURCE_ONLY_FORMATS** = `{step, iges, fbx, dae}`：能 parse 不能 export；ConverterPage 自动隐藏 sample 按钮、reverse link 改指首页
+- **JSON-LD** 用 `<JsonLd data={...}>` 组件注入到任何页面（client/server 都可）；root layout 已注入 WebSite schema，每页加自己的
 
 ---
 
@@ -127,12 +152,23 @@ npx tsc --noEmit     # TS 检查
 
 ---
 
-## 当前状态速查
+## 已知踩坑（补充）
 
-- ✅ STL viewer 跑通（拖拽 → 预览 → 统计）
-- ✅ SEO 基础完整
-- ⏳ 还没接 Cloudflare Pages 部署
-- ⏳ 还没做 STL → 其他格式转换（W1 剩余任务）
-- ⏳ 4 个差异化爆款（Bambu 3MF / G-code / Repair / iframe）还没做
+- **`output: "export"` 模式下 `app/sitemap.ts` / `robots.ts` / `opengraph-image.tsx` / `icon.tsx` 必须 export `const dynamic = "force-static"`**，否则 build 报错
+- **Cloudflare Pages 对无扩展名文件（opengraph-image / icon）需要 `_headers` 强制 Content-Type**，否则浏览器/社交平台不认
+- **GA 自定义事件不要用 `@next/third-parties` 的 `sendGAEvent`**，flaky；直接 `window.gtag('event', name, params)`
+- **Next.js `<Link>` 在 static export + trailingSlash 下偶有客户端导航 stuck**：关键入口（logo）用 `<a>` 强制 reload 更可靠
+- **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
+- **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
+
+## 当前状态速查（2026-05-13）
+
+- ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing**
+- ✅ 4 差异化工具：Bambu↔Prusa 3MF · G-code Simulator · STL Repair · iframe Embed v2（4 主题）
+- ✅ 3 reference · 3 legal · sitemap **52 URLs** · GA4 + GSC + 4 种 JSON-LD schema
+- ✅ Cloudflare Pages auto-deploy（push main → 2-3 分钟生效）
+- ⏳ W8 reference 表 × 4（drill-bit / thread-pitch / tolerance / bed-sizes）
+- ⏳ W9 Lithophane Generator
+- ⏳ STL Repair v2（manifold-3d 真补孔 + 自交修复）
 
 更新进度时改 `../progress.md`。
