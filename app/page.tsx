@@ -14,6 +14,12 @@ import {
   disposeObject,
   type Format,
 } from "@/lib/converters";
+import {
+  trackFileUploaded,
+  trackSampleLoaded,
+  trackFileConverted,
+  trackConvertError,
+} from "@/lib/analytics";
 
 const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
   ssr: false,
@@ -82,7 +88,11 @@ export default function Home() {
   const [status, setStatus] = useState<ConvertStatus>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleFile = async (buffer: ArrayBuffer, name: string) => {
+  const handleFile = async (
+    buffer: ArrayBuffer,
+    name: string,
+    source: "drop" | "sample" = "drop",
+  ) => {
     const fmt = detectFormat(name);
     if (!fmt) {
       const ext = name.toLowerCase().split(".").pop() ?? "";
@@ -102,6 +112,7 @@ export default function Home() {
       setSourceFormat(fmt);
       setTargetFormat(fmt === "stl" ? "obj" : "stl");
       setStatus("idle");
+      trackFileUploaded(fmt, source);
     } catch (err) {
       console.error("Parse failed", err);
       setErrorMsg(err instanceof Error ? err.message : `Could not parse ${fmt} file`);
@@ -123,6 +134,7 @@ export default function Home() {
     setStatus("loading");
     setErrorMsg(null);
     setUnsupportedExt(null);
+    trackSampleLoaded(format);
     try {
       const geo = new THREE.TorusKnotGeometry(10, 3, 100, 16);
       const mat = new THREE.MeshStandardMaterial({
@@ -135,7 +147,7 @@ export default function Home() {
       geo.dispose();
       mat.dispose();
       const buffer = await blob.arrayBuffer();
-      await handleFile(buffer, `flip3d-sample.${format}`);
+      await handleFile(buffer, `flip3d-sample.${format}`, "sample");
     } catch (err) {
       console.error("Sample load failed", err);
       setErrorMsg(err instanceof Error ? err.message : "Failed to load sample");
@@ -152,10 +164,13 @@ export default function Home() {
       const baseName = fileName.replace(/\.[^.]+$/, "") || "model";
       downloadBlob(blob, `${baseName}.${targetFormat}`);
       setStatus("idle");
+      trackFileConverted(sourceFormat, targetFormat);
     } catch (err) {
       console.error("Convert failed", err);
-      setErrorMsg(err instanceof Error ? err.message : "Conversion failed");
+      const msg = err instanceof Error ? err.message : "Conversion failed";
+      setErrorMsg(msg);
       setStatus("error");
+      trackConvertError(sourceFormat, targetFormat, msg);
     }
   };
 

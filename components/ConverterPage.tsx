@@ -13,6 +13,12 @@ import {
   disposeObject,
   type Format,
 } from "@/lib/converters";
+import {
+  trackFileUploaded,
+  trackSampleLoaded,
+  trackFileConverted,
+  trackConvertError,
+} from "@/lib/analytics";
 
 const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
   ssr: false,
@@ -39,7 +45,11 @@ export default function ConverterPage({ from, to }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleFile = async (buffer: ArrayBuffer, name: string) => {
+  const handleFile = async (
+    buffer: ArrayBuffer,
+    name: string,
+    source: "drop" | "sample" = "drop",
+  ) => {
     setStatus("loading");
     setErrorMsg(null);
     try {
@@ -48,6 +58,7 @@ export default function ConverterPage({ from, to }: Props) {
       setObject(parsed);
       setFileName(name);
       setStatus("idle");
+      trackFileUploaded(from, source);
     } catch (err) {
       console.error("Parse failed", err);
       setErrorMsg(err instanceof Error ? err.message : `Could not parse .${from} file`);
@@ -58,6 +69,7 @@ export default function ConverterPage({ from, to }: Props) {
   const handleSample = async () => {
     setStatus("loading");
     setErrorMsg(null);
+    trackSampleLoaded(from);
     try {
       const geo = new THREE.TorusKnotGeometry(10, 3, 100, 16);
       const mat = new THREE.MeshStandardMaterial({
@@ -70,7 +82,7 @@ export default function ConverterPage({ from, to }: Props) {
       geo.dispose();
       mat.dispose();
       const buffer = await blob.arrayBuffer();
-      await handleFile(buffer, `flip3d-sample.${from}`);
+      await handleFile(buffer, `flip3d-sample.${from}`, "sample");
     } catch (err) {
       console.error("Sample failed", err);
       setErrorMsg(err instanceof Error ? err.message : "Failed to load sample");
@@ -95,10 +107,13 @@ export default function ConverterPage({ from, to }: Props) {
       const baseName = fileName.replace(/\.[^.]+$/, "") || "model";
       downloadBlob(blob, `${baseName}.${to}`);
       setStatus("idle");
+      trackFileConverted(from, to);
     } catch (err) {
       console.error("Convert failed", err);
-      setErrorMsg(err instanceof Error ? err.message : "Conversion failed");
+      const msg = err instanceof Error ? err.message : "Conversion failed";
+      setErrorMsg(msg);
       setStatus("error");
+      trackConvertError(from, to, msg);
     }
   };
 
