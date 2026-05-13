@@ -36,7 +36,17 @@ export default function SiteFooter() {
                   STL vs OBJ vs 3MF
                 </Link>
               </li>
-              <li><Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Home</Link></li>
+              <li>
+                <Link
+                  href="/reference/bambu-vs-prusa/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  Bambu vs Prusa
+                </Link>
+              </li>
+              <li><Link href="/about/" className="hover:text-blue-600 dark:hover:text-blue-400">About</Link></li>
+              <li><Link href="/privacy/" className="hover:text-blue-600 dark:hover:text-blue-400">Privacy</Link></li>
+              <li><Link href="/terms/" className="hover:text-blue-600 dark:hover:text-blue-400">Terms</Link></li>
               <li>
                 <a
                   href="https://github.com/suyfdong/flip3d"

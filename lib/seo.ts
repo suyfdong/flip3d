@@ -47,4 +47,14 @@ export const REFERENCE_ROUTES: Array<{ slug: string; title: string }> = [
     slug: "stl-vs-obj-vs-3mf",
     title: "STL vs OBJ vs 3MF vs GLB vs PLY",
   },
+  {
+    slug: "bambu-vs-prusa",
+    title: "Bambu Lab vs Prusa — Slicers, 3MF, Workflow",
+  },
+];
+
+export const LEGAL_ROUTES: Array<{ slug: string }> = [
+  { slug: "about" },
+  { slug: "privacy" },
+  { slug: "terms" },
 ];

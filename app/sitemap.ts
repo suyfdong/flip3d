@@ -1,5 +1,10 @@
 import type { MetadataRoute } from "next";
-import { CONVERTER_ROUTES, REFERENCE_ROUTES, SITE_URL } from "@/lib/seo";
+import {
+  CONVERTER_ROUTES,
+  LEGAL_ROUTES,
+  REFERENCE_ROUTES,
+  SITE_URL,
+} from "@/lib/seo";
 
 export const dynamic = "force-static";
 
@@ -23,5 +28,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));
-  return [home, ...converters, ...references];
+  const legal = LEGAL_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "yearly" as const,
+    priority: 0.3,
+  }));
+  return [home, ...converters, ...references, ...legal];
 }
