@@ -4,7 +4,7 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-zinc-200 dark:border-zinc-800 py-10 mt-auto">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8 mb-8 text-sm">
           <div>
             <h3 className="font-semibold mb-3">Converters</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
@@ -23,6 +23,15 @@ export default function SiteFooter() {
               <li><Link href="/3mf-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">3MF to STL</Link></li>
               <li className="text-zinc-400 dark:text-zinc-600">Bambu ↔ Prusa <span className="text-xs">(W4)</span></li>
               <li className="text-zinc-400 dark:text-zinc-600">STL Repair <span className="text-xs">(W6)</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-3">CAD</h3>
+            <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
+              <li><Link href="/step-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to STL</Link></li>
+              <li><Link href="/step-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to OBJ</Link></li>
+              <li><Link href="/step-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to GLB</Link></li>
+              <li><Link href="/step-to-3mf/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to 3MF</Link></li>
             </ul>
           </div>
           <div>

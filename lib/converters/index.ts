@@ -1,4 +1,12 @@
-export { FORMATS, FORMAT_LABELS, MIME_TYPES, detectFormat, isFormat } from "./formats";
+export {
+  FORMATS,
+  FORMAT_LABELS,
+  MIME_TYPES,
+  SOURCE_ONLY_FORMATS,
+  detectFormat,
+  isFormat,
+  isExportable,
+} from "./formats";
 export type { Format } from "./formats";
 export { parseToObject } from "./parse";
 export { exportToBlob, downloadBlob } from "./export";

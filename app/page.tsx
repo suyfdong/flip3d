@@ -7,11 +7,13 @@ import Dropzone from "@/components/Dropzone";
 import {
   FORMATS,
   FORMAT_LABELS,
+  SOURCE_ONLY_FORMATS,
   detectFormat,
   parseToObject,
   exportToBlob,
   downloadBlob,
   disposeObject,
+  isExportable,
   type Format,
 } from "@/lib/converters";
 import {
@@ -202,7 +204,7 @@ export default function Home() {
                   <span className="text-zinc-500 dark:text-zinc-400">
                     No file handy? Try a sample:
                   </span>
-                  {FORMATS.map((f) => (
+                  {FORMATS.filter((f) => !SOURCE_ONLY_FORMATS.has(f)).map((f) => (
                     <button
                       key={f}
                       onClick={() => handleSample(f)}
@@ -274,7 +276,7 @@ export default function Home() {
                     onChange={(e) => setTargetFormat(e.target.value as Format)}
                     className="font-mono uppercase px-2 py-1 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs cursor-pointer"
                   >
-                    {FORMATS.filter((f) => f !== sourceFormat).map((f) => (
+                    {FORMATS.filter((f) => f !== sourceFormat && isExportable(f)).map((f) => (
                       <option key={f} value={f}>
                         {FORMAT_LABELS[f]}
                       </option>
@@ -402,7 +404,10 @@ export default function Home() {
                 </p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                   {ALL_FORMATS.map((fmt) => {
-                    const isLive = (FORMATS as readonly string[]).includes(fmt.toLowerCase());
+                    const lower = fmt.toLowerCase();
+                    const isLive =
+                      (FORMATS as readonly string[]).includes(lower) ||
+                      lower === "stp";
                     return (
                       <div
                         key={fmt}

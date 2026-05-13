@@ -50,6 +50,10 @@ export async function parseToObject(
       if (!geometry.attributes.normal) geometry.computeVertexNormals();
       return new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
     }
+    case "step": {
+      const { parseStepFile } = await import("./step");
+      return parseStepFile(buffer);
+    }
   }
 }
 

@@ -7,6 +7,7 @@ import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
 import {
   FORMAT_LABELS,
+  SOURCE_ONLY_FORMATS,
   parseToObject,
   exportToBlob,
   downloadBlob,
@@ -117,7 +118,14 @@ export default function ConverterPage({ from, to }: Props) {
     }
   };
 
-  const reverseSlug = `/${to}-to-${from}/`;
+  const reverseExists = !SOURCE_ONLY_FORMATS.has(from);
+  const reverseSlug = reverseExists ? `/${to}-to-${from}/` : "/";
+  const reverseLabel = reverseExists
+    ? `${toLabel} → ${fromLabel}`
+    : "All conversions";
+  const reverseHint = reverseExists
+    ? "Go the other way"
+    : `STEP is a CAD parametric format — we can read it but can't write it. Browse other tools.`;
 
   return (
     <>
@@ -141,20 +149,25 @@ export default function ConverterPage({ from, to }: Props) {
             </div>
 
             <div className="max-w-2xl mx-auto">
-              <Dropzone onFileLoaded={handleFile} accept={[`.${from}`]} />
+              <Dropzone
+                onFileLoaded={handleFile}
+                accept={from === "step" ? [".step", ".stp"] : [`.${from}`]}
+              />
 
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-                <span className="text-zinc-500 dark:text-zinc-400">
-                  No .{from} handy?
-                </span>
-                <button
-                  onClick={handleSample}
-                  disabled={status === "loading"}
-                  className="px-3 py-1 rounded-full font-mono text-xs uppercase border border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
-                >
-                  Try a sample .{from}
-                </button>
-              </div>
+              {!SOURCE_ONLY_FORMATS.has(from) && (
+                <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    No .{from} handy?
+                  </span>
+                  <button
+                    onClick={handleSample}
+                    disabled={status === "loading"}
+                    className="px-3 py-1 rounded-full font-mono text-xs uppercase border border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+                  >
+                    Try a sample .{from}
+                  </button>
+                </div>
+              )}
 
               {status === "loading" && (
                 <div className="mt-4 px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-sm text-zinc-700 dark:text-zinc-300">
@@ -261,11 +274,9 @@ export default function ConverterPage({ from, to }: Props) {
                   href={reverseSlug}
                   className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700 transition-colors"
                 >
-                  <div className="font-semibold">
-                    {toLabel} → {fromLabel}
-                  </div>
+                  <div className="font-semibold">{reverseLabel}</div>
                   <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                    Go the other way
+                    {reverseHint}
                   </div>
                 </Link>
                 <Link

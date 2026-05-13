@@ -40,6 +40,10 @@ export const CONVERTER_ROUTES: Array<{ from: Format; to: Format }> = [
   { from: "3mf", to: "stl" },
   { from: "stl", to: "ply" },
   { from: "ply", to: "stl" },
+  { from: "step", to: "stl" },
+  { from: "step", to: "obj" },
+  { from: "step", to: "glb" },
+  { from: "step", to: "3mf" },
 ];
 
 export const REFERENCE_ROUTES: Array<{ slug: string; title: string }> = [
