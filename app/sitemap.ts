@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { CONVERTER_ROUTES, SITE_URL } from "@/lib/seo";
+import { CONVERTER_ROUTES, REFERENCE_ROUTES, SITE_URL } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
@@ -17,5 +17,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
-  return [home, ...converters];
+  const references = REFERENCE_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/reference/${slug}/`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+  return [home, ...converters, ...references];
 }

@@ -26,8 +26,16 @@ export default function SiteFooter() {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-3">About</h3>
+            <h3 className="font-semibold mb-3">Reference</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
+              <li>
+                <Link
+                  href="/reference/stl-vs-obj-vs-3mf/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  STL vs OBJ vs 3MF
+                </Link>
+              </li>
               <li><Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">Home</Link></li>
               <li>
                 <a

@@ -41,3 +41,10 @@ export const CONVERTER_ROUTES: Array<{ from: Format; to: Format }> = [
   { from: "stl", to: "ply" },
   { from: "ply", to: "stl" },
 ];
+
+export const REFERENCE_ROUTES: Array<{ slug: string; title: string }> = [
+  {
+    slug: "stl-vs-obj-vs-3mf",
+    title: "STL vs OBJ vs 3MF vs GLB vs PLY",
+  },
+];
