@@ -127,7 +127,7 @@ export default function MeshViewer({ object }: Props) {
     <div className="flex flex-col h-full">
       <div
         ref={containerRef}
-        className="flex-1 min-h-[400px] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+        className="flex-1 min-h-[300px] sm:min-h-[400px] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
       />
       {stats && (
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-zinc-600 dark:text-zinc-400">

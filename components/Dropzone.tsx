@@ -84,9 +84,9 @@ export default function Dropzone({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={`
-          flex flex-col items-center justify-center w-full min-h-[280px]
+          flex flex-col items-center justify-center w-full min-h-[220px] sm:min-h-[280px]
           rounded-2xl border-2 border-dashed cursor-pointer
-          transition-all duration-200 px-6 py-12
+          transition-all duration-200 px-4 py-8 sm:px-6 sm:py-12
           ${
             isDragging
               ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30"
@@ -95,7 +95,7 @@ export default function Dropzone({
         `}
       >
         <svg
-          className="w-12 h-12 mb-4 text-zinc-400"
+          className="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4 text-zinc-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

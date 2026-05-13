@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function SiteHeader() {
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">
             F

@@ -14,8 +14,6 @@ declare global {
 
 function track(event: string, params: Record<string, unknown>) {
   if (typeof window === "undefined") return;
-  // eslint-disable-next-line no-console
-  console.log("[Flip3D]", event, params, "gtag?", typeof window.gtag);
   if (typeof window.gtag === "function") {
     window.gtag("event", event, params);
     return;

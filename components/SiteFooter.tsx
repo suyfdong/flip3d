@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function SiteFooter() {
   return (
     <footer className="border-t border-zinc-200 dark:border-zinc-800 py-10 mt-auto">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-sm">
           <div>
             <h3 className="font-semibold mb-3">Converters</h3>

@@ -121,14 +121,14 @@ export default function ConverterPage({ from, to }: Props) {
 
   return (
     <>
-      <section className="max-w-6xl mx-auto px-6 pt-12 pb-8">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-12">
         {!object ? (
           <>
             <div className="text-center max-w-3xl mx-auto mb-10">
               <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-3 uppercase tracking-wide">
                 Free Online Converter
               </p>
-              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
                 Convert{" "}
                 <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
                   {fromLabel} to {toLabel}
@@ -213,7 +213,7 @@ export default function ConverterPage({ from, to }: Props) {
               </div>
             )}
 
-            <div className="h-[560px]">
+            <div className="h-[60vh] sm:h-[480px] lg:h-[560px]">
               <MeshViewer object={object} />
             </div>
           </>
@@ -223,7 +223,7 @@ export default function ConverterPage({ from, to }: Props) {
       {!object && (
         <>
           <section className="border-t border-zinc-200 dark:border-zinc-800 py-14">
-            <div className="max-w-3xl mx-auto px-6">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold tracking-tight mb-6">
                 How to convert {fromLabel} to {toLabel}
               </h2>
@@ -252,7 +252,7 @@ export default function ConverterPage({ from, to }: Props) {
           </section>
 
           <section className="border-t border-zinc-200 dark:border-zinc-800 py-14 bg-zinc-50 dark:bg-zinc-950/50">
-            <div className="max-w-3xl mx-auto px-6">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6">
               <h2 className="text-xl font-bold tracking-tight mb-4">
                 Related converters
               </h2>

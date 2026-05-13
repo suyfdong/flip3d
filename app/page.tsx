@@ -178,11 +178,11 @@ export default function Home() {
 
   return (
     <>
-        <section className="max-w-6xl mx-auto px-6 pt-16 pb-12">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-16 sm:pb-12">
           {!hasFile ? (
             <>
               <div className="text-center max-w-3xl mx-auto mb-12">
-                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
                   Flip your 3D files.
                   <br />
                   <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
@@ -298,7 +298,7 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="h-[560px]">
+              <div className="h-[60vh] sm:h-[480px] lg:h-[560px]">
                 <MeshViewer object={object} />
               </div>
             </>
@@ -311,7 +311,7 @@ export default function Home() {
               id="tools"
               className="border-t border-zinc-200 dark:border-zinc-800 py-16"
             >
-              <div className="max-w-6xl mx-auto px-6">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
                   <div>
                     <h2 className="text-2xl font-bold tracking-tight">Quick tools</h2>
@@ -339,7 +339,7 @@ export default function Home() {
               id="why"
               className="border-t border-zinc-200 dark:border-zinc-800 py-16 bg-zinc-50 dark:bg-zinc-950/50"
             >
-              <div className="max-w-6xl mx-auto px-6">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <div className="text-center max-w-2xl mx-auto mb-12">
                   <h2 className="text-2xl font-bold tracking-tight">Why Flip3D</h2>
                   <p className="text-zinc-600 dark:text-zinc-400 mt-2">
@@ -371,7 +371,7 @@ export default function Home() {
               id="how"
               className="border-t border-zinc-200 dark:border-zinc-800 py-16"
             >
-              <div className="max-w-6xl mx-auto px-6">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <h2 className="text-2xl font-bold tracking-tight text-center mb-12">
                   How it works
                 </h2>
@@ -393,7 +393,7 @@ export default function Home() {
               id="formats"
               className="border-t border-zinc-200 dark:border-zinc-800 py-16 bg-zinc-50 dark:bg-zinc-950/50"
             >
-              <div className="max-w-6xl mx-auto px-6">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <h2 className="text-2xl font-bold tracking-tight mb-2 text-center">
                   12 formats and counting
                 </h2>
