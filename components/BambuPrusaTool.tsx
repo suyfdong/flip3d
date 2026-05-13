@@ -15,6 +15,10 @@ import {
   type SanitizeReport,
 } from "@/lib/converters/3mf-sanitizer";
 import {
+  buildSampleBambu3MF,
+  buildSamplePrusa3MF,
+} from "@/lib/converters/3mf-sample";
+import {
   trackFileUploaded,
   trackFileConverted,
   trackConvertError,
@@ -118,6 +122,25 @@ export default function BambuPrusaTool({ direction }: Props) {
     trackFileConverted("3mf", "3mf");
   };
 
+  const handleSample = async () => {
+    setStatus("loading");
+    setErrorMsg(null);
+    setReport(null);
+    setOutputBlob(null);
+    try {
+      const sample =
+        direction === "bambu-to-prusa"
+          ? await buildSampleBambu3MF()
+          : await buildSamplePrusa3MF();
+      const buffer = await sample.arrayBuffer();
+      await handleFile(buffer, sample.name);
+    } catch (err) {
+      console.error("Sample build failed", err);
+      setErrorMsg(err instanceof Error ? err.message : "Failed to build sample");
+      setStatus("error");
+    }
+  };
+
   const handleReset = () => {
     if (object) disposeObject(object);
     setObject(null);
@@ -161,6 +184,19 @@ export default function BambuPrusaTool({ direction }: Props) {
               <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-3 text-center">
                 {copy.sourceHint}
               </p>
+
+              <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  No .3mf handy?
+                </span>
+                <button
+                  onClick={handleSample}
+                  disabled={status === "loading" || status === "processing"}
+                  className="px-3 py-1 rounded-full font-mono text-xs uppercase border border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+                >
+                  Try a sample .3mf
+                </button>
+              </div>
 
               {status === "loading" && (
                 <div className="mt-4 px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-sm">
