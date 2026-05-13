@@ -1,16 +1,38 @@
-import { sendGAEvent } from "@next/third-parties/google";
 import type { Format } from "./converters";
 
+type GtagFn = (
+  command: "event" | "config" | "set" | "js",
+  ...args: unknown[]
+) => void;
+
+declare global {
+  interface Window {
+    gtag?: GtagFn;
+    dataLayer?: unknown[];
+  }
+}
+
+function track(event: string, params: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  if (typeof window.gtag === "function") {
+    window.gtag("event", event, params);
+    return;
+  }
+  if (Array.isArray(window.dataLayer)) {
+    window.dataLayer.push({ event, ...params });
+  }
+}
+
 export function trackFileUploaded(format: Format, source: "drop" | "sample") {
-  sendGAEvent("event", "file_uploaded", { format, source });
+  track("file_uploaded", { format, source });
 }
 
 export function trackSampleLoaded(format: Format) {
-  sendGAEvent("event", "sample_loaded", { format });
+  track("sample_loaded", { format });
 }
 
 export function trackFileConverted(from: Format, to: Format) {
-  sendGAEvent("event", "file_converted", {
+  track("file_converted", {
     source_format: from,
     target_format: to,
     pair: `${from}-to-${to}`,
@@ -18,7 +40,7 @@ export function trackFileConverted(from: Format, to: Format) {
 }
 
 export function trackConvertError(from: Format, to: Format, message: string) {
-  sendGAEvent("event", "convert_error", {
+  track("convert_error", {
     source_format: from,
     target_format: to,
     error: message.slice(0, 100),
