@@ -61,6 +61,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  verification: {
+    google: "N5M6GjYvuUsnWd8Va7IBAXa80lNJgRTvNtuo4MILJAE",
+  },
 };
 
 export const viewport: Viewport = {
