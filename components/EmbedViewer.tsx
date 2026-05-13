@@ -77,7 +77,7 @@ export default function EmbedViewer() {
   }, [url, formatParam]);
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="fixed inset-0 flex flex-col bg-zinc-50 dark:bg-zinc-950">
       {!url && <NoUrlNotice />}
       {url && status === "loading" && (
         <div className="flex-1 flex items-center justify-center">
