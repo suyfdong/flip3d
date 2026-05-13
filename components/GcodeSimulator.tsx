@@ -72,6 +72,9 @@ export default function GcodeSimulator() {
       }
       setParsed(result);
       setFileName(name);
+      // Start at full progress so users see the whole print first, then
+      // they can scrub backwards. The visible slider thumb makes scrubbing
+      // obvious.
       setProgressPct(100);
       setStatus("ready");
       trackFileUploaded("stl", "drop"); // reuse: format param unused for tools
@@ -212,10 +215,15 @@ export default function GcodeSimulator() {
             )}
 
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 mb-4">
-              <div className="flex items-center justify-between mb-2 text-sm">
-                <span className="font-medium">Timeline</span>
-                <span className="text-zinc-500 dark:text-zinc-400 font-mono text-xs">
-                  {progressPct}% · layer {currentLayer ?? "—"} /{" "}
+              <div className="flex items-center justify-between mb-2 text-sm flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Timeline</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    ← drag to scrub through the print
+                  </span>
+                </div>
+                <span className="text-zinc-700 dark:text-zinc-300 font-mono text-xs tabular-nums">
+                  {progressPct}% · layer {currentLayer ?? 0} /{" "}
                   {stats?.layerCount ?? 0}
                 </span>
               </div>
@@ -226,7 +234,11 @@ export default function GcodeSimulator() {
                 step={1}
                 value={progressPct}
                 onChange={(e) => setProgressPct(parseInt(e.target.value, 10))}
-                className="w-full accent-blue-500"
+                aria-label="Print progress timeline"
+                className="gcode-timeline w-full h-2 rounded-full appearance-none bg-zinc-200 dark:bg-zinc-800 cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${progressPct}%, #e4e4e7 ${progressPct}%, #e4e4e7 100%)`,
+                }}
               />
               <div className="flex items-center justify-between mt-3 text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
