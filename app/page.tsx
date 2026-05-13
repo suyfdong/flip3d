@@ -119,6 +119,30 @@ export default function Home() {
     setStatus("idle");
   };
 
+  const handleSample = async (format: Format) => {
+    setStatus("loading");
+    setErrorMsg(null);
+    setUnsupportedExt(null);
+    try {
+      const geo = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x3b82f6,
+        metalness: 0.1,
+        roughness: 0.6,
+      });
+      const sampleMesh = new THREE.Mesh(geo, mat);
+      const blob = await exportToBlob(sampleMesh, format);
+      geo.dispose();
+      mat.dispose();
+      const buffer = await blob.arrayBuffer();
+      await handleFile(buffer, `flip3d-sample.${format}`);
+    } catch (err) {
+      console.error("Sample load failed", err);
+      setErrorMsg(err instanceof Error ? err.message : "Failed to load sample");
+      setStatus("error");
+    }
+  };
+
   const handleConvert = async () => {
     if (!object || !sourceFormat) return;
     setStatus("converting");
@@ -176,6 +200,22 @@ export default function Home() {
 
               <div className="max-w-2xl mx-auto">
                 <Dropzone onFileLoaded={handleFile} />
+
+                <div className="mt-4 flex items-center justify-center gap-2 flex-wrap text-sm">
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    No file handy? Try a sample:
+                  </span>
+                  {FORMATS.map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => handleSample(f)}
+                      disabled={status === "loading"}
+                      className="px-3 py-1 rounded-full font-mono text-xs uppercase border border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      .{f}
+                    </button>
+                  ))}
+                </div>
 
                 {status === "loading" && (
                   <div className="mt-4 px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-sm text-zinc-700 dark:text-zinc-300">
