@@ -24,11 +24,11 @@ export async function parseToObject(
     case "obj": {
       const text = new TextDecoder("utf-8").decode(buffer);
       const group = new OBJLoader().parse(text);
-      applyDefaultMaterial(group);
+      applyBrandMaterial(group);
       return group;
     }
     case "glb": {
-      return new Promise<THREE.Object3D>((resolve, reject) => {
+      const scene = await new Promise<THREE.Object3D>((resolve, reject) => {
         new GLTFLoader().parse(
           buffer,
           "",
@@ -36,19 +36,26 @@ export async function parseToObject(
           (event) => reject(new Error(event.message || "Failed to parse GLB")),
         );
       });
+      applyBrandMaterial(scene);
+      return scene;
     }
     case "3mf": {
       const group = new ThreeMFLoader().parse(buffer);
-      applyDefaultMaterial(group);
+      applyBrandMaterial(group);
       return group;
     }
   }
 }
 
-function applyDefaultMaterial(root: THREE.Object3D): void {
+function applyBrandMaterial(root: THREE.Object3D): void {
   root.traverse((child) => {
-    if (child instanceof THREE.Mesh && !child.material) {
-      child.material = DEFAULT_MATERIAL.clone();
+    if (!(child instanceof THREE.Mesh)) return;
+    const oldMat = child.material;
+    if (Array.isArray(oldMat)) {
+      oldMat.forEach((m) => m.dispose());
+    } else if (oldMat) {
+      oldMat.dispose();
     }
+    child.material = DEFAULT_MATERIAL.clone();
   });
 }
