@@ -162,25 +162,7 @@ export default function Home() {
   const hasFile = object !== null;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">
-              F
-            </div>
-            <span className="font-semibold tracking-tight">Flip3D</span>
-          </a>
-          <nav className="hidden sm:flex items-center gap-6 text-sm text-zinc-600 dark:text-zinc-400">
-            <a href="#tools" className="hover:text-zinc-900 dark:hover:text-zinc-100">Tools</a>
-            <a href="#why" className="hover:text-zinc-900 dark:hover:text-zinc-100">Why Flip3D</a>
-            <a href="#how" className="hover:text-zinc-900 dark:hover:text-zinc-100">How it works</a>
-            <a href="#formats" className="hover:text-zinc-900 dark:hover:text-zinc-100">Formats</a>
-          </nav>
-        </div>
-      </header>
-
-      <main className="flex-1">
+    <>
         <section className="max-w-6xl mx-auto px-6 pt-16 pb-12">
           {!hasFile ? (
             <>
@@ -424,15 +406,7 @@ export default function Home() {
             </section>
           </>
         )}
-      </main>
-
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 flex-wrap gap-2">
-          <p>© {new Date().getFullYear()} Flip3D</p>
-          <p className="font-mono text-xs">v0.2.0 · Built in public · three.js</p>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
 
