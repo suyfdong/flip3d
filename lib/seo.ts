@@ -55,6 +55,10 @@ export const REFERENCE_ROUTES: Array<{ slug: string; title: string }> = [
     slug: "bambu-vs-prusa",
     title: "Bambu Lab vs Prusa — Slicers, 3MF, Workflow",
   },
+  {
+    slug: "metal-gauge-chart",
+    title: "Sheet Metal Gauge to mm/inch Chart",
+  },
 ];
 
 export const LEGAL_ROUTES: Array<{ slug: string }> = [

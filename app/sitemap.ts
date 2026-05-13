@@ -34,5 +34,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "yearly" as const,
     priority: 0.3,
   }));
-  return [home, ...converters, ...references, ...legal];
+  const embed = [
+    {
+      url: `${SITE_URL}/embed/`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    },
+  ];
+  return [home, ...converters, ...references, ...legal, ...embed];
 }

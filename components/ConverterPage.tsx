@@ -280,6 +280,15 @@ export default function ConverterPage({ from, to }: Props) {
                   </div>
                 </Link>
                 <Link
+                  href="/embed/"
+                  className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700 transition-colors"
+                >
+                  <div className="font-semibold">Embed viewer →</div>
+                  <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                    One line of iframe HTML on your site
+                  </div>
+                </Link>
+                <Link
                   href="/"
                   className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700 transition-colors"
                 >

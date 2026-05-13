@@ -32,6 +32,7 @@ export default function SiteFooter() {
               <li><Link href="/step-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to OBJ</Link></li>
               <li><Link href="/step-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to GLB</Link></li>
               <li><Link href="/step-to-3mf/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to 3MF</Link></li>
+              <li><Link href="/embed/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Embed viewer →</Link></li>
             </ul>
           </div>
           <div>
@@ -51,6 +52,14 @@ export default function SiteFooter() {
                   className="hover:text-blue-600 dark:hover:text-blue-400"
                 >
                   Bambu vs Prusa
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/reference/metal-gauge-chart/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  Metal gauge chart
                 </Link>
               </li>
               <li><Link href="/about/" className="hover:text-blue-600 dark:hover:text-blue-400">About</Link></li>
