@@ -18,6 +18,7 @@ type OcctResult = {
 
 type OcctModule = {
   ReadStepFile: (data: Uint8Array, params: unknown) => OcctResult;
+  ReadIgesFile: (data: Uint8Array, params: unknown) => OcctResult;
 };
 
 let occtPromise: Promise<OcctModule> | null = null;
@@ -40,18 +41,16 @@ function loadOcct(): Promise<OcctModule> {
 
 const BRAND_COLOR = 0x3b82f6;
 
-export async function parseStepFile(buffer: ArrayBuffer): Promise<THREE.Object3D> {
-  const occt = await loadOcct();
-  const result = occt.ReadStepFile(new Uint8Array(buffer), null);
+function resultToGroup(result: OcctResult, fallbackName: string): THREE.Group {
   if (!result.success) {
-    throw new Error("STEP parser rejected the file");
+    throw new Error(`${fallbackName} parser rejected the file`);
   }
   if (!result.meshes.length) {
-    throw new Error("STEP file contained no triangulated meshes");
+    throw new Error(`${fallbackName} file contained no triangulated meshes`);
   }
 
   const group = new THREE.Group();
-  group.name = result.root.name ?? "step-import";
+  group.name = result.root.name ?? `${fallbackName.toLowerCase()}-import`;
 
   for (const mesh of result.meshes) {
     const geometry = new THREE.BufferGeometry();
@@ -81,4 +80,16 @@ export async function parseStepFile(buffer: ArrayBuffer): Promise<THREE.Object3D
   }
 
   return group;
+}
+
+export async function parseStepFile(buffer: ArrayBuffer): Promise<THREE.Object3D> {
+  const occt = await loadOcct();
+  const result = occt.ReadStepFile(new Uint8Array(buffer), null);
+  return resultToGroup(result, "STEP");
+}
+
+export async function parseIgesFile(buffer: ArrayBuffer): Promise<THREE.Object3D> {
+  const occt = await loadOcct();
+  const result = occt.ReadIgesFile(new Uint8Array(buffer), null);
+  return resultToGroup(result, "IGES");
 }

@@ -1,0 +1,9 @@
+import type { Metadata } from "next";
+import ConverterPage from "@/components/ConverterPage";
+import { buildConverterMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildConverterMetadata("3mf", "ply");
+
+export default function Page() {
+  return <ConverterPage from="3mf" to="ply" />;
+}

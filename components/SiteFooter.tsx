@@ -4,7 +4,7 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-zinc-200 dark:border-zinc-800 py-10 mt-auto">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8 mb-8 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 mb-8 text-sm">
           <div>
             <h3 className="font-semibold mb-3">Converters</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
@@ -29,9 +29,18 @@ export default function SiteFooter() {
             <h3 className="font-semibold mb-3">CAD</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
               <li><Link href="/step-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to STL</Link></li>
-              <li><Link href="/step-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to OBJ</Link></li>
               <li><Link href="/step-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to GLB</Link></li>
-              <li><Link href="/step-to-3mf/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to 3MF</Link></li>
+              <li><Link href="/iges-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">IGES to STL</Link></li>
+              <li><Link href="/iges-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">IGES to OBJ</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-3">DCC / Game</h3>
+            <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
+              <li><Link href="/fbx-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX to STL</Link></li>
+              <li><Link href="/fbx-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX to OBJ</Link></li>
+              <li><Link href="/fbx-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX to GLB</Link></li>
+              <li><Link href="/dae-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE to OBJ</Link></li>
               <li><Link href="/embed/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Embed viewer →</Link></li>
             </ul>
           </div>

@@ -125,7 +125,7 @@ export default function ConverterPage({ from, to }: Props) {
     : "All conversions";
   const reverseHint = reverseExists
     ? "Go the other way"
-    : `STEP is a CAD parametric format — we can read it but can't write it. Browse other tools.`;
+    : `${fromLabel} is read-only in Flip3D — we import it but don't write it back. Browse other conversions.`;
 
   return (
     <>
@@ -151,7 +151,13 @@ export default function ConverterPage({ from, to }: Props) {
             <div className="max-w-2xl mx-auto">
               <Dropzone
                 onFileLoaded={handleFile}
-                accept={from === "step" ? [".step", ".stp"] : [`.${from}`]}
+                accept={
+                  from === "step"
+                    ? [".step", ".stp"]
+                    : from === "iges"
+                      ? [".iges", ".igs"]
+                      : [`.${from}`]
+                }
               />
 
               {!SOURCE_ONLY_FORMATS.has(from) && (

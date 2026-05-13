@@ -32,18 +32,30 @@ export function buildConverterMetadata(from: Format, to: Format): Metadata {
 }
 
 export const CONVERTER_ROUTES: Array<{ from: Format; to: Format }> = [
-  { from: "stl", to: "obj" },
-  { from: "obj", to: "stl" },
-  { from: "stl", to: "glb" },
-  { from: "glb", to: "stl" },
-  { from: "stl", to: "3mf" },
-  { from: "3mf", to: "stl" },
-  { from: "stl", to: "ply" },
-  { from: "ply", to: "stl" },
-  { from: "step", to: "stl" },
-  { from: "step", to: "obj" },
-  { from: "step", to: "glb" },
-  { from: "step", to: "3mf" },
+  // Mesh ↔ mesh full matrix (5 mesh × 4 = 20)
+  { from: "stl", to: "obj" }, { from: "obj", to: "stl" },
+  { from: "stl", to: "glb" }, { from: "glb", to: "stl" },
+  { from: "stl", to: "3mf" }, { from: "3mf", to: "stl" },
+  { from: "stl", to: "ply" }, { from: "ply", to: "stl" },
+  { from: "obj", to: "glb" }, { from: "glb", to: "obj" },
+  { from: "obj", to: "3mf" }, { from: "3mf", to: "obj" },
+  { from: "obj", to: "ply" }, { from: "ply", to: "obj" },
+  { from: "glb", to: "3mf" }, { from: "3mf", to: "glb" },
+  { from: "glb", to: "ply" }, { from: "ply", to: "glb" },
+  { from: "3mf", to: "ply" }, { from: "ply", to: "3mf" },
+  // Source-only → mesh
+  { from: "step", to: "stl" }, { from: "step", to: "obj" },
+  { from: "step", to: "glb" }, { from: "step", to: "3mf" },
+  { from: "step", to: "ply" },
+  { from: "iges", to: "stl" }, { from: "iges", to: "obj" },
+  { from: "iges", to: "glb" }, { from: "iges", to: "3mf" },
+  { from: "iges", to: "ply" },
+  { from: "fbx", to: "stl" }, { from: "fbx", to: "obj" },
+  { from: "fbx", to: "glb" }, { from: "fbx", to: "3mf" },
+  { from: "fbx", to: "ply" },
+  { from: "dae", to: "stl" }, { from: "dae", to: "obj" },
+  { from: "dae", to: "glb" }, { from: "dae", to: "3mf" },
+  { from: "dae", to: "ply" },
 ];
 
 export const REFERENCE_ROUTES: Array<{ slug: string; title: string }> = [

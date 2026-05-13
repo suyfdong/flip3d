@@ -53,9 +53,12 @@ export async function exportToBlob(
         }
       });
     }
-    case "step": {
+    case "step":
+    case "iges":
+    case "fbx":
+    case "dae": {
       throw new Error(
-        "STEP export isn't supported — STEP is a parametric CAD format and Flip3D handles meshes. Convert to STL, OBJ, GLB, 3MF, or PLY instead.",
+        `${format.toUpperCase()} export isn't supported — Flip3D imports these formats but exports only mesh formats (STL, OBJ, GLB, 3MF, PLY).`,
       );
     }
   }

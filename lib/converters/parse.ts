@@ -54,6 +54,28 @@ export async function parseToObject(
       const { parseStepFile } = await import("./step");
       return parseStepFile(buffer);
     }
+    case "iges": {
+      const { parseIgesFile } = await import("./step");
+      return parseIgesFile(buffer);
+    }
+    case "fbx": {
+      const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js");
+      const group = new FBXLoader().parse(buffer, "");
+      applyBrandMaterial(group);
+      return group;
+    }
+    case "dae": {
+      const { ColladaLoader } = await import(
+        "three/examples/jsm/loaders/ColladaLoader.js"
+      );
+      const text = new TextDecoder("utf-8").decode(buffer);
+      const result = new ColladaLoader().parse(text, "");
+      if (!result || !result.scene) {
+        throw new Error("Failed to parse Collada (.dae) file");
+      }
+      applyBrandMaterial(result.scene);
+      return result.scene;
+    }
   }
 }
 

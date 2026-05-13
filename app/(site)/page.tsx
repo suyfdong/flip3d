@@ -37,22 +37,28 @@ type ToolCard = { title: string; desc: string; status: ToolStatus; badge: string
 
 const QUICK_TOOLS: ToolCard[] = [
   {
-    title: "STL ↔ OBJ ↔ GLB ↔ 3MF",
-    desc: "Free conversion between the four most common mesh formats",
+    title: "Mesh ↔ Mesh converter",
+    desc: "STL, OBJ, GLB, 3MF, PLY — any direction. Bidirectional, instant.",
     status: "live",
     badge: "Live now",
   },
   {
-    title: "Bambu 3MF → Prusa 3MF",
-    desc: "Convert between Bambu Studio and PrusaSlicer formats",
-    status: "highlight",
-    badge: "Coming W4 ⭐",
+    title: "CAD / DCC → mesh",
+    desc: "STEP, IGES, FBX, DAE imported and converted to a clean mesh",
+    status: "live",
+    badge: "Live now",
   },
   {
-    title: "STL ↔ STEP",
-    desc: "Bidirectional CAD ↔ mesh conversion",
-    status: "soon",
-    badge: "Coming W2",
+    title: "Embed 3D Viewer",
+    desc: "One-line iframe to drop a viewer on any blog or doc site",
+    status: "live",
+    badge: "Live now",
+  },
+  {
+    title: "Bambu 3MF ↔ Prusa 3MF",
+    desc: "Convert between Bambu Studio and PrusaSlicer's quirky 3MF dialects",
+    status: "highlight",
+    badge: "Coming W4 ⭐",
   },
   {
     title: "G-code Simulator",
@@ -65,12 +71,6 @@ const QUICK_TOOLS: ToolCard[] = [
     desc: "Fix non-manifold edges, holes, and self-intersections",
     status: "soon",
     badge: "Coming W6",
-  },
-  {
-    title: "Embed 3D Viewer",
-    desc: "One-line iframe to embed a 3D viewer on any site",
-    status: "soon",
-    badge: "Coming W7",
   },
 ];
 
