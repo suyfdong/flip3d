@@ -7,9 +7,38 @@ import { computeStats, type ModelStats } from "@/lib/converters";
 
 type Props = {
   object: THREE.Object3D | null;
+  compact?: boolean;
 };
 
-export default function MeshViewer({ object }: Props) {
+function fitCamera(
+  camera: THREE.PerspectiveCamera,
+  controls: OrbitControls,
+  object: THREE.Object3D,
+  width: number,
+  height: number,
+) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+
+  const aspect = Math.max(width / height, 0.0001);
+  const halfFov = (camera.fov / 2) * (Math.PI / 180);
+  const fitHeightDistance = maxDim / 2 / Math.tan(halfFov);
+  const fitWidthDistance = fitHeightDistance / aspect;
+  const distance = Math.max(fitHeightDistance, fitWidthDistance) * 1.6;
+
+  camera.position.set(distance * 0.85, distance * 0.6, distance);
+  camera.near = Math.max(distance / 100, 0.01);
+  camera.far = distance * 100;
+  camera.aspect = aspect;
+  camera.updateProjectionMatrix();
+  camera.lookAt(0, 0, 0);
+  controls.target.set(0, 0, 0);
+  controls.update();
+}
+
+export default function MeshViewer({ object, compact = false }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -24,8 +53,8 @@ export default function MeshViewer({ object }: Props) {
     const container = containerRef.current;
     if (!container) return;
 
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || 1;
+    const height = container.clientHeight || 1;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf4f4f5);
@@ -68,14 +97,23 @@ export default function MeshViewer({ object }: Props) {
       if (!container || !cameraRef.current || !rendererRef.current) return;
       const w = container.clientWidth;
       const h = container.clientHeight;
-      cameraRef.current.aspect = w / h;
-      cameraRef.current.updateProjectionMatrix();
+      if (w === 0 || h === 0) return;
       rendererRef.current.setSize(w, h);
+      if (currentObjectRef.current && controlsRef.current) {
+        fitCamera(cameraRef.current, controlsRef.current, currentObjectRef.current, w, h);
+      } else {
+        cameraRef.current.aspect = w / h;
+        cameraRef.current.updateProjectionMatrix();
+      }
     };
     window.addEventListener("resize", handleResize);
 
+    const observer = new ResizeObserver(() => handleResize());
+    observer.observe(container);
+
     return () => {
       window.removeEventListener("resize", handleResize);
+      observer.disconnect();
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -91,7 +129,8 @@ export default function MeshViewer({ object }: Props) {
     const scene = sceneRef.current;
     const camera = cameraRef.current;
     const controls = controlsRef.current;
-    if (!scene || !camera || !controls) return;
+    const container = containerRef.current;
+    if (!scene || !camera || !controls || !container) return;
 
     if (currentObjectRef.current) {
       scene.remove(currentObjectRef.current);
@@ -111,14 +150,13 @@ export default function MeshViewer({ object }: Props) {
     scene.add(object);
     currentObjectRef.current = object;
 
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const maxDim = Math.max(size.x, size.y, size.z) || 1;
-    const distance = maxDim * 2.2;
-    camera.position.set(distance, distance, distance);
-    camera.lookAt(0, 0, 0);
-    controls.target.set(0, 0, 0);
-    controls.update();
+    fitCamera(
+      camera,
+      controls,
+      object,
+      container.clientWidth || 1,
+      container.clientHeight || 1,
+    );
 
     setStats(computeStats(object));
   }, [object]);
@@ -127,9 +165,13 @@ export default function MeshViewer({ object }: Props) {
     <div className="flex flex-col h-full">
       <div
         ref={containerRef}
-        className="flex-1 min-h-[300px] sm:min-h-[400px] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+        className={
+          compact
+            ? "flex-1 min-h-0 overflow-hidden"
+            : "flex-1 min-h-[300px] sm:min-h-[400px] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+        }
       />
-      {stats && (
+      {!compact && stats && (
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-zinc-600 dark:text-zinc-400">
           <Stat label="triangles" value={stats.triangles.toLocaleString()} />
           <Stat label="vertices" value={stats.vertices.toLocaleString()} />

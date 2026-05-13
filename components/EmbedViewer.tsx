@@ -98,8 +98,8 @@ export default function EmbedViewer() {
         </div>
       )}
       {url && status === "idle" && object && (
-        <div className="flex-1 px-2 pt-2 pb-2">
-          <MeshViewer object={object} />
+        <div className="flex-1 min-h-0">
+          <MeshViewer object={object} compact />
         </div>
       )}
 
