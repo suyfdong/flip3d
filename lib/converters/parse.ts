@@ -3,6 +3,7 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ThreeMFLoader } from "three/examples/jsm/loaders/3MFLoader.js";
+import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 import type { Format } from "./formats";
 
 const DEFAULT_MATERIAL = new THREE.MeshStandardMaterial({
@@ -43,6 +44,11 @@ export async function parseToObject(
       const group = new ThreeMFLoader().parse(buffer);
       applyBrandMaterial(group);
       return group;
+    }
+    case "ply": {
+      const geometry = new PLYLoader().parse(buffer);
+      if (!geometry.attributes.normal) geometry.computeVertexNormals();
+      return new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
     }
   }
 }

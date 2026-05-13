@@ -12,6 +12,8 @@ export default function SiteFooter() {
               <li><Link href="/obj-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">OBJ to STL</Link></li>
               <li><Link href="/stl-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">STL to GLB</Link></li>
               <li><Link href="/glb-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">GLB to STL</Link></li>
+              <li><Link href="/stl-to-ply/" className="hover:text-blue-600 dark:hover:text-blue-400">STL to PLY</Link></li>
+              <li><Link href="/ply-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">PLY to STL</Link></li>
             </ul>
           </div>
           <div>

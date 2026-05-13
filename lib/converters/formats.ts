@@ -1,4 +1,4 @@
-export const FORMATS = ["stl", "obj", "glb", "3mf"] as const;
+export const FORMATS = ["stl", "obj", "glb", "3mf", "ply"] as const;
 export type Format = (typeof FORMATS)[number];
 
 const FORMAT_SET = new Set<string>(FORMATS);
@@ -17,6 +17,7 @@ export const MIME_TYPES: Record<Format, string> = {
   obj: "model/obj",
   glb: "model/gltf-binary",
   "3mf": "model/3mf",
+  ply: "application/octet-stream",
 };
 
 export const FORMAT_LABELS: Record<Format, string> = {
@@ -24,4 +25,5 @@ export const FORMAT_LABELS: Record<Format, string> = {
   obj: "OBJ",
   glb: "GLB",
   "3mf": "3MF",
+  ply: "PLY",
 };

@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.6",
     "@types/jszip": "^3.4.0",
     "@types/three": "^0.184.1",
     "jszip": "^3.10.1",

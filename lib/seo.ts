@@ -38,4 +38,6 @@ export const CONVERTER_ROUTES: Array<{ from: Format; to: Format }> = [
   { from: "glb", to: "stl" },
   { from: "stl", to: "3mf" },
   { from: "3mf", to: "stl" },
+  { from: "stl", to: "ply" },
+  { from: "ply", to: "stl" },
 ];

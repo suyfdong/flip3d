@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
+import { PLYExporter } from "three/examples/jsm/exporters/PLYExporter.js";
 import type { Format } from "./formats";
 import { MIME_TYPES } from "./formats";
 import { exportTo3MF } from "./3mf-writer";
@@ -32,6 +33,25 @@ export async function exportToBlob(
     }
     case "3mf": {
       return exportTo3MF(object);
+    }
+    case "ply": {
+      return new Promise<Blob>((resolve, reject) => {
+        try {
+          new PLYExporter().parse(
+            object,
+            (result) => {
+              const blob =
+                result instanceof ArrayBuffer
+                  ? new Blob([result], { type: MIME_TYPES.ply })
+                  : new Blob([result], { type: "text/plain" });
+              resolve(blob);
+            },
+            { binary: true },
+          );
+        } catch (err) {
+          reject(err);
+        }
+      });
     }
   }
 }
