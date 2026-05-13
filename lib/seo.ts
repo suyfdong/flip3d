@@ -88,4 +88,8 @@ export const TOOL_ROUTES: Array<{ slug: string; title: string }> = [
     slug: "prusa-3mf-to-bambu",
     title: "Prusa 3MF to Bambu 3MF Converter",
   },
+  {
+    slug: "gcode-simulator",
+    title: "G-code Simulator",
+  },
 ];

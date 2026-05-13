@@ -62,9 +62,9 @@ const QUICK_TOOLS: ToolCard[] = [
   },
   {
     title: "G-code Simulator",
-    desc: "Visualize 3D print toolpaths before printing",
-    status: "soon",
-    badge: "Coming W5",
+    desc: "Visualize 3D print toolpaths before printing. Bambu / Prusa / Orca / Cura.",
+    status: "live",
+    badge: "Live now",
   },
   {
     title: "STL Repair",

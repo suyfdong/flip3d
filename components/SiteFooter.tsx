@@ -37,6 +37,14 @@ export default function SiteFooter() {
                   Prusa 3MF → Bambu
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/tools/gcode-simulator/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+                >
+                  G-code Simulator ⭐
+                </Link>
+              </li>
               <li className="text-zinc-400 dark:text-zinc-600">STL Repair <span className="text-xs">(W6)</span></li>
             </ul>
           </div>
