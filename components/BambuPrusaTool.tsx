@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
@@ -84,6 +84,12 @@ export default function BambuPrusaTool({ direction }: Props) {
   const [report, setReport] = useState<SanitizeReport | null>(null);
   const [outputBlob, setOutputBlob] = useState<Blob | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (object) disposeObject(object);
+    };
+  }, [object]);
+
   const handleFile = async (buffer: ArrayBuffer, name: string) => {
     setStatus("loading");
     setErrorMsg(null);
@@ -93,7 +99,7 @@ export default function BambuPrusaTool({ direction }: Props) {
     try {
       // 1. Preview: parse 3MF for the viewer
       const parsed = await parseToObject(buffer, "3mf");
-      if (object) disposeObject(object);
+      // useEffect cleanup will dispose the previous object on state change.
       setObject(parsed);
       setFileName(name);
       trackFileUploaded("3mf", "drop");
@@ -142,7 +148,6 @@ export default function BambuPrusaTool({ direction }: Props) {
   };
 
   const handleReset = () => {
-    if (object) disposeObject(object);
     setObject(null);
     setFileName("");
     setStatus("idle");

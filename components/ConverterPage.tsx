@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
@@ -46,6 +46,16 @@ export default function ConverterPage({ from, to }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Dispose the loaded Object3D when it changes or on unmount.
+  // Without this, navigating away (clicking the logo, jumping to another
+  // landing page) leaks the geometry + material + GPU buffers and stalls
+  // the next page's MeshViewer initialization.
+  useEffect(() => {
+    return () => {
+      if (object) disposeObject(object);
+    };
+  }, [object]);
+
   const handleFile = async (
     buffer: ArrayBuffer,
     name: string,
@@ -55,7 +65,7 @@ export default function ConverterPage({ from, to }: Props) {
     setErrorMsg(null);
     try {
       const parsed = await parseToObject(buffer, from);
-      if (object) disposeObject(object);
+      // The useEffect cleanup will dispose the previous object when state updates.
       setObject(parsed);
       setFileName(name);
       setStatus("idle");
@@ -92,7 +102,6 @@ export default function ConverterPage({ from, to }: Props) {
   };
 
   const handleReset = () => {
-    if (object) disposeObject(object);
     setObject(null);
     setFileName("");
     setStatus("idle");

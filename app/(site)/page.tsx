@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
@@ -90,6 +90,12 @@ export default function Home() {
   const [status, setStatus] = useState<ConvertStatus>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (object) disposeObject(object);
+    };
+  }, [object]);
+
   const handleFile = async (
     buffer: ArrayBuffer,
     name: string,
@@ -108,7 +114,7 @@ export default function Home() {
 
     try {
       const parsed = await parseToObject(buffer, fmt);
-      if (object) disposeObject(object);
+      // useEffect cleanup disposes the previous object on state change.
       setObject(parsed);
       setFileName(name);
       setSourceFormat(fmt);
@@ -123,7 +129,6 @@ export default function Home() {
   };
 
   const handleReset = () => {
-    if (object) disposeObject(object);
     setObject(null);
     setFileName("");
     setSourceFormat(null);
