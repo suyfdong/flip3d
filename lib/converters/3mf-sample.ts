@@ -49,60 +49,98 @@ printer_settings_id = "Original Prusa MK4S 0.4 nozzle"
 nozzle_diameter = 0.4
 pressure_advance = 0.045`;
 
-function buildModelXml(
-  vendor: "bambu" | "prusa",
-  positions: Float32Array,
-  indices: Uint32Array,
-): string {
+function meshXml(positions: Float32Array, indices: Uint32Array, indent: string): string {
   const lines: string[] = [];
-  lines.push(`<?xml version="1.0" encoding="UTF-8"?>`);
-
-  if (vendor === "bambu") {
-    lines.push(
-      `<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06">`,
-    );
-    lines.push(`  <metadata name="Application">BambuStudio-01.09.05.51</metadata>`);
-    lines.push(`  <metadata name="BambuStudio:3mfVersion">1</metadata>`);
-    lines.push(`  <BambuStudio:filament_map>1,2,3,4</BambuStudio:filament_map>`);
-  } else {
-    lines.push(
-      `<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">`,
-    );
-    lines.push(`  <metadata name="Application">PrusaSlicer-2.7.4</metadata>`);
-    lines.push(`  <slic3rpe:source>PrusaSlicer</slic3rpe:source>`);
-  }
-
-  lines.push(`  <resources>`);
-  lines.push(`    <object id="1" type="model">`);
-  lines.push(`      <mesh>`);
-  lines.push(`        <vertices>`);
+  lines.push(`${indent}<mesh>`);
+  lines.push(`${indent}  <vertices>`);
   for (let i = 0; i < positions.length; i += 3) {
     lines.push(
-      `          <vertex x="${positions[i].toFixed(4)}" y="${positions[i + 1].toFixed(4)}" z="${positions[i + 2].toFixed(4)}" />`,
+      `${indent}    <vertex x="${positions[i].toFixed(4)}" y="${positions[i + 1].toFixed(4)}" z="${positions[i + 2].toFixed(4)}" />`,
     );
   }
-  lines.push(`        </vertices>`);
-  lines.push(`        <triangles>`);
+  lines.push(`${indent}  </vertices>`);
+  lines.push(`${indent}  <triangles>`);
   for (let i = 0; i < indices.length; i += 3) {
     lines.push(
-      `          <triangle v1="${indices[i]}" v2="${indices[i + 1]}" v3="${indices[i + 2]}" />`,
+      `${indent}    <triangle v1="${indices[i]}" v2="${indices[i + 1]}" v3="${indices[i + 2]}" />`,
     );
   }
-  lines.push(`        </triangles>`);
-  lines.push(`      </mesh>`);
-  lines.push(`    </object>`);
-  lines.push(`  </resources>`);
-  lines.push(`  <build>`);
-  if (vendor === "bambu") {
-    lines.push(`    <item objectid="1" p:UUID="00000000-0000-0000-0000-000000000001" />`);
-  } else {
-    lines.push(`    <item objectid="1" />`);
-  }
-  lines.push(`  </build>`);
-  lines.push(`</model>`);
-
+  lines.push(`${indent}  </triangles>`);
+  lines.push(`${indent}</mesh>`);
   return lines.join("\n");
 }
+
+// Single-file PrusaSlicer model — geometry inline, slic3rpe vendor namespace.
+function buildPrusaModelXml(positions: Float32Array, indices: Uint32Array): string {
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">`,
+    `  <metadata name="Application">PrusaSlicer-2.7.4</metadata>`,
+    `  <slic3rpe:source>PrusaSlicer</slic3rpe:source>`,
+    `  <resources>`,
+    `    <object id="1" type="model">`,
+    meshXml(positions, indices, "      "),
+    `    </object>`,
+    `  </resources>`,
+    `  <build>`,
+    `    <item objectid="1" />`,
+    `  </build>`,
+    `</model>`,
+  ].join("\n");
+}
+
+// Production-extension Bambu root: no inline geometry, just a component that
+// points at an external part file via p:path (this is what real Bambu /
+// MakerWorld files look like, and what the flattener has to inline).
+function buildBambuRootModelXml(): string {
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">`,
+    `  <metadata name="Application">BambuStudio-02.04.00.70</metadata>`,
+    `  <metadata name="BambuStudio:3mfVersion">1</metadata>`,
+    `  <metadata name="Title">Flip3D Demo — Bambu production-extension sample</metadata>`,
+    `  <resources>`,
+    `    <object id="2" p:UUID="00000002-61cb-4c03-9d28-80fed5dfa1dc" type="model">`,
+    `      <components>`,
+    `        <component p:path="/3D/Objects/object_1.model" objectid="1" p:UUID="00020000-b206-40ff-9872-83e8017abed1" transform="1 0 0 0 1 0 0 0 1 0 0 0" />`,
+    `      </components>`,
+    `    </object>`,
+    `  </resources>`,
+    `  <build p:UUID="2c7c17d8-22b5-4d84-8835-1976022ea369">`,
+    `    <item objectid="2" p:UUID="00000002-b1ec-4553-aec9-835e5b724bb4" transform="1 0 0 0 1 0 0 0 1 0 0 0" printable="1" />`,
+    `  </build>`,
+    `</model>`,
+  ].join("\n");
+}
+
+// External part file holding the actual mesh (referenced by p:path above).
+function buildBambuObjectModelXml(positions: Float32Array, indices: Uint32Array): string {
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">`,
+    `  <metadata name="BambuStudio:3mfVersion">1</metadata>`,
+    `  <resources>`,
+    `    <object id="1" p:UUID="00020000-81cb-4c03-9d28-80fed5dfa1dc" type="model">`,
+    meshXml(positions, indices, "      "),
+    `    </object>`,
+    `  </resources>`,
+    `  <build/>`,
+    `</model>`,
+  ].join("\n");
+}
+
+const BAMBU_MODEL_RELS = `<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+ <Relationship Target="/3D/Objects/object_1.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+</Relationships>`;
+
+// _rels/.rels that also points at a thumbnail we deliberately drop — exercises
+// the flattener's dangling-relationship cleanup.
+const BAMBU_ROOT_RELS = `<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+ <Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+ <Relationship Target="/Auxiliaries/.thumbnails/thumbnail_3mf.png" Id="rel-2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"/>
+</Relationships>`;
 
 function indexFromPositions(positionCount: number): Uint32Array {
   const idx = new Uint32Array(positionCount);
@@ -129,13 +167,17 @@ export async function buildSampleBambu3MF(): Promise<File> {
   const { positions, indices } = torusKnotGeometryData();
   const zip = new JSZip();
   zip.file("[Content_Types].xml", CONTENT_TYPES);
-  zip.folder("_rels")!.file(".rels", RELS);
-  zip.folder("3D")!.file("3dmodel.model", buildModelXml("bambu", positions, indices));
+  zip.folder("_rels")!.file(".rels", BAMBU_ROOT_RELS);
+  // Production extension: root references geometry held in an external part.
+  zip.folder("3D")!.file("3dmodel.model", buildBambuRootModelXml());
+  zip.folder("3D/_rels")!.file("3dmodel.model.rels", BAMBU_MODEL_RELS);
+  zip.folder("3D/Objects")!.file("object_1.model", buildBambuObjectModelXml(positions, indices));
   // Bambu-private files that should be stripped:
   const meta = zip.folder("Metadata")!;
   meta.file("project_settings.config", BAMBU_PROJECT_SETTINGS);
   meta.file("slice_info.config", BAMBU_SLICE_INFO);
   meta.file("plate_1.config", "# fake bambu plate config\n");
+  zip.folder("Auxiliaries/.thumbnails")!.file("thumbnail_3mf.png", "fake-png-bytes");
   zip.folder("Auxiliaries")!.file("readme.txt", "Demo Bambu Studio export bundle");
   const blob = await zip.generateAsync({
     type: "blob",
@@ -150,7 +192,7 @@ export async function buildSamplePrusa3MF(): Promise<File> {
   const zip = new JSZip();
   zip.file("[Content_Types].xml", CONTENT_TYPES);
   zip.folder("_rels")!.file(".rels", RELS);
-  zip.folder("3D")!.file("3dmodel.model", buildModelXml("prusa", positions, indices));
+  zip.folder("3D")!.file("3dmodel.model", buildPrusaModelXml(positions, indices));
   const meta = zip.folder("Metadata")!;
   meta.file("Slic3r_PE.config", PRUSA_PROJECT_SETTINGS);
   meta.file("Slic3r_PE_model.config", "<?xml version=\"1.0\"?><config><object id=\"1\" instances_count=\"1\"/></config>");

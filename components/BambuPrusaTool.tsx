@@ -271,12 +271,34 @@ export default function BambuPrusaTool({ direction }: Props) {
               </button>
             </div>
 
-            {report && (report.droppedPaths.length > 0 || report.strippedNamespaces.length > 0) && (
+            {status === "ready" && report?.flattenedProduction && (
+              <div className="rounded-xl border border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-950/20 p-4 mb-4 text-sm text-green-800 dark:text-green-300">
+                ✓ Flattened {report.mergedModelFiles} external part{report.mergedModelFiles === 1 ? "" : "s"} into a single
+                model and removed the Bambu &ldquo;production extension&rdquo; — this is the part standard slicers
+                like PrusaSlicer can&apos;t open on their own.
+              </div>
+            )}
+
+            {report && (report.droppedPaths.length > 0 || report.strippedNamespaces.length > 0 || report.flattenedProduction) && (
               <details className="mb-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 text-sm">
                 <summary className="cursor-pointer font-medium text-zinc-700 dark:text-zinc-300">
-                  What was removed
+                  What changed
                 </summary>
                 <div className="mt-3 space-y-3 text-zinc-600 dark:text-zinc-400">
+                  {report.flattenedProduction && (
+                    <div>
+                      <p className="font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                        Production extension flattened:
+                      </p>
+                      <p className="text-xs">
+                        Merged {report.mergedModelFiles} external{" "}
+                        <code className="font-mono">3D/Objects/*.model</code> part file
+                        {report.mergedModelFiles === 1 ? "" : "s"} into the root model and resolved all{" "}
+                        <code className="font-mono">p:path</code> component references, so geometry no longer
+                        lives in separate files behind <code className="font-mono">requiredextensions=&quot;p&quot;</code>.
+                      </p>
+                    </div>
+                  )}
                   {report.strippedNamespaces.length > 0 && (
                     <div>
                       <p className="font-medium text-zinc-700 dark:text-zinc-300 mb-1">
