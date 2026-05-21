@@ -273,9 +273,10 @@ export default function BambuPrusaTool({ direction }: Props) {
 
             {status === "ready" && report?.flattenedProduction && (
               <div className="rounded-xl border border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-950/20 p-4 mb-4 text-sm text-green-800 dark:text-green-300">
-                ✓ Flattened {report.mergedModelFiles} external part{report.mergedModelFiles === 1 ? "" : "s"} into a single
-                model and removed the Bambu &ldquo;production extension&rdquo; — this is the part standard slicers
-                like PrusaSlicer can&apos;t open on their own.
+                ✓ Flattened {report.mergedModelFiles} external{" "}
+                {report.mergedModelFiles === 1 ? "part" : "parts"} into a single model and removed the Bambu{" "}
+                &ldquo;production extension&rdquo; — the part standard slicers like PrusaSlicer can&apos;t open on
+                their own.
               </div>
             )}
 
