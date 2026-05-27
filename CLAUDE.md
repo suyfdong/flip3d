@@ -161,14 +161,21 @@ npx tsc --noEmit     # TS 检查
 - **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
 - **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
 
-## 当前状态速查（2026-05-13）
+## 当前状态速查（2026-05-27）
 
 - ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing**
+- ✅ **Image→STL / Lithophane**（`/image-to-stl` `/png-to-stl` `/jpg-to-stl` `/lithophane-generator`）—— convert3d 没有、imagetostl 独占的 ~31K vol 缝隙。核心 `lib/heightmap/image-to-mesh.ts`（亮度→水密高度场实体，relief/lithophane 两模式）
 - ✅ 4 差异化工具：Bambu↔Prusa 3MF · G-code Simulator · STL Repair · iframe Embed v2（4 主题）
-- ✅ 3 reference · 3 legal · sitemap **52 URLs** · GA4 + GSC + 4 种 JSON-LD schema
+- ✅ 3 reference · 3 legal · sitemap **57 URLs** · GA4 + GSC + 4 种 JSON-LD schema
 - ✅ Cloudflare Pages auto-deploy（push main → 2-3 分钟生效）
 - ⏳ W8 reference 表 × 4（drill-bit / thread-pitch / tolerance / bed-sizes）
-- ⏳ W9 Lithophane Generator
 - ⏳ STL Repair v2（manifold-3d 真补孔 + 自交修复）
+
+### 转换页 SEO 富内容机制（2026-05-27 加）
+
+- `ConverterPage` 有可选 `content` prop（`ConverterContent`：`lede / aboutTitle / about[] / faq[] / related[] / fromLabel`）。**默认转换页不传，保持精简**；头部大词页传入数据驱动内容 + 在 route 里注入 FAQPage/Breadcrumb JSON-LD。
+- 已套用：`3mf-to-stl` · `obj-to-stl` · `step-to-stl` · `stl-to-obj`。内容词簇来自 Semrush（convert3d/imagetostl/fabconvert 三站 CSV 分析）。
+- **扩展名别名页**：`fromLabel` 覆盖 + `lib/seo.ts` 的 `ALIAS_ROUTES` → 如 `/stp-to-stl`（解析为 step，但 H1/canonical 独立，吃 `stp to stl` 1600 vol）。`IMAGE_ROUTES` 同理收录图像页到 sitemap。
+- ❌ **stl→step 已评估，不做**：mesh→B-rep 信息论上不可逆，只能输出 faceted「假」STEP，违背诚信红线。详见 `../progress.md` Day 6。
 
 更新进度时改 `../progress.md`。
