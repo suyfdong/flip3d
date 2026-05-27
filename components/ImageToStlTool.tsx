@@ -229,7 +229,7 @@ export default function ImageToStlTool({
             </div>
 
             <div className="max-w-2xl mx-auto">
-              <Dropzone onFileLoaded={handleFile} accept={IMAGE_ACCEPT} />
+              <Dropzone onFileLoaded={handleFile} accept={IMAGE_ACCEPT} label="image" />
               <div className="mt-4 flex items-center justify-center gap-2 text-sm">
                 <span className="text-zinc-500 dark:text-zinc-400">No image handy?</span>
                 <button

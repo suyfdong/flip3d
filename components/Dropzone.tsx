@@ -5,6 +5,8 @@ import { useCallback, useState } from "react";
 type Props = {
   onFileLoaded: (buffer: ArrayBuffer, fileName: string) => void;
   accept?: string[];
+  /** Noun shown in the prompt: "Drop your {label} here". Defaults to "3D file". */
+  label?: string;
 };
 
 export const SUPPORTED_FORMATS = [
@@ -25,6 +27,7 @@ export const SUPPORTED_FORMATS = [
 export default function Dropzone({
   onFileLoaded,
   accept = [...SUPPORTED_FORMATS],
+  label = "3D file",
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +111,7 @@ export default function Dropzone({
           />
         </svg>
         <p className="text-base font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-          Drop your 3D file here, or{" "}
+          Drop your {label} here, or{" "}
           <span className="text-blue-600 dark:text-blue-400">browse</span>
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
