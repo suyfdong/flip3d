@@ -32,13 +32,32 @@ const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
 
 type Status = "idle" | "loading" | "converting" | "error";
 
+/**
+ * Optional rich on-page content for a converter landing. Lets a high-value
+ * page (e.g. /3mf-to-stl) carry a tuned lede, format-specific body, FAQ, and
+ * extra internal links to capture its keyword-variant cluster — while the
+ * other routes keep the lean default. All fields are plain serializable data
+ * so this passes cleanly from a server route into this client component.
+ */
+export type ConverterContent = {
+  lede?: string;
+  aboutTitle?: string;
+  about?: string[];
+  faq?: { q: string; a: string }[];
+  related?: { href: string; title: string; desc: string }[];
+  /** Override the displayed source-format label (e.g. "STP" on /stp-to-stl,
+   * which parses as the "step" format). Does not change parsing. */
+  fromLabel?: string;
+};
+
 type Props = {
   from: Format;
   to: Format;
+  content?: ConverterContent;
 };
 
-export default function ConverterPage({ from, to }: Props) {
-  const fromLabel = FORMAT_LABELS[from];
+export default function ConverterPage({ from, to, content }: Props) {
+  const fromLabel = content?.fromLabel ?? FORMAT_LABELS[from];
   const toLabel = FORMAT_LABELS[to];
 
   const [object, setObject] = useState<THREE.Object3D | null>(null);
@@ -152,8 +171,8 @@ export default function ConverterPage({ from, to }: Props) {
                 </span>
               </h1>
               <p className="text-lg text-zinc-600 dark:text-zinc-400">
-                Drop a .{from} file, get a .{to} back in seconds. Runs entirely
-                in your browser — no upload, no signup, no watermark.
+                {content?.lede ??
+                  `Drop a .${from} file, get a .${to} back in seconds. Runs entirely in your browser — no upload, no signup, no watermark.`}
               </p>
             </div>
 
@@ -294,12 +313,64 @@ export default function ConverterPage({ from, to }: Props) {
             </div>
           </section>
 
+          {content?.about && content.about.length > 0 && (
+            <section className="border-t border-zinc-200 dark:border-zinc-800 py-14 bg-zinc-50 dark:bg-zinc-950/50">
+              <div className="max-w-3xl mx-auto px-4 sm:px-6">
+                <h2 className="text-2xl font-bold tracking-tight mb-5">
+                  {content.aboutTitle ?? `About ${fromLabel} → ${toLabel}`}
+                </h2>
+                <div className="space-y-4 text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                  {content.about.map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {content?.faq && content.faq.length > 0 && (
+            <section className="border-t border-zinc-200 dark:border-zinc-800 py-14">
+              <div className="max-w-3xl mx-auto px-4 sm:px-6">
+                <h2 className="text-2xl font-bold tracking-tight mb-5">
+                  Frequently asked questions
+                </h2>
+                <div className="divide-y divide-zinc-200 dark:divide-zinc-800 border-y border-zinc-200 dark:border-zinc-800">
+                  {content.faq.map((f) => (
+                    <details key={f.q} className="group py-4">
+                      <summary className="flex cursor-pointer items-center justify-between font-medium list-none">
+                        {f.q}
+                        <span className="ml-4 text-zinc-400 transition-transform group-open:rotate-45">
+                          +
+                        </span>
+                      </summary>
+                      <p className="mt-3 text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        {f.a}
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
           <section className="border-t border-zinc-200 dark:border-zinc-800 py-14 bg-zinc-50 dark:bg-zinc-950/50">
             <div className="max-w-3xl mx-auto px-4 sm:px-6">
               <h2 className="text-xl font-bold tracking-tight mb-4">
                 Related converters
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {content?.related?.map((r) => (
+                  <Link
+                    key={r.href}
+                    href={r.href}
+                    className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700 transition-colors"
+                  >
+                    <div className="font-semibold">{r.title}</div>
+                    <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                      {r.desc}
+                    </div>
+                  </Link>
+                ))}
                 <Link
                   href={reverseSlug}
                   className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700 transition-colors"

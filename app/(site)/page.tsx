@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
 import {
@@ -36,7 +37,13 @@ const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
 });
 
 type ToolStatus = "live" | "soon" | "highlight";
-type ToolCard = { title: string; desc: string; status: ToolStatus; badge: string };
+type ToolCard = {
+  title: string;
+  desc: string;
+  status: ToolStatus;
+  badge: string;
+  href?: string;
+};
 
 const QUICK_TOOLS: ToolCard[] = [
   {
@@ -44,36 +51,56 @@ const QUICK_TOOLS: ToolCard[] = [
     desc: "STL, OBJ, GLB, 3MF, PLY — any direction. Bidirectional, instant.",
     status: "live",
     badge: "Live now",
+    href: "/stl-to-obj/",
   },
   {
     title: "CAD / DCC → mesh",
     desc: "STEP, IGES, FBX, DAE imported and converted to a clean mesh",
     status: "live",
     badge: "Live now",
+    href: "/step-to-stl/",
+  },
+  {
+    title: "Image → STL / Lithophane",
+    desc: "Turn a PNG or JPG into a printable 3D relief or backlit lithophane",
+    status: "highlight",
+    badge: "New ⭐",
+    href: "/image-to-stl/",
   },
   {
     title: "Embed 3D Viewer",
     desc: "One-line iframe to drop a viewer on any blog or doc site",
     status: "live",
     badge: "Live now",
+    href: "/embed/",
   },
   {
     title: "Bambu 3MF ↔ Prusa 3MF",
     desc: "Strip vendor-private metadata so the file opens in the other slicer",
     status: "highlight",
     badge: "Live now ⭐",
+    href: "/tools/bambu-3mf-to-prusa/",
   },
   {
     title: "G-code Simulator",
     desc: "Visualize 3D print toolpaths before printing. Bambu / Prusa / Orca / Cura.",
     status: "live",
     badge: "Live now",
+    href: "/tools/gcode-simulator/",
   },
   {
     title: "STL Repair",
     desc: "Weld duplicate vertices, remove degenerate triangles, detect holes",
     status: "live",
     badge: "Live now",
+    href: "/tools/stl-repair/",
+  },
+  {
+    title: "Lithophane Generator",
+    desc: "Photo → 3D-printable lithophane that glows when backlit. Tune the thickness.",
+    status: "live",
+    badge: "New",
+    href: "/lithophane-generator/",
   },
 ];
 
@@ -335,7 +362,7 @@ export default function Home() {
                   <div>
                     <h2 className="text-2xl font-bold tracking-tight">Quick tools</h2>
                     <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-                      6 tools shipping in the next 6 weeks. Built in public.
+                      Eight tools, all live today — 100% in your browser.
                     </p>
                   </div>
                   <a
@@ -453,19 +480,20 @@ function ToolCardItem({ tool }: { tool: ToolCard }) {
   const isLive = tool.status === "live";
   const isHighlight = tool.status === "highlight";
 
-  return (
-    <div
-      className={`
-        group relative rounded-xl border p-5 transition-all
-        ${
-          isLive
-            ? "border-blue-300 dark:border-blue-800 bg-white dark:bg-zinc-900 hover:shadow-md hover:-translate-y-0.5"
-            : isHighlight
-            ? "border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30"
-            : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50"
-        }
-      `}
-    >
+  const className = `
+    group relative block rounded-xl border p-5 transition-all
+    ${tool.href ? "hover:shadow-md hover:-translate-y-0.5 hover:border-blue-400 dark:hover:border-blue-700" : ""}
+    ${
+      isLive
+        ? "border-blue-300 dark:border-blue-800 bg-white dark:bg-zinc-900"
+        : isHighlight
+        ? "border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30"
+        : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50"
+    }
+  `;
+
+  const inner = (
+    <>
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold tracking-tight">{tool.title}</h3>
         <span
@@ -484,8 +512,17 @@ function ToolCardItem({ tool }: { tool: ToolCard }) {
         </span>
       </div>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">{tool.desc}</p>
-    </div>
+    </>
   );
+
+  if (tool.href) {
+    return (
+      <Link href={tool.href} className={className}>
+        {inner}
+      </Link>
+    );
+  }
+  return <div className={className}>{inner}</div>;
 }
 
 function WhyCard({ icon, title, desc }: { icon: string; title: string; desc: string }) {

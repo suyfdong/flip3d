@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import {
+  ALIAS_ROUTES,
   CONVERTER_ROUTES,
+  IMAGE_ROUTES,
   LEGAL_ROUTES,
   REFERENCE_ROUTES,
   SITE_URL,
@@ -49,5 +51,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly" as const,
     priority: 0.9, // Differentiated tools = highest priority
   }));
-  return [home, ...converters, ...references, ...legal, ...embed, ...tools];
+  const imageTools = IMAGE_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.9, // Image→3D = differentiated, convert3d doesn't have it
+  }));
+  const aliases = ALIAS_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+  return [
+    home,
+    ...converters,
+    ...references,
+    ...legal,
+    ...embed,
+    ...tools,
+    ...imageTools,
+    ...aliases,
+  ];
 }

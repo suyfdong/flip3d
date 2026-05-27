@@ -46,3 +46,15 @@ export function trackConvertError(from: Format, to: Format, message: string) {
     error: message.slice(0, 100),
   });
 }
+
+export function trackImageConverted(
+  sourceExt: string,
+  mode: "relief" | "lithophane",
+) {
+  track("file_converted", {
+    source_format: sourceExt,
+    target_format: "stl",
+    pair: `${sourceExt}-to-stl`,
+    image_mode: mode,
+  });
+}

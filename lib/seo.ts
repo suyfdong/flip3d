@@ -97,3 +97,18 @@ export const TOOL_ROUTES: Array<{ slug: string; title: string }> = [
     title: "STL Repair",
   },
 ];
+
+// Image → 3D (heightmap / lithophane) landing pages. Root-level short URLs
+// matching the search queries (image to stl / png to stl / jpg to stl).
+export const IMAGE_ROUTES: Array<{ slug: string; title: string }> = [
+  { slug: "image-to-stl", title: "Image to STL" },
+  { slug: "png-to-stl", title: "PNG to STL" },
+  { slug: "jpg-to-stl", title: "JPG to STL" },
+  { slug: "lithophane-generator", title: "Lithophane Generator" },
+];
+
+// Extension-alias converter pages: same engine as a CONVERTER_ROUTE but a
+// distinct search query gets its own URL + canonical (e.g. .stp vs .step).
+export const ALIAS_ROUTES: Array<{ slug: string; title: string }> = [
+  { slug: "stp-to-stl", title: "STP to STL" },
+];
