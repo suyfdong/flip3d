@@ -259,52 +259,80 @@ export default function Home() {
               </div>
 
               <div className="max-w-2xl mx-auto">
-                <Dropzone
-                  onFileLoaded={handleFile}
-                  // Let image/vector files through so handleFile can point the
-                  // user to the right dedicated tool instead of a dead reject.
-                  accept={[...SUPPORTED_FORMATS, ".svg", ".png", ".jpg", ".jpeg", ".webp"]}
-                />
-
-                <div className="mt-4 flex items-center justify-center gap-2 flex-wrap text-sm">
-                  <span className="text-zinc-500 dark:text-zinc-400">
-                    No file handy? Try a sample:
-                  </span>
-                  {FORMATS.filter((f) => !SOURCE_ONLY_FORMATS.has(f)).map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => handleSample(f)}
-                      disabled={status === "loading"}
-                      className="px-3 py-1 rounded-full font-mono text-xs uppercase border border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                {unsupportedExt && TOOL_FOR_EXT[unsupportedExt] ? (
+                  // Routable file (SVG / image): take over the drop area with a
+                  // clear "detected" state so the next step is right where the
+                  // user just dropped — no easy-to-miss footnote.
+                  <div className="flex flex-col items-center justify-center text-center w-full min-h-[220px] sm:min-h-[280px] rounded-2xl border-2 border-blue-300 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/30 px-6 py-10">
+                    <div className="w-12 h-12 mb-4 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white">
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.8}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold tracking-tight mb-1.5">
+                      {unsupportedExt.toUpperCase()} detected
+                    </h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-sm mb-6">
+                      {unsupportedExt === "svg"
+                        ? "An SVG becomes 3D by extruding its outline — that runs on a separate tool from this mesh converter."
+                        : "An image becomes 3D by turning brightness into height — that runs on a separate tool from this mesh converter."}
+                    </p>
+                    <Link
+                      href={TOOL_FOR_EXT[unsupportedExt].href}
+                      className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:opacity-90 shadow-sm"
                     >
-                      .{f}
+                      Open {TOOL_FOR_EXT[unsupportedExt].label} →
+                    </Link>
+                    <button
+                      onClick={() => setUnsupportedExt(null)}
+                      className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 underline hover:no-underline"
+                    >
+                      Choose another file
                     </button>
-                  ))}
-                </div>
-
-                {status === "loading" && (
-                  <div className="mt-4 px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-sm text-zinc-700 dark:text-zinc-300">
-                    Parsing file…
                   </div>
-                )}
+                ) : (
+                  <>
+                    <Dropzone
+                      onFileLoaded={handleFile}
+                      // Let image/vector files through so handleFile can point the
+                      // user to the right dedicated tool instead of a dead reject.
+                      accept={[...SUPPORTED_FORMATS, ".svg", ".png", ".jpg", ".jpeg", ".webp"]}
+                    />
 
-                {unsupportedExt && (
-                  <div className="mt-4 px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-sm text-blue-900 dark:text-blue-200">
-                    {TOOL_FOR_EXT[unsupportedExt] ? (
-                      <>
-                        <span className="font-medium">
-                          .{unsupportedExt} isn&rsquo;t a 3D mesh — but you can still turn it into an STL.
-                        </span>{" "}
-                        Use the{" "}
-                        <Link
-                          href={TOOL_FOR_EXT[unsupportedExt].href}
-                          className="underline font-medium hover:no-underline"
+                    <div className="mt-4 flex items-center justify-center gap-2 flex-wrap text-sm">
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        No file handy? Try a sample:
+                      </span>
+                      {FORMATS.filter((f) => !SOURCE_ONLY_FORMATS.has(f)).map((f) => (
+                        <button
+                          key={f}
+                          onClick={() => handleSample(f)}
+                          disabled={status === "loading"}
+                          className="px-3 py-1 rounded-full font-mono text-xs uppercase border border-zinc-300 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {TOOL_FOR_EXT[unsupportedExt].label} tool →
-                        </Link>
-                      </>
-                    ) : (
-                      <>
+                          .{f}
+                        </button>
+                      ))}
+                    </div>
+
+                    {status === "loading" && (
+                      <div className="mt-4 px-4 py-3 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-sm text-zinc-700 dark:text-zinc-300">
+                        Parsing file…
+                      </div>
+                    )}
+
+                    {unsupportedExt && (
+                      <div className="mt-4 px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-sm text-blue-900 dark:text-blue-200">
                         <span className="font-medium">.{unsupportedExt} isn&rsquo;t supported here.</span>{" "}
                         This converter handles STL, OBJ, GLB, 3MF, PLY, STEP, IGES, FBX and DAE. For
                         an image use{" "}
@@ -316,15 +344,15 @@ export default function Home() {
                           SVG to STL
                         </Link>
                         .
-                      </>
+                        <button
+                          onClick={() => setUnsupportedExt(null)}
+                          className="ml-3 underline hover:no-underline"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
                     )}
-                    <button
-                      onClick={() => setUnsupportedExt(null)}
-                      className="ml-3 underline hover:no-underline"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
+                  </>
                 )}
 
                 {errorMsg && (
