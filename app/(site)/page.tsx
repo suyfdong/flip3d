@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
-import Dropzone from "@/components/Dropzone";
+import Dropzone, { SUPPORTED_FORMATS } from "@/components/Dropzone";
 import {
   FORMATS,
   FORMAT_LABELS,
@@ -115,6 +115,16 @@ const ALL_FORMATS = [
   "STL", "OBJ", "GLB", "GLTF", "3MF", "STEP",
   "STP", "FBX", "PLY", "IGES", "DAE", "X_T",
 ];
+
+// Files the mesh converter can't read but that have their own dedicated tool —
+// point the user there instead of a dead "unsupported" message.
+const TOOL_FOR_EXT: Record<string, { href: string; label: string }> = {
+  svg: { href: "/svg-to-stl/", label: "SVG to STL" },
+  png: { href: "/png-to-stl/", label: "PNG to STL" },
+  jpg: { href: "/jpg-to-stl/", label: "JPG to STL" },
+  jpeg: { href: "/jpg-to-stl/", label: "JPG to STL" },
+  webp: { href: "/image-to-stl/", label: "Image to STL" },
+};
 
 type ConvertStatus = "idle" | "loading" | "converting" | "error";
 
@@ -249,7 +259,12 @@ export default function Home() {
               </div>
 
               <div className="max-w-2xl mx-auto">
-                <Dropzone onFileLoaded={handleFile} />
+                <Dropzone
+                  onFileLoaded={handleFile}
+                  // Let image/vector files through so handleFile can point the
+                  // user to the right dedicated tool instead of a dead reject.
+                  accept={[...SUPPORTED_FORMATS, ".svg", ".png", ".jpg", ".jpeg", ".webp"]}
+                />
 
                 <div className="mt-4 flex items-center justify-center gap-2 flex-wrap text-sm">
                   <span className="text-zinc-500 dark:text-zinc-400">
@@ -275,9 +290,34 @@ export default function Home() {
 
                 {unsupportedExt && (
                   <div className="mt-4 px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-sm text-blue-900 dark:text-blue-200">
-                    <span className="font-medium">.{unsupportedExt} support coming soon.</span>{" "}
-                    Currently STL, OBJ, GLB and 3MF are fully supported. STEP /
-                    FBX / PLY / IGES arrive W2-W6 — see the roadmap below.
+                    {TOOL_FOR_EXT[unsupportedExt] ? (
+                      <>
+                        <span className="font-medium">
+                          .{unsupportedExt} isn&rsquo;t a 3D mesh — but you can still turn it into an STL.
+                        </span>{" "}
+                        Use the{" "}
+                        <Link
+                          href={TOOL_FOR_EXT[unsupportedExt].href}
+                          className="underline font-medium hover:no-underline"
+                        >
+                          {TOOL_FOR_EXT[unsupportedExt].label} tool →
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium">.{unsupportedExt} isn&rsquo;t supported here.</span>{" "}
+                        This converter handles STL, OBJ, GLB, 3MF, PLY, STEP, IGES, FBX and DAE. For
+                        an image use{" "}
+                        <Link href="/image-to-stl/" className="underline hover:no-underline">
+                          Image to STL
+                        </Link>
+                        ; for a vector use{" "}
+                        <Link href="/svg-to-stl/" className="underline hover:no-underline">
+                          SVG to STL
+                        </Link>
+                        .
+                      </>
+                    )}
                     <button
                       onClick={() => setUnsupportedExt(null)}
                       className="ml-3 underline hover:no-underline"
