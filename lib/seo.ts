@@ -107,6 +107,12 @@ export const IMAGE_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "lithophane-generator", title: "Lithophane Generator" },
 ];
 
+// Vector → 3D (SVG extrude) landing pages. Separate pipeline from the mesh
+// converters (SVGLoader + ExtrudeGeometry), so they get their own group.
+export const VECTOR_ROUTES: Array<{ slug: string; title: string }> = [
+  { slug: "svg-to-stl", title: "SVG to STL" },
+];
+
 // Extension-alias converter pages: same engine as a CONVERTER_ROUTE but a
 // distinct search query gets its own URL + canonical (e.g. .stp vs .step).
 export const ALIAS_ROUTES: Array<{ slug: string; title: string }> = [

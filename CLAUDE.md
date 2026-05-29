@@ -161,15 +161,25 @@ npx tsc --noEmit     # TS 检查
 - **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
 - **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
 
-## 当前状态速查（2026-05-27）
+## 当前状态速查（2026-05-29）
 
 - ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing**
 - ✅ **Image→STL / Lithophane**（`/image-to-stl` `/png-to-stl` `/jpg-to-stl` `/lithophane-generator`）—— convert3d 没有、imagetostl 独占的 ~31K vol 缝隙。核心 `lib/heightmap/image-to-mesh.ts`（亮度→水密高度场实体，relief/lithophane 两模式）
+- ✅ **SVG→STL**（`/svg-to-stl`，1900 vol/KD22 缝隙，convert3d 没有）—— 矢量挤出管线，独立于 mesh converter。核心 `lib/svg/svg-to-mesh.ts`（SVGLoader→ExtrudeGeometry→水密实体；可选 base plate 合并多片）
 - ✅ 4 差异化工具：Bambu↔Prusa 3MF · G-code Simulator · STL Repair · iframe Embed v2（4 主题）
-- ✅ 3 reference · 3 legal · sitemap **57 URLs** · GA4 + GSC + 4 种 JSON-LD schema
+- ✅ 3 reference · 3 legal · sitemap **58 URLs** · GA4 + GSC + 4 种 JSON-LD schema
 - ✅ Cloudflare Pages auto-deploy（push main → 2-3 分钟生效）
 - ⏳ W8 reference 表 × 4（drill-bit / thread-pitch / tolerance / bed-sizes）
 - ⏳ STL Repair v2（manifold-3d 真补孔 + 自交修复）
+
+### SVG→STL 管线要点（2026-05-29 加）
+
+- **第二条非 mesh 管线**（第一条是 image heightmap）：`lib/svg/svg-to-mesh.ts` 用 `SVGLoader.parse`（**依赖 DOMParser → 仅浏览器**，不能在 Node 跑全流程）+ `SVGLoader.createShapes`（自动处理孔洞/fill-rule）+ `ExtrudeGeometry`。
+- **Y 轴翻转**：SVG y 向下，挤出后 `geo.scale(1,-1,1)` 翻正 → 翻转会反转缠绕方向（法线朝内）→ 用 **signedVolume<0 则 reverseWinding** 修回外向（已 Node 验证：带孔方框 0 边界边、0 non-manifold、体积转正）。
+- **单位深度技巧**：先 `depth:1` 挤出，再 `scale(xy, xy, depthMM)`，让厚度精确不受 SVG 自身坐标尺度影响。
+- **可选 base plate**：`baseMM>0` 时 merge 一块 Box 在底部把分离的多片连成一体（切片软件按 union 处理重叠体）。`mergeGeometries` 要求都 non-indexed → Box 先 `.toNonIndexed()`。
+- **诚实边界**：stroke/outline-only SVG 无填充面 → 抛友好错误，不输出空 mesh。
+- 路由注册在 `lib/seo.ts` 的 `VECTOR_ROUTES`（独立分组，非 CONVERTER_ROUTES）。
 
 ### 转换页 SEO 富内容机制（2026-05-27 加）
 

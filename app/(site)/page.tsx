@@ -68,6 +68,13 @@ const QUICK_TOOLS: ToolCard[] = [
     href: "/image-to-stl/",
   },
   {
+    title: "SVG → STL",
+    desc: "Extrude a logo, icon, or outline into a printable 3D model. Holes preserved.",
+    status: "highlight",
+    badge: "New ⭐",
+    href: "/svg-to-stl/",
+  },
+  {
     title: "Embed 3D Viewer",
     desc: "One-line iframe to drop a viewer on any blog or doc site",
     status: "live",

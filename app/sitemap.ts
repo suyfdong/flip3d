@@ -7,6 +7,7 @@ import {
   REFERENCE_ROUTES,
   SITE_URL,
   TOOL_ROUTES,
+  VECTOR_ROUTES,
 } from "@/lib/seo";
 
 export const dynamic = "force-static";
@@ -63,6 +64,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
+  const vectorTools = VECTOR_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.9, // SVG→3D = differentiated, convert3d doesn't have it
+  }));
   return [
     home,
     ...converters,
@@ -72,5 +79,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...tools,
     ...imageTools,
     ...aliases,
+    ...vectorTools,
   ];
 }
