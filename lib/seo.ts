@@ -105,6 +105,10 @@ export const IMAGE_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "png-to-stl", title: "PNG to STL" },
   { slug: "jpg-to-stl", title: "JPG to STL" },
   { slug: "lithophane-generator", title: "Lithophane Generator" },
+  // Same heightmap pipeline, OBJ output (convert3d png/jpg/image→obj cluster).
+  { slug: "image-to-obj", title: "Image to OBJ" },
+  { slug: "png-to-obj", title: "PNG to OBJ" },
+  { slug: "jpg-to-obj", title: "JPG to OBJ" },
 ];
 
 // Vector → 3D (SVG extrude) landing pages. Separate pipeline from the mesh

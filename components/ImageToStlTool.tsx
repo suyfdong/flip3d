@@ -70,14 +70,39 @@ const VARIANT_COPY: Record<
   },
 };
 
+// Title + intro overrides when the page outputs OBJ instead of STL. The mesh
+// pipeline is identical (a watertight heightmap solid); only the export format
+// and the on-page copy change. Lithophane stays STL-only, so it's omitted here.
+const OBJ_COPY: Partial<Record<ImageToStlVariant, { title: string; intro: string }>> = {
+  image: {
+    title: "Image to OBJ",
+    intro:
+      "Turn any photo, logo, or drawing into a 3D OBJ model. Brightness becomes height — drop an image and download a Wavefront OBJ. Free, instant, 100% local.",
+  },
+  png: {
+    title: "PNG to OBJ",
+    intro:
+      "Convert a PNG into a 3D OBJ mesh. Transparent areas flatten to the base; brightness becomes height. Drop your PNG and download an OBJ — free, in your browser.",
+  },
+  jpg: {
+    title: "JPG to OBJ",
+    intro:
+      "Convert a JPG photo into a 3D OBJ mesh. Brightness becomes height. Drop your JPG and download a Wavefront OBJ — free, no upload, no signup.",
+  },
+};
+
 export default function ImageToStlTool({
   defaultMode = "relief",
   variant = "image",
+  targetFormat = "stl",
 }: {
   defaultMode?: HeightmapMode;
   variant?: ImageToStlVariant;
+  targetFormat?: "stl" | "obj";
 }) {
-  const copy = VARIANT_COPY[variant];
+  const objCopy = targetFormat === "obj" ? OBJ_COPY[variant] : undefined;
+  const copy = objCopy ? { ...VARIANT_COPY[variant], ...objCopy } : VARIANT_COPY[variant];
+  const tgtLabel = targetFormat.toUpperCase();
   const imageRef = useRef<ImageBitmap | HTMLCanvasElement | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
   const [fileName, setFileName] = useState("");
@@ -191,9 +216,9 @@ export default function ImageToStlTool({
   const handleDownload = async () => {
     if (!object) return;
     try {
-      const blob = await exportToBlob(object, "stl");
+      const blob = await exportToBlob(object, targetFormat);
       const base = fileName.replace(/\.[^.]+$/, "") || "model";
-      downloadBlob(blob, `${base}-${opts.mode}.stl`);
+      downloadBlob(blob, `${base}-${opts.mode}.${targetFormat}`);
       trackImageConverted(copy.sourceExt, opts.mode);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Download failed");
@@ -264,7 +289,7 @@ export default function ImageToStlTool({
                   disabled={!object}
                   className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:opacity-90 disabled:opacity-50"
                 >
-                  Download .stl
+                  Download .{targetFormat}
                 </button>
                 <button
                   onClick={handleReset}
@@ -376,27 +401,49 @@ export default function ImageToStlTool({
                 Pick <strong>Relief</strong> (bright = taller emboss) or{" "}
                 <strong>Lithophane</strong> (dark = thicker, glows when backlit).
               </li>
-              <li>Set the physical width and thickness, then download a watertight STL.</li>
+              <li>
+                Set the physical width and thickness, then download a watertight{" "}
+                {tgtLabel}.
+              </li>
             </ol>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link
-                href="/tools/stl-repair/"
-                className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700"
-              >
-                <div className="font-semibold">STL Repair</div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                  Clean up a mesh before slicing
-                </div>
-              </Link>
-              <Link
-                href="/stl-to-3mf/"
-                className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700"
-              >
-                <div className="font-semibold">STL → 3MF</div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                  Convert the result for your slicer
-                </div>
-              </Link>
+              {(targetFormat === "obj"
+                ? [
+                    {
+                      href: "/image-to-stl/",
+                      title: "Image → STL",
+                      desc: "Same tool, STL output for slicers",
+                    },
+                    {
+                      href: "/obj-to-stl/",
+                      title: "OBJ → STL",
+                      desc: "Convert the result to a print-ready STL",
+                    },
+                  ]
+                : [
+                    {
+                      href: "/tools/stl-repair/",
+                      title: "STL Repair",
+                      desc: "Clean up a mesh before slicing",
+                    },
+                    {
+                      href: "/stl-to-3mf/",
+                      title: "STL → 3MF",
+                      desc: "Convert the result for your slicer",
+                    },
+                  ]
+              ).map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700"
+                >
+                  <div className="font-semibold">{l.title}</div>
+                  <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                    {l.desc}
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
