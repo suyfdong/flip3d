@@ -96,6 +96,10 @@ export const TOOL_ROUTES: Array<{ slug: string; title: string }> = [
     slug: "stl-repair",
     title: "STL Repair",
   },
+  {
+    slug: "print-checker",
+    title: "3D Print Checker",
+  },
 ];
 
 // Image → 3D (heightmap / lithophane) landing pages. Root-level short URLs

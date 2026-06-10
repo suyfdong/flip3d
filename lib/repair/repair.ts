@@ -10,7 +10,8 @@ export type RepairReport = {
 
 // Collect every Mesh in the object into one merged BufferGeometry. Repair
 // operates on a single geometry — that's the contract STL/PLY expect anyway.
-function flattenToGeometry(object: THREE.Object3D): THREE.BufferGeometry {
+// Exported so the print-readiness checker can reuse the same flatten step.
+export function flattenToGeometry(object: THREE.Object3D): THREE.BufferGeometry {
   const geometries: THREE.BufferGeometry[] = [];
   object.updateMatrixWorld(true);
   object.traverse((child) => {
