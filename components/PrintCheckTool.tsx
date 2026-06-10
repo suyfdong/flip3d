@@ -52,27 +52,20 @@ const VERDICT_UI = {
   },
 };
 
-// A deliberately broken cube: one face omitted (leaves a hole) plus a
-// degenerate triangle. The sample should demonstrate what the checker catches
-// and route to STL Repair — a clean model would teach the user nothing.
+// A deliberately broken 30mm cube: one face removed (leaves a hole) plus a
+// degenerate triangle. Built from BoxGeometry so the winding is correct (a
+// hand-wound cube can flip a face and skew the overhang stat). The sample
+// demonstrates what the checker catches and routes to STL Repair — a clean
+// model would teach the user nothing.
 function buildBrokenSampleMesh(): THREE.Mesh {
-  const s = 15;
-  const v: [number, number, number][] = [
-    [-s, -s, -s], [s, -s, -s], [s, s, -s], [-s, s, -s],
-    [-s, -s, s], [s, -s, s], [s, s, s], [-s, s, s],
-  ];
-  const positions: number[] = [];
-  const tri = (a: number, b: number, c: number) =>
-    positions.push(...v[a], ...v[b], ...v[c]);
-  tri(0, 1, 2); tri(0, 2, 3); // bottom
-  tri(4, 6, 5); tri(4, 7, 6); // top
-  tri(0, 4, 5); tri(0, 5, 1); // front
-  tri(3, 2, 6); tri(3, 6, 7); // back
-  tri(0, 3, 7); tri(0, 7, 4); // left
-  // right face intentionally omitted → leaves a hole (not watertight)
-  positions.push(0, 0, 0, 0, 0, 0, 1, 0, 0); // a degenerate triangle too
+  const box = new THREE.BoxGeometry(30, 30, 30).toNonIndexed();
+  // 12 triangles × 9 floats; drop the last face (2 triangles) → a hole.
+  const kept = Array.from(box.getAttribute("position").array as Float32Array)
+    .slice(0, (12 - 2) * 9);
+  kept.push(0, 0, 0, 0, 0, 0, 1, 0, 0); // a degenerate triangle too
+  box.dispose();
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(kept, 3));
   geo.computeVertexNormals();
   return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
 }

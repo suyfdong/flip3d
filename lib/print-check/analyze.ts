@@ -70,12 +70,9 @@ export function analyzePrintReadiness(
   // Faces within this band of the bottom rest on the bed → not real overhangs.
   const baseBand = Math.max(0.4, heightZ * 0.01);
 
-  // ---- per-triangle pass: area, overhang area, signed volume ----
+  // ---- per-triangle passes: area + signed volume, then overhang ----
   const pos = geo.getAttribute("position") as THREE.BufferAttribute | undefined;
   const index = geo.getIndex();
-  let totalArea = 0;
-  let overhangArea = 0;
-  let signedVol6 = 0; // 6× signed volume
 
   const a = new THREE.Vector3();
   const b = new THREE.Vector3();
@@ -83,38 +80,49 @@ export function analyzePrintReadiness(
   const ab = new THREE.Vector3();
   const ac = new THREE.Vector3();
   const n = new THREE.Vector3();
-
-  // A face needs support when the angle of its surface from horizontal exceeds
-  // the threshold AND it points downward. In normal terms: the downward normal
-  // component is steeper than cos(thresholdFromVertical). Vertical walls (nz≈0)
-  // never need support; a flat ceiling (nz≈-1) always does.
-  const nzSupportMax = -Math.cos((overhangThresholdDeg * Math.PI) / 180);
+  const bc = new THREE.Vector3();
 
   const triCount = pos ? (index ? index.count / 3 : pos.count / 3) : 0;
   const idx = (t: number, s: 0 | 1 | 2) =>
     index ? index.getX(t * 3 + s) : t * 3 + s;
-
-  for (let t = 0; t < triCount; t++) {
-    if (!pos) break;
-    a.fromBufferAttribute(pos, idx(t, 0));
-    b.fromBufferAttribute(pos, idx(t, 1));
-    c.fromBufferAttribute(pos, idx(t, 2));
-
+  const readTri = (t: number) => {
+    a.fromBufferAttribute(pos!, idx(t, 0));
+    b.fromBufferAttribute(pos!, idx(t, 1));
+    c.fromBufferAttribute(pos!, idx(t, 2));
     ab.subVectors(b, a);
     ac.subVectors(c, a);
-    n.crossVectors(ab, ac); // length = 2 × area, direction = face normal
+    n.crossVectors(ab, ac); // |n| = 2 × area, direction = face normal
+  };
+
+  // Pass 1: total area + signed volume. The volume sign tells us whether the
+  // mesh winding is net outward (+) or inverted (−), so the overhang test below
+  // stays correct even on a uniformly flipped-normal STL (a common defect).
+  let totalArea = 0;
+  let signedVol6 = 0; // 6× signed volume
+  for (let t = 0; t < triCount && pos; t++) {
+    readTri(t);
     const area2 = n.length();
     if (area2 === 0) continue; // degenerate
-    const area = area2 * 0.5;
-    totalArea += area;
+    totalArea += area2 * 0.5;
+    signedVol6 += a.dot(bc.crossVectors(b, c)); // tetra (origin,a,b,c) × 6
+  }
+  const orient = signedVol6 >= 0 ? 1 : -1;
 
-    // signed volume of tetra (origin, a, b, c) = dot(a, cross(b, c)) / 6
-    signedVol6 += a.dot(new THREE.Vector3().crossVectors(b, c));
+  // A face needs support when its surface tips past the threshold from
+  // horizontal AND points downward. Vertical walls (nz≈0) never need support;
+  // a flat ceiling (nz≈−1) always does.
+  const nzSupportMax = -Math.cos((overhangThresholdDeg * Math.PI) / 180);
 
-    const nz = n.z / area2; // normalized z component of outward normal
+  // Pass 2: overhang area, excluding faces resting on the build plate.
+  let overhangArea = 0;
+  for (let t = 0; t < triCount && pos; t++) {
+    readTri(t);
+    const area2 = n.length();
+    if (area2 === 0) continue;
+    const nz = (orient * n.z) / area2; // outward-oriented normal's z
     if (nz < nzSupportMax) {
       const centroidZ = (a.z + b.z + c.z) / 3;
-      if (centroidZ > minZ + baseBand) overhangArea += area;
+      if (centroidZ > minZ + baseBand) overhangArea += area2 * 0.5;
     }
   }
 

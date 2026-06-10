@@ -73,31 +73,48 @@ console.log("\n[5] 0.5mm cube (unit mismatch)");
   check("verdict fail", r.verdict === "fail", r.verdict);
 }
 
-// 6) Broken cube (tool sample): one face omitted + a degenerate triangle
+// 6) Broken sample cube (BoxGeometry, one face removed + a degenerate)
 console.log("\n[6] Broken sample cube (hole + degenerate)");
 {
-  const s = 15;
-  const v: [number, number, number][] = [
-    [-s, -s, -s], [s, -s, -s], [s, s, -s], [-s, s, -s],
-    [-s, -s, s], [s, -s, s], [s, s, s], [-s, s, s],
-  ];
-  const p: number[] = [];
-  const tri = (a: number, b: number, c: number) => p.push(...v[a], ...v[b], ...v[c]);
-  tri(0, 1, 2); tri(0, 2, 3); tri(4, 6, 5); tri(4, 7, 6);
-  tri(0, 4, 5); tri(0, 5, 1); tri(3, 2, 6); tri(3, 6, 7);
-  tri(0, 3, 7); tri(0, 7, 4); // right face omitted
+  const box = new THREE.BoxGeometry(30, 30, 30).toNonIndexed();
+  const p = Array.from(box.getAttribute("position").array as Float32Array)
+    .slice(0, (12 - 2) * 9); // drop last face
   p.push(0, 0, 0, 0, 0, 0, 1, 0, 0); // degenerate
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
-  const r = analyzePrintReadiness(geo);
+  const r = analyzePrintReadiness(onBed(geo));
   check("not watertight (hole)", !r.topology.isClosed,
     `holes=${r.topology.boundaryEdges}`);
   check("no non-manifold edges (Manifold card stays ✓)",
     r.topology.nonManifoldEdges === 0);
   check("degenerate triangle counted", r.topology.degenerateTriangles >= 1,
     `${r.topology.degenerateTriangles}`);
+  check("overhang ≈ 0% (cube, correct winding)", r.overhangAreaPct < 1,
+    `${r.overhangAreaPct.toFixed(1)}%`);
   check("verdict fail", r.verdict === "fail", r.verdict);
   check("reason routes to repair", r.reasons.some((x) => /STL Repair/i.test(x)));
+}
+
+// 7) Flipped-normal solid cube → overhang must still read ≈ 0% (robustness)
+console.log("\n[7] Flipped-normal cube (inverted winding)");
+{
+  const box = new THREE.BoxGeometry(20, 20, 20).toNonIndexed();
+  const arr = (box.getAttribute("position").array as Float32Array).slice();
+  // reverse winding of every triangle: swap vertices 1 and 2
+  for (let t = 0; t < arr.length; t += 9) {
+    for (let k = 0; k < 3; k++) {
+      const tmp = arr[t + 3 + k];
+      arr[t + 3 + k] = arr[t + 6 + k];
+      arr[t + 6 + k] = tmp;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(arr, 3));
+  box.dispose();
+  const r = analyzePrintReadiness(onBed(geo));
+  check("watertight despite flip", r.topology.isClosed);
+  check("overhang ≈ 0% even with inverted normals", r.overhangAreaPct < 1,
+    `${r.overhangAreaPct.toFixed(1)}%`);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
