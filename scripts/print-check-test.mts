@@ -73,5 +73,32 @@ console.log("\n[5] 0.5mm cube (unit mismatch)");
   check("verdict fail", r.verdict === "fail", r.verdict);
 }
 
+// 6) Broken cube (tool sample): one face omitted + a degenerate triangle
+console.log("\n[6] Broken sample cube (hole + degenerate)");
+{
+  const s = 15;
+  const v: [number, number, number][] = [
+    [-s, -s, -s], [s, -s, -s], [s, s, -s], [-s, s, -s],
+    [-s, -s, s], [s, -s, s], [s, s, s], [-s, s, s],
+  ];
+  const p: number[] = [];
+  const tri = (a: number, b: number, c: number) => p.push(...v[a], ...v[b], ...v[c]);
+  tri(0, 1, 2); tri(0, 2, 3); tri(4, 6, 5); tri(4, 7, 6);
+  tri(0, 4, 5); tri(0, 5, 1); tri(3, 2, 6); tri(3, 6, 7);
+  tri(0, 3, 7); tri(0, 7, 4); // right face omitted
+  p.push(0, 0, 0, 0, 0, 0, 1, 0, 0); // degenerate
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
+  const r = analyzePrintReadiness(geo);
+  check("not watertight (hole)", !r.topology.isClosed,
+    `holes=${r.topology.boundaryEdges}`);
+  check("no non-manifold edges (Manifold card stays ✓)",
+    r.topology.nonManifoldEdges === 0);
+  check("degenerate triangle counted", r.topology.degenerateTriangles >= 1,
+    `${r.topology.degenerateTriangles}`);
+  check("verdict fail", r.verdict === "fail", r.verdict);
+  check("reason routes to repair", r.reasons.some((x) => /STL Repair/i.test(x)));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

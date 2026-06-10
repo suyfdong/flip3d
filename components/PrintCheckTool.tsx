@@ -52,6 +52,31 @@ const VERDICT_UI = {
   },
 };
 
+// A deliberately broken cube: one face omitted (leaves a hole) plus a
+// degenerate triangle. The sample should demonstrate what the checker catches
+// and route to STL Repair — a clean model would teach the user nothing.
+function buildBrokenSampleMesh(): THREE.Mesh {
+  const s = 15;
+  const v: [number, number, number][] = [
+    [-s, -s, -s], [s, -s, -s], [s, s, -s], [-s, s, -s],
+    [-s, -s, s], [s, -s, s], [s, s, s], [-s, s, s],
+  ];
+  const positions: number[] = [];
+  const tri = (a: number, b: number, c: number) =>
+    positions.push(...v[a], ...v[b], ...v[c]);
+  tri(0, 1, 2); tri(0, 2, 3); // bottom
+  tri(4, 6, 5); tri(4, 7, 6); // top
+  tri(0, 4, 5); tri(0, 5, 1); // front
+  tri(3, 2, 6); tri(3, 6, 7); // back
+  tri(0, 3, 7); tri(0, 7, 4); // left
+  // right face intentionally omitted → leaves a hole (not watertight)
+  positions.push(0, 0, 0, 0, 0, 0, 1, 0, 0); // a degenerate triangle too
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
+}
+
 export default function PrintCheckTool() {
   const [object, setObject] = useState<THREE.Object3D | null>(null);
   const [report, setReport] = useState<PrintReadiness | null>(null);
@@ -113,15 +138,17 @@ export default function PrintCheckTool() {
     setErrorMsg(null);
     trackSampleLoaded("stl");
     try {
-      // A torus knot: watertight but full of curved overhangs — shows a
-      // non-trivial report (size, volume, overhang %) rather than a clean cube.
-      const geo = new THREE.TorusKnotGeometry(20, 6, 160, 24);
-      const mat = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
-      const mesh = new THREE.Mesh(geo, mat);
+      // Deliberately broken (a hole + a degenerate face) so the sample shows
+      // the checker catching real problems and routing to STL Repair.
+      const mesh = buildBrokenSampleMesh();
       const blob = await exportToBlob(mesh, "stl");
-      geo.dispose();
-      mat.dispose();
-      await handleFile(await blob.arrayBuffer(), "flip3d-sample.stl", "sample");
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+      await handleFile(
+        await blob.arrayBuffer(),
+        "flip3d-broken-sample.stl",
+        "sample",
+      );
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Failed to build sample");
       setStatus("error");
@@ -243,7 +270,7 @@ export default function PrintCheckTool() {
                   />
                   <CheckCard
                     label="Manifold"
-                    ok={report.topology.isManifold}
+                    ok={report.topology.nonManifoldEdges === 0}
                     detail={
                       report.topology.nonManifoldEdges === 0
                         ? "Clean topology"
