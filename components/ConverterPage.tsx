@@ -184,7 +184,9 @@ export default function ConverterPage({ from, to, content }: Props) {
                     ? [".step", ".stp"]
                     : from === "iges"
                       ? [".iges", ".igs"]
-                      : [`.${from}`]
+                      : from === "glb"
+                        ? [".glb", ".gltf"]
+                        : [`.${from}`]
                 }
               />
 

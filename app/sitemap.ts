@@ -8,6 +8,7 @@ import {
   SITE_URL,
   TOOL_ROUTES,
   VECTOR_ROUTES,
+  VIEWER_ROUTES,
 } from "@/lib/seo";
 
 export const dynamic = "force-static";
@@ -70,6 +71,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly" as const,
     priority: 0.9, // SVG→3D = differentiated, convert3d doesn't have it
   }));
+  const viewers = VIEWER_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.8, // Viewer landing pages reusing the MeshViewer engine
+  }));
   return [
     home,
     ...converters,
@@ -80,5 +87,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...imageTools,
     ...aliases,
     ...vectorTools,
+    ...viewers,
   ];
 }

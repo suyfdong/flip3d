@@ -125,4 +125,19 @@ export const VECTOR_ROUTES: Array<{ slug: string; title: string }> = [
 // distinct search query gets its own URL + canonical (e.g. .stp vs .step).
 export const ALIAS_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "stp-to-stl", title: "STP to STL" },
+  // glTF parses identically to GLB (GLTFLoader), but "gltf to obj" is its own
+  // query cluster, so it gets its own URL + canonical.
+  { slug: "gltf-to-obj", title: "glTF to OBJ" },
+];
+
+// In-browser 3D viewer landing pages. Reuse the existing MeshViewer engine —
+// no export, just open + inspect. Captures the "<format> viewer" query cluster
+// (online stl viewer / obj viewer / fbx viewer / ply viewer / glb viewer) and
+// feeds the iframe-embed backlink surface.
+export const VIEWER_ROUTES: Array<{ slug: string; title: string }> = [
+  { slug: "stl-viewer", title: "Online STL Viewer" },
+  { slug: "obj-viewer", title: "Online OBJ Viewer" },
+  { slug: "fbx-viewer", title: "Online FBX Viewer" },
+  { slug: "ply-viewer", title: "Online PLY Viewer" },
+  { slug: "glb-viewer", title: "Online GLB & glTF Viewer" },
 ];

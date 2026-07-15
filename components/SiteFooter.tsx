@@ -4,7 +4,7 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-zinc-200 dark:border-zinc-800 py-10 mt-auto">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 mb-8 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-6 sm:gap-8 mb-8 text-sm">
           <div>
             <h3 className="font-semibold mb-3">Converters</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
@@ -72,6 +72,16 @@ export default function SiteFooter() {
               <li><Link href="/fbx-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX to GLB</Link></li>
               <li><Link href="/dae-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE to OBJ</Link></li>
               <li><Link href="/embed/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Embed viewer →</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-3">Viewers</h3>
+            <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
+              <li><Link href="/stl-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">STL Viewer</Link></li>
+              <li><Link href="/obj-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">OBJ Viewer</Link></li>
+              <li><Link href="/fbx-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX Viewer</Link></li>
+              <li><Link href="/ply-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">PLY Viewer</Link></li>
+              <li><Link href="/glb-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">GLB / glTF Viewer</Link></li>
             </ul>
           </div>
           <div>
