@@ -53,6 +53,14 @@ export default function SiteFooter() {
                   STL Repair ⭐
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/tools/stl-editor/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+                >
+                  STL Editor ⭐
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
