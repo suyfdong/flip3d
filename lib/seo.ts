@@ -144,4 +144,5 @@ export const VIEWER_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "fbx-viewer", title: "Online FBX Viewer" },
   { slug: "ply-viewer", title: "Online PLY Viewer" },
   { slug: "glb-viewer", title: "Online GLB & glTF Viewer" },
+  { slug: "3mf-viewer", title: "Online 3MF Viewer" },
 ];

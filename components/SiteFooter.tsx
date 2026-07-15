@@ -82,6 +82,7 @@ export default function SiteFooter() {
               <li><Link href="/fbx-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX Viewer</Link></li>
               <li><Link href="/ply-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">PLY Viewer</Link></li>
               <li><Link href="/glb-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">GLB / glTF Viewer</Link></li>
+              <li><Link href="/3mf-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">3MF Viewer</Link></li>
             </ul>
           </div>
           <div>
