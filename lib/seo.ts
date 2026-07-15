@@ -113,6 +113,10 @@ export const IMAGE_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "image-to-obj", title: "Image to OBJ" },
   { slug: "png-to-obj", title: "PNG to OBJ" },
   { slug: "jpg-to-obj", title: "JPG to OBJ" },
+  // "photo/picture to stl" + "3d print a photo/picture" query clusters
+  // (hyper3d.ai keyword analysis). Same heightmap pipeline, distinct queries.
+  { slug: "photo-to-stl", title: "Photo to STL" },
+  { slug: "picture-to-stl", title: "Picture to STL" },
 ];
 
 // Vector → 3D (SVG extrude) landing pages. Separate pipeline from the mesh

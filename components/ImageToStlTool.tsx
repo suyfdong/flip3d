@@ -34,7 +34,13 @@ const IMAGE_ACCEPT = [".png", ".jpg", ".jpeg", ".webp"];
 
 type Status = "idle" | "ready" | "error";
 
-export type ImageToStlVariant = "image" | "png" | "jpg" | "lithophane";
+export type ImageToStlVariant =
+  | "image"
+  | "png"
+  | "jpg"
+  | "lithophane"
+  | "photo"
+  | "picture";
 
 const VARIANT_COPY: Record<
   ImageToStlVariant,
@@ -67,6 +73,20 @@ const VARIANT_COPY: Record<
     intro:
       "Turn a photo into a 3D-printable lithophane: dark areas print thicker so the image appears when backlit. Tune thickness, drop a photo, download an STL. Free and local.",
     sourceExt: "photo",
+  },
+  photo: {
+    eyebrow: "Photo → 3D · Heightmap",
+    title: "Photo to STL",
+    intro:
+      "3D print a photo: turn any photo into a printable STL relief or lithophane. Brightness becomes height — drop a photo and download an STL. Free, instant, 100% local, no signup.",
+    sourceExt: "photo",
+  },
+  picture: {
+    eyebrow: "Picture → 3D · Heightmap",
+    title: "Picture to STL",
+    intro:
+      "Convert a picture to a printable 3D STL. 3D print a picture as a relief or lithophane — brightness becomes height. Drop a picture and download an STL. Free, no upload, no signup.",
+    sourceExt: "picture",
   },
 };
 
