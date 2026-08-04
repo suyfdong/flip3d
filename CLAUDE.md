@@ -26,8 +26,12 @@ app/
 │   ├── layout.tsx       注入 chrome
 │   ├── page.tsx         首页
 │   ├── (converters)/    40 个 X-to-Y/page.tsx（复用 ConverterPage 模板）
+│   ├── converters/      目录 hub（矩阵 + 分区，从 lib/seo.ts 常量生成）
 │   ├── tools/           差异化工具：bambu-3mf-to-prusa, prusa-3mf-to-bambu,
-│   │                                 gcode-simulator, stl-repair
+│   │                                 gcode-simulator, stl-repair,
+│   │                                 print-checker, stl-editor
+│   ├── *-viewer/        10 个 viewer 页（复用 ViewerTool，root-level 短 URL）
+│   ├── *-to-dxf/ dxf-*  2D/DXF 管线 7 页
 │   ├── reference/       evergreen：stl-vs-obj-vs-3mf, bambu-vs-prusa, metal-gauge-chart
 │   ├── embed/page.tsx   embed 主页（marketing + code generator）
 │   └── about|privacy|terms/
@@ -38,7 +42,10 @@ app/
 ├── icon.tsx + apple-icon.tsx  品牌渐变 favicon
 ├── sitemap.ts + robots.ts     都 export const dynamic = "force-static"
 
-components/   ConverterPage / BambuPrusaTool / GcodeSimulator / StlRepairTool /
+components/   ConverterPage / ViewerTool / SeoFaqSection /
+              DxfPreview / ImageToDxfTool / MeshToDxfTool / DxfToMeshTool / DxfViewerTool /
+              ImageToStlTool / SvgToStlTool / PrintCheckTool / StlEditorTool /
+              BambuPrusaTool / GcodeSimulator / StlRepairTool /
               EmbedViewer / EmbedCodeGenerator / GcodeViewer / MeshViewer /
               SiteHeader / SiteFooter / Dropzone / JsonLd
 
@@ -46,12 +53,22 @@ lib/
 ├── converters/  formats.ts (Format enum + SOURCE_ONLY) · parse.ts · export.ts
 │                stats.ts · step.ts (occt-import-js dynamic) · 3mf-writer.ts
 │                3mf-sanitizer.ts · 3mf-sample.ts
-├── repair/      analyze.ts · repair.ts
+├── repair/      analyze.ts · repair.ts（导出 flattenToGeometry）
 ├── gcode/       parser.ts · stats.ts · sample.ts
-├── schema.ts    JSON-LD 工厂（WebSite/SoftwareApplication/FAQPage/Breadcrumb）
+├── heightmap/   image-to-mesh.ts（图像→高度场）
+├── svg/         svg-to-mesh.ts（矢量挤出，需 DOMParser → 仅浏览器）
+├── dxf/         write.ts（R12 writer）· trace.ts（位图描边）· section.ts（网格截面）
+│               parse.ts（DXF 读取 + BLOCKS/INSERT）· dxf-to-mesh.ts（挤出）
+│               —— 全部纯数据、无 DOM，Node 可测
+├── print-check/ analyze.ts（水密/尺寸/悬垂/床位适配，纯几何）
+├── edit/        transform.ts（缩放/旋转/落床，纯几何）
+├── schema.ts    JSON-LD 工厂（WebSite/SoftwareApplication/FAQPage/Breadcrumb/ItemList）
 ├── embed-themes.ts  light/dark/paper/neon 主题色
 ├── analytics.ts     window.gtag 直接调用（不用 sendGAEvent）
-└── seo.ts       SITE_URL + CONVERTER_ROUTES + REFERENCE/LEGAL/TOOL_ROUTES + buildConverterMetadata
+└── seo.ts       SITE_URL + buildConverterMetadata + 全部路由分组：CONVERTER /
+                 ALIAS / IMAGE / VECTOR / DXF / VIEWER / TOOL / REFERENCE /
+                 HUB / LEGAL。**新页必须注册进对应分组** —— sitemap 和
+                 /converters 目录都从这里生成，漏注册＝孤儿页
 
 public/
 ├── _headers           Cloudflare Pages：opengraph-image / icon / wasm 的 Content-Type
@@ -117,6 +134,8 @@ npx tsc --noEmit     # TS 检查
 - **客户端 page 不能 export metadata** —— 用 server wrapper 或继承 layout
 - 所有页面：title / description / canonical / og / twitter 必须齐全
 - Internal links 用 `<Link>` 不用 `<a>`
+- **新页必须注册进 `lib/seo.ts` 的路由分组**（否则不进 sitemap、不进 `/converters` 目录 = 孤儿页），并在页脚给个入口
+- **别名页只给"真实存在的另一个扩展名"**（`.stp` vs `.step`、`.gltf` vs `.glb`）。**错拼 / 语序变体不建独立 URL** —— 2026-08-04 实测：`mf3 to stl`(720) 是 imagetostl 用规范页 `/3mf/to/stl` 排 #1、`step in stl`(1000) 用 `/step/to/stl` 排 #2，没有赢家靠错拼 URL。这类词写进规范页的 FAQ/about（且必须是**真回答**，不是塞词）
 
 ---
 
@@ -161,16 +180,30 @@ npx tsc --noEmit     # TS 检查
 - **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
 - **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
 
-## 当前状态速查（2026-05-29）
+## 当前状态速查（2026-08-04）
 
-- ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing**
-- ✅ **Image→STL / Lithophane**（`/image-to-stl` `/png-to-stl` `/jpg-to-stl` `/lithophane-generator`）—— convert3d 没有、imagetostl 独占的 ~31K vol 缝隙。核心 `lib/heightmap/image-to-mesh.ts`（亮度→水密高度场实体，relief/lithophane 两模式）
-- ✅ **SVG→STL**（`/svg-to-stl`，1900 vol/KD22 缝隙，convert3d 没有）—— 矢量挤出管线，独立于 mesh converter。核心 `lib/svg/svg-to-mesh.ts`（SVGLoader→ExtrudeGeometry→水密实体；可选 base plate 合并多片）
-- ✅ 4 差异化工具：Bambu↔Prusa 3MF · G-code Simulator · STL Repair · iframe Embed v2（4 主题）
-- ✅ 3 reference · 3 legal · sitemap **58 URLs** · GA4 + GSC + 4 种 JSON-LD schema
+- ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing** + 别名页（`/stp-to-stl` `/gltf-to-obj`）
+- ✅ **`/converters` 目录 hub** —— 9×5 矩阵链到全部 40 转换页 + 各分区；从 `lib/seo.ts` 常量生成，加新路由自动进目录
+- ✅ **Image→STL / Lithophane**（image/png/jpg/photo/picture-to-stl + lithophane-generator，另有 →obj 三页）。核心 `lib/heightmap/image-to-mesh.ts`
+- ✅ **SVG→STL**（`/svg-to-stl`）—— 矢量挤出管线。核心 `lib/svg/svg-to-mesh.ts`
+- ✅ **10 个 viewer 页**：stl/obj/fbx/ply/glb/3mf + step/stp/iges/dae（CAD 四个走 occt）。全部复用 `components/ViewerTool.tsx`，零新引擎代码
+- ✅ **2D / DXF 管线**（7 页）：jpg/png/image→dxf（位图描边）· stl/step→dxf（截面 + 3DFACE）· dxf→stl（挤出）· `/dxf-viewer`。核心 `lib/dxf/*`，见下方要点
+- ✅ 6 差异化工具：Bambu↔Prusa 3MF · G-code Simulator · STL Repair · **3D Print Checker** · **STL Editor** · iframe Embed v2（4 主题）
+- ✅ 3 reference · 3 legal · sitemap **84 URLs** · GA4 + GSC + 5 种 JSON-LD schema（+ ItemList）
 - ✅ Cloudflare Pages auto-deploy（push main → 2-3 分钟生效）
-- ⏳ W8 reference 表 × 4（drill-bit / thread-pitch / tolerance / bed-sizes）
-- ⏳ STL Repair v2（manifold-3d 真补孔 + 自交修复）
+- ✅ Node 测试 **134/134**：`scripts/{dxf,print-check,stl-editor}-test.mts`，用 `npx tsx scripts/X-test.mts` 跑
+- ⏳ 待办清单见 `../progress.md` 末尾（GSC 提交 · 真机验证 canvas/WebGL · 功能候选 · 红线维持）
+- ⚠️ **真瓶颈是分发不是功能**（Day 6/7/8/10 反复确认）。再加页前先问一句是否该转分发轨。
+
+### DXF / 2D 管线要点（2026-08-04 加）
+
+- **第三条非 mesh 管线**。`lib/dxf/*` 全部**纯数据、无 DOM、无 three.js 依赖**（`dxf-to-mesh.ts` 除外，它建 THREE.Shape），所以能在 Node 全流程单测 —— 跟 SVG 管线只能在浏览器跑相反。
+- **写 R12(AC1009) + POLYLINE，不要 LWPOLYLINE**：后者是 R14+，老激光/CAM 软件会拒。3DFACE 用来装三角面（四角重复第 3 点 = 三角形）。
+- **描边**（`trace.ts`）：Otsu 自动阈值 → 沿像素边界 crack-following（**墨保持在左侧** ⇒ 外轮廓自动 CCW、孔 CW）→ RDP 简化 → 杂点过滤。对角鞍点按"右转优先"，保证 8 连通的墨不被拆成两个环。
+- **截面**（`section.ts`）踩坑：三角形与平面相交产生的线段**方向不保证一致**（取决于平面切到哪两条边），所以链接必须**方向无关**（两端都建索引、需要时翻转），否则立方体截面会碎成开链。取向最后按嵌套深度用面积符号修。
+- **解析**（`parse.ts`）：必须展开 **BLOCKS/INSERT**（含位置/缩放/旋转），否则大量真实图纸解析成空。不支持的实体计数上报，不静默丢。
+- **诚信边界**（每页都写明）：描边是阈值折线非曲线拟合矢量图 · mesh→DXF 必须选平面（给真实截面非投影糊影）· DXF→mesh 厚度由用户给 · 不闭合轮廓画琥珀色排除、不偷偷焊上 · STEP→DXF 圆孔是多边形非 CIRCLE 实体（先三角化了）。
+- 验证套路可复用：`scripts/dxf-test.mts` 有**往返测试**（立方体→截面→写 DXF→解析→挤出，用 `analyzePrintReadiness` 验水密+体积），另用第三方 `dxf-parser` 独立读回做交叉校验（装 scratchpad，**没进项目依赖**）。
 
 ### SVG→STL 管线要点（2026-05-29 加）
 
