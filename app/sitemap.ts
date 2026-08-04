@@ -3,6 +3,7 @@ import {
   ALIAS_ROUTES,
   CONVERTER_ROUTES,
   DXF_ROUTES,
+  HUB_ROUTES,
   IMAGE_ROUTES,
   LEGAL_ROUTES,
   REFERENCE_ROUTES,
@@ -22,6 +23,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly" as const,
     priority: 1.0,
   };
+  const hubs = HUB_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.9, // directory page — links to every deep converter
+  }));
   const converters = CONVERTER_ROUTES.map(({ from, to }) => ({
     url: `${SITE_URL}/${from}-to-${to}/`,
     lastModified: now,
@@ -86,6 +93,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
   return [
     home,
+    ...hubs,
     ...converters,
     ...references,
     ...legal,

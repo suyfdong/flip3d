@@ -38,6 +38,10 @@ const FAQ: { q: string; a: string }[] = [
     a: "Yes. .stp and .step are two extensions for the same ISO 10303 CAD format. This converter accepts both and produces identical results.",
   },
   {
+    q: "How do I get an STP file in STL format?",
+    a: "Convert it here: drop the .stp file and download the .stl. There's no way to \"open\" a STEP file as an STL — the two store geometry completely differently — so a conversion step is always involved. Your original .stp isn't modified.",
+  },
+  {
     q: "Is the STP to STL converter free?",
     a: "Yes. It's free with no signup, no watermark, and no file-size paywall. Flip3D runs the OpenCASCADE engine locally in your browser.",
   },

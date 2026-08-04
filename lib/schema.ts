@@ -56,6 +56,23 @@ export function faqPageSchema(faqs: Array<{ q: string; a: string }>) {
   };
 }
 
+/** An index/hub page listing other pages — e.g. the converter directory. */
+export function itemListSchema(
+  items: Array<{ name: string; url: string }>,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    numberOfItems: items.length,
+    itemListElement: items.map((item, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: item.name,
+      url: item.url,
+    })),
+  };
+}
+
 export function breadcrumbSchema(
   items: Array<{ name: string; url: string }>,
 ) {

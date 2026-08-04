@@ -37,6 +37,10 @@ const FAQ = [
     a: "Yes. This is a 2D-to-3D converter — a photo, picture, logo or drawing all work. For a portrait, use lithophane mode so the image shows when backlit; for logos, a plain relief prints cleanly.",
   },
   {
+    q: "Is this the same as an \"img to STL\" converter?",
+    a: "Yes — img, image, photo and picture all mean the same thing here. Any PNG, JPG or WebP goes in the same box and comes out as an STL.",
+  },
+  {
     q: "Is the image to STL converter free?",
     a: "Yes — free, no signup, no watermark, and no file-size paywall. It runs locally in your browser with WebGL.",
   },

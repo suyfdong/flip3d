@@ -8,6 +8,7 @@ export default function SiteFooter() {
           <div>
             <h3 className="font-semibold mb-3">Converters</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
+              <li><Link href="/converters/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">All converters →</Link></li>
               <li><Link href="/stl-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">STL to OBJ</Link></li>
               <li><Link href="/obj-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">OBJ to STL</Link></li>
               <li><Link href="/stl-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">STL to GLB</Link></li>

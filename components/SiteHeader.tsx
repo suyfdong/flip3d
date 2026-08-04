@@ -15,14 +15,17 @@ export default function SiteHeader() {
           <span className="font-semibold tracking-tight">Flip3D</span>
         </a>
         <nav className="hidden sm:flex items-center gap-5 text-sm text-zinc-600 dark:text-zinc-400">
+          <Link
+            href="/converters/"
+            className="hover:text-zinc-900 dark:hover:text-zinc-100 font-medium text-zinc-800 dark:text-zinc-200"
+          >
+            All converters
+          </Link>
           <Link href="/stl-to-obj/" className="hover:text-zinc-900 dark:hover:text-zinc-100">
             STL ↔ OBJ
           </Link>
           <Link href="/stl-to-glb/" className="hover:text-zinc-900 dark:hover:text-zinc-100">
             STL ↔ GLB
-          </Link>
-          <Link href="/stl-to-3mf/" className="hover:text-zinc-900 dark:hover:text-zinc-100">
-            STL ↔ 3MF
           </Link>
           <a
             href="https://github.com/suyfdong/flip3d"

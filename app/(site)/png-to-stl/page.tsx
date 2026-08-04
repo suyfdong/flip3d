@@ -37,6 +37,10 @@ const FAQ = [
     a: "Transparent (alpha) areas are treated as the base level, so cut-out PNGs keep a clean flat background instead of a raised block. Opaque areas are raised by their brightness.",
   },
   {
+    q: "Why does my PNG STL come out almost flat?",
+    a: "Height comes from brightness, so an image whose tones sit in a narrow band gives a nearly flat relief. Raise the height/thickness setting, or start from a higher-contrast PNG — a flat result means the source had little to work with, not that the conversion failed.",
+  },
+  {
     q: "Is the PNG to STL converter free?",
     a: "Yes — free, no signup, no watermark, and no file-size paywall. It converts locally in your browser.",
   },

@@ -73,6 +73,12 @@ export const REFERENCE_ROUTES: Array<{ slug: string; title: string }> = [
   },
 ];
 
+// Directory / index pages. /converters is the browsable hub over every
+// converter, viewer and tool — the site had no index except the footer.
+export const HUB_ROUTES: Array<{ slug: string; title: string }> = [
+  { slug: "converters", title: "All 3D File Converters" },
+];
+
 export const LEGAL_ROUTES: Array<{ slug: string }> = [
   { slug: "about" },
   { slug: "privacy" },

@@ -50,6 +50,10 @@ const FAQ: { q: string; a: string }[] = [
     a: "No. There is no upload and no server. The file is read and converted entirely on your device, and nothing is stored.",
   },
   {
+    q: "I have an MF3 file — is that the same thing?",
+    a: "Almost certainly yes: there is no .mf3 3D format, so \"mf3 to stl\" is nearly always 3MF with the digits transposed. Drop the file here and it converts like any other 3MF. If it genuinely isn't a 3MF, the converter says so instead of producing a broken mesh.",
+  },
+  {
     q: "Can I convert STL back to 3MF?",
     a: "Yes — use the STL to 3MF converter for the reverse direction. For the difference between the formats, see the STL vs OBJ vs 3MF reference.",
   },
@@ -63,6 +67,7 @@ const CONTENT: ConverterContent = {
     "3MF is a zip-based 3D-printing format that can pack several objects, colors, and slicer settings into one file. STL is the opposite — a single, geometry-only mesh with no color or metadata. This 3MF to STL converter reads the mesh out of your .3mf and writes a standard STL that any slicer or CAD tool accepts.",
     "If your 3MF holds multiple parts, they're merged into one mesh on the way out, since STL can't keep them separate. The geometry itself is preserved triangle-for-triangle — only the color and slicer metadata are dropped, because STL has nowhere to store them.",
     "Going through STL is the right move when you just need plain geometry. If you're instead trying to open a Bambu project in PrusaSlicer (or the reverse) and want to keep it editable, don't flatten to STL — use the Bambu 3MF ↔ Prusa 3MF tool, which strips the vendor-private parts and keeps the file as a .3mf.",
+    "A note on the name: people often search for \"mf3 to stl\". There's no .mf3 3D format — it's 3MF with the digits swapped, and this is the page you want either way.",
   ],
   faq: FAQ,
   related: [
