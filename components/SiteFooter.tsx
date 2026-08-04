@@ -4,7 +4,7 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-zinc-200 dark:border-zinc-800 py-10 mt-auto">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-6 sm:gap-8 mb-8 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-6 sm:gap-8 mb-8 text-sm">
           <div>
             <h3 className="font-semibold mb-3">Converters</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
@@ -84,6 +84,19 @@ export default function SiteFooter() {
               <li><Link href="/dae-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE to OBJ</Link></li>
               <li><Link href="/dae-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE Viewer</Link></li>
               <li><Link href="/embed/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Embed viewer →</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-3">2D / Laser</h3>
+            <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
+              <li><Link href="/jpg-to-dxf/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">JPG to DXF ⭐</Link></li>
+              <li><Link href="/png-to-dxf/" className="hover:text-blue-600 dark:hover:text-blue-400">PNG to DXF</Link></li>
+              <li><Link href="/image-to-dxf/" className="hover:text-blue-600 dark:hover:text-blue-400">Image to DXF</Link></li>
+              <li><Link href="/stl-to-dxf/" className="hover:text-blue-600 dark:hover:text-blue-400">STL to DXF</Link></li>
+              <li><Link href="/step-to-dxf/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to DXF</Link></li>
+              <li><Link href="/dxf-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">DXF to STL</Link></li>
+              <li><Link href="/dxf-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">DXF Viewer</Link></li>
+              <li><Link href="/svg-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">SVG to STL</Link></li>
             </ul>
           </div>
           <div>

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import {
   ALIAS_ROUTES,
   CONVERTER_ROUTES,
+  DXF_ROUTES,
   IMAGE_ROUTES,
   LEGAL_ROUTES,
   REFERENCE_ROUTES,
@@ -71,6 +72,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly" as const,
     priority: 0.9, // SVG→3D = differentiated, convert3d doesn't have it
   }));
+  const dxf = DXF_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.9, // 2D CAD pipeline — differentiated, convert3d ranks poorly here
+  }));
   const viewers = VIEWER_ROUTES.map(({ slug }) => ({
     url: `${SITE_URL}/${slug}/`,
     lastModified: now,
@@ -87,6 +94,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...imageTools,
     ...aliases,
     ...vectorTools,
+    ...dxf,
     ...viewers,
   ];
 }

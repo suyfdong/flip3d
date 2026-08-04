@@ -129,6 +129,19 @@ export const VECTOR_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "svg-to-stl", title: "SVG to STL" },
 ];
 
+// DXF (2D CAD / laser + CNC) pages. Three separate pipelines, none of which
+// touch the mesh converter: raster tracing (image → DXF), mesh sectioning
+// (STL/STEP → DXF) and DXF parsing + extrusion (DXF → mesh).
+export const DXF_ROUTES: Array<{ slug: string; title: string }> = [
+  { slug: "jpg-to-dxf", title: "JPG to DXF" },
+  { slug: "png-to-dxf", title: "PNG to DXF" },
+  { slug: "image-to-dxf", title: "Image to DXF" },
+  { slug: "stl-to-dxf", title: "STL to DXF" },
+  { slug: "step-to-dxf", title: "STEP to DXF" },
+  { slug: "dxf-to-stl", title: "DXF to STL" },
+  { slug: "dxf-viewer", title: "Online DXF Viewer" },
+];
+
 // Extension-alias converter pages: same engine as a CONVERTER_ROUTE but a
 // distinct search query gets its own URL + canonical (e.g. .stp vs .step).
 export const ALIAS_ROUTES: Array<{ slug: string; title: string }> = [
