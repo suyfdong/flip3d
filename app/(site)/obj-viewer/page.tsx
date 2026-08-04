@@ -9,9 +9,9 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/obj-viewer/`;
-const title = "Online OBJ Viewer — Free, No Signup | View .OBJ Files in Browser";
+const title = "OBJ Viewer — Free Online .OBJ File Viewer | No Signup";
 const description =
-  "Open and view Wavefront OBJ files online in your browser. Drag to rotate, zoom and inspect any .obj model — free, instant, 100% local. No upload, no signup, nothing installed.";
+  "Free online OBJ file viewer. Open a Wavefront .obj file and view the 3D model in your browser — rotate, zoom, inspect. Instant, 100% local, no upload, no signup, nothing installed.";
 
 export const metadata: Metadata = {
   title,
@@ -50,6 +50,10 @@ const config: ViewerConfig = {
     {
       q: "How do I open an OBJ file online?",
       a: "Drop your .obj file into the box above. It opens instantly in a 3D viewer — drag to rotate, scroll to zoom. Nothing is uploaded; the file is read locally in your browser.",
+    },
+    {
+      q: "What program opens a .obj file?",
+      a: "Blender, MeshLab, Windows 3D Viewer and most 3D suites import OBJ — but they all need installing. This OBJ file viewer runs in the browser tab you already have open.",
     },
     {
       q: "Is this OBJ viewer free?",

@@ -149,4 +149,11 @@ export const VIEWER_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "ply-viewer", title: "Online PLY Viewer" },
   { slug: "glb-viewer", title: "Online GLB & glTF Viewer" },
   { slug: "3mf-viewer", title: "Online 3MF Viewer" },
+  // CAD viewers (occt-import-js tessellation). "stp file viewer" and
+  // "step viewer online" are separate query clusters, so .stp gets its own
+  // URL + canonical, same as /stp-to-stl.
+  { slug: "step-viewer", title: "Online STEP Viewer" },
+  { slug: "stp-viewer", title: "Free STP File Viewer" },
+  { slug: "iges-viewer", title: "Online IGES Viewer" },
+  { slug: "dae-viewer", title: "Online DAE (Collada) Viewer" },
 ];

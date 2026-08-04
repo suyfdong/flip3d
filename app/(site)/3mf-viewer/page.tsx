@@ -9,9 +9,9 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/3mf-viewer/`;
-const title = "Online 3MF Viewer — Open .3mf Files Free | No Signup";
+const title = "3MF Viewer — Open .3mf Files Free Online | No Signup";
 const description =
-  "Open and view 3MF files online in your browser. Drag to rotate, zoom and inspect any .3mf model from Bambu Studio, PrusaSlicer or Cura — free, instant, 100% local. No upload, no signup.";
+  "Free online 3MF file viewer. Open a .3mf from Bambu Studio, PrusaSlicer or Cura and view the model in your browser — rotate, zoom, inspect. 100% local, no upload, no signup.";
 
 export const metadata: Metadata = {
   title,
@@ -54,6 +54,10 @@ const config: ViewerConfig = {
     {
       q: "What is a 3MF file?",
       a: "3MF (3D Manufacturing Format) is a modern 3D-printing file that bundles the model mesh together with print settings and metadata in a single zip-based package. Slicers like Bambu Studio and PrusaSlicer save projects as .3mf.",
+    },
+    {
+      q: "What program opens a .3mf file?",
+      a: "Bambu Studio, PrusaSlicer, Cura and Windows 3D Builder open 3MF — all of them installs, and slicers take a while to boot just to peek at a model. This 3MF file viewer opens it in the browser instead.",
     },
     {
       q: "Is this 3MF viewer free?",

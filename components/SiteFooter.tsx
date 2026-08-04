@@ -70,6 +70,9 @@ export default function SiteFooter() {
               <li><Link href="/step-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to GLB</Link></li>
               <li><Link href="/iges-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">IGES to STL</Link></li>
               <li><Link href="/iges-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">IGES to OBJ</Link></li>
+              <li><Link href="/step-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP Viewer</Link></li>
+              <li><Link href="/stp-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">STP File Viewer</Link></li>
+              <li><Link href="/iges-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">IGES Viewer</Link></li>
             </ul>
           </div>
           <div>
@@ -79,6 +82,7 @@ export default function SiteFooter() {
               <li><Link href="/fbx-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX to OBJ</Link></li>
               <li><Link href="/fbx-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX to GLB</Link></li>
               <li><Link href="/dae-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE to OBJ</Link></li>
+              <li><Link href="/dae-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE Viewer</Link></li>
               <li><Link href="/embed/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Embed viewer →</Link></li>
             </ul>
           </div>

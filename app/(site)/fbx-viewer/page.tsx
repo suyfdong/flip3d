@@ -9,9 +9,9 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/fbx-viewer/`;
-const title = "Online FBX Viewer — Free, No Signup | View .FBX Files in Browser";
+const title = "FBX Viewer — Free Online .FBX File Viewer | No Signup";
 const description =
-  "Open and view FBX files online in your browser. Drag to rotate, zoom and inspect any .fbx model — free, instant, 100% local. No upload, no signup, nothing installed.";
+  "Free online FBX file viewer. Open a .fbx file and view the 3D model in your browser — rotate, zoom, inspect. Instant, 100% local, no upload, no signup, no Autodesk software.";
 
 export const metadata: Metadata = {
   title,
@@ -50,6 +50,10 @@ const config: ViewerConfig = {
     {
       q: "How do I open an FBX file online?",
       a: "Drop your .fbx file into the box above. It opens instantly in a 3D viewer — drag to rotate, scroll to zoom. Nothing is uploaded; the file is read locally in your browser.",
+    },
+    {
+      q: "What program opens a .fbx file?",
+      a: "Maya, 3ds Max, Blender and Unity all import FBX, but each is a large install and some need a licence. This FBX file viewer opens the model in the browser with none of that.",
     },
     {
       q: "Is this FBX viewer free?",

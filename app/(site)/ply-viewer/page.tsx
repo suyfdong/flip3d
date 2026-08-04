@@ -9,9 +9,9 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/ply-viewer/`;
-const title = "Online PLY Viewer — Free, No Signup | View .PLY Files in Browser";
+const title = "PLY Viewer — Free Online .PLY File Viewer | No Signup";
 const description =
-  "Open and view PLY files online in your browser. Drag to rotate, zoom and inspect any .ply mesh or point cloud — free, instant, 100% local. No upload, no signup, nothing installed.";
+  "Free online PLY file viewer. Open a .ply scan or mesh and view it in your browser — rotate, zoom, inspect. Instant, 100% local, no upload, no signup, nothing installed.";
 
 export const metadata: Metadata = {
   title,
@@ -50,6 +50,10 @@ const config: ViewerConfig = {
     {
       q: "How do I open a PLY file online?",
       a: "Drop your .ply file into the box above. It opens instantly in a 3D viewer — drag to rotate, scroll to zoom. Nothing is uploaded; the file is read locally in your browser.",
+    },
+    {
+      q: "What opens a .ply file?",
+      a: "MeshLab, CloudCompare and Blender read PLY, but each needs an install and a slow first launch. This PLY file viewer opens the scan straight in the browser instead.",
     },
     {
       q: "Is this PLY viewer free?",

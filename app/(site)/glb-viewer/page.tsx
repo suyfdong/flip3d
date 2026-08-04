@@ -9,9 +9,9 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/glb-viewer/`;
-const title = "Online GLB & glTF Viewer — Free, No Signup | View in Browser";
+const title = "GLB Viewer — Open .GLB Files Free Online | glTF Viewer";
 const description =
-  "Open and view GLB / glTF files online in your browser. Drag to rotate, zoom and inspect any .glb or .gltf model — free, instant, 100% local. No upload, no signup, nothing installed.";
+  "Free online GLB viewer. Open a .glb or .gltf file and view the 3D model in your browser — rotate, zoom, inspect. Instant, 100% local, no upload, no signup, nothing installed.";
 
 export const metadata: Metadata = {
   title,
@@ -41,6 +41,7 @@ const config: ViewerConfig = {
   intro:
     "Drop a .glb or .gltf file to open it in a fast 3D viewer — drag to rotate, scroll to zoom, and inspect the model. Free, instant, and 100% local: your file never leaves the browser.",
   about: [
+    "Got a .glb file and nothing that opens it? This page is the whole answer — no app, no account, no upload.",
     "Views GLB and glTF 2.0 — the standard format for web, AR and asset pipelines. Self-contained .glb files load most reliably.",
     "Everything runs on your device with WebGL. There's no upload, no account, and no file-size paywall.",
     "A single .gltf that references external .bin or texture files may render geometry only, since those side files aren't included in one upload — .glb bundles everything and is preferred.",
@@ -50,6 +51,14 @@ const config: ViewerConfig = {
     {
       q: "How do I open a GLB or glTF file online?",
       a: "Drop your .glb or .gltf file into the box above. It opens instantly in a 3D viewer — drag to rotate, scroll to zoom. Nothing is uploaded; the file is read locally in your browser.",
+    },
+    {
+      q: "What program opens a .glb file?",
+      a: "You don't need one — this page opens .glb files directly in the browser. On the desktop, Windows 3D Viewer, Blender and most game engines import GLB too, but they all require an install; this doesn't.",
+    },
+    {
+      q: "Why won't my .glb file open by double-clicking it?",
+      a: "GLB isn't registered to an app on most systems, so double-clicking does nothing or opens a text editor. Drag the file into the box above instead and it renders immediately.",
     },
     {
       q: "What's the difference between GLB and glTF here?",
