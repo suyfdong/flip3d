@@ -38,12 +38,20 @@ const FAQ: { q: string; a: string }[] = [
     a: "Yes. It's free with no signup, no watermark, and no file-size paywall. Flip3D processes everything locally in your browser.",
   },
   {
+    q: "I searched for \".obj to .stl\" — is that a different conversion?",
+    a: "No, it's the same one. The dots are just how the extensions appear in your file manager, so \".obj to .stl\", \"obj file to stl\" and \"obj to stl\" all land here. What does change the result is what sits next to the .obj: OBJ keeps its materials in a separate .mtl file and STL stores no material data at all, so only the geometry carries over.",
+  },
+  {
     q: "What happens to the .mtl file, materials and textures?",
     a: "STL stores only geometry — no color, materials, or texture coordinates. So the .mtl materials and any textures referenced by your OBJ are dropped, and named groups are merged into one mesh. The geometry itself is preserved exactly. If you need to keep materials, convert to GLB or 3MF instead.",
   },
   {
     q: "Do I need to upload the .mtl file too?",
     a: "No. STL ignores materials, so only the .obj geometry is used. There's nothing to upload anyway — the file is read on your device.",
+  },
+  {
+    q: "My model is a .blend file — can I use it here?",
+    a: "Not directly. A .blend is Blender's own working format and only Blender reads it reliably, so Flip3D does not try. Open it in Blender and use File → Export → Wavefront (.obj), then drop that .obj here. Going through OBJ also lets you check the mesh in the preview before it becomes an STL.",
   },
   {
     q: "Does it handle large OBJ files?",

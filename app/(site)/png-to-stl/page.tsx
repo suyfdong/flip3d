@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/png-to-stl/`;
 const title = "PNG to STL Converter — Free Online | No Signup Required";
 const description =
-  "Convert a PNG to a printable 3D STL in your browser. Brightness becomes height for a relief or lithophane; transparency flattens to the base. Free, instant, 100% local.";
+  "Free PNG to STL converter — convert a PNG to a printable 3D STL in your browser. Brightness becomes height for a relief or lithophane; transparency flattens to the base. Instant, 100% local, no signup.";
 
 export const metadata: Metadata = {
   title,
@@ -28,6 +28,10 @@ export const metadata: Metadata = {
 };
 
 const FAQ = [
+  {
+    q: "Is there a free PNG to STL converter that doesn't need an account?",
+    a: "This page. The PNG to STL conversion runs in your browser, so there is nothing to sign up for and nothing to upload — and no watermark on the file you download.",
+  },
   {
     q: "How do I convert a PNG to STL?",
     a: "Drop your .png above, pick relief or lithophane, set the size and thickness, and download the STL. Brightness becomes height; transparent pixels flatten to the base of the model.",

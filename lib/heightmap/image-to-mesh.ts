@@ -29,6 +29,12 @@ export type ImageToMeshOptions = {
   resolution: number;
   /** Flip the brightness→thickness mapping. */
   invert: boolean;
+  /**
+   * Also carry the image's colours as per-vertex colours. STL/OBJ/3MF cannot
+   * store them — only PLY and GLB can — so the UI restricts the export format
+   * when this is on rather than silently dropping the colour.
+   */
+  keepColor: boolean;
 };
 
 export const MODE_DEFAULTS: Record<HeightmapMode, ImageToMeshOptions> = {
@@ -39,6 +45,7 @@ export const MODE_DEFAULTS: Record<HeightmapMode, ImageToMeshOptions> = {
     maxThicknessMM: 6,
     resolution: 200,
     invert: false,
+    keepColor: false,
   },
   lithophane: {
     mode: "lithophane",
@@ -47,6 +54,7 @@ export const MODE_DEFAULTS: Record<HeightmapMode, ImageToMeshOptions> = {
     maxThicknessMM: 3,
     resolution: 250,
     invert: true,
+    keepColor: false,
   },
 };
 
@@ -58,11 +66,34 @@ export type Heightfield = {
   height: number;
   /** Normalised luminance in [0,1], row-major, length width*height. */
   lum: Float32Array;
+  /**
+   * Per-pixel colour in three.js working (linear) space, row-major,
+   * length width*height*3. Sampled in the same pass as `lum` — the exporters
+   * convert back to sRGB on write, so storing linear here is what keeps the
+   * printed colours matching the source image.
+   */
+  rgb: Float32Array;
 };
 
 /**
+ * sRGB byte → linear float, precomputed for all 256 values. three.js works in
+ * linear space and both PLYExporter and GLTFExporter convert back to sRGB when
+ * writing, so feeding them sRGB directly would double-apply the transfer curve
+ * and wash the colours out.
+ */
+const SRGB_TO_LINEAR = (() => {
+  const lut = new Float32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const c = i / 255;
+    lut[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  }
+  return lut;
+})();
+
+/**
  * Draw the image onto a canvas downsampled so its longer edge is `resolution`
- * pixels, then read back per-pixel luminance (Rec. 601 weights).
+ * pixels, then read back per-pixel luminance and colour (Rec. 601 weights for
+ * luminance).
  */
 export function sampleLuminance(
   source: CanvasImageSource & { width: number; height: number },
@@ -95,6 +126,7 @@ export function sampleLuminance(
 
   const { data } = ctx.getImageData(0, 0, w, h);
   const lum = new Float32Array(w * h);
+  const rgb = new Float32Array(w * h * 3);
   for (let i = 0; i < w * h; i++) {
     const r = data[i * 4];
     const g = data[i * 4 + 1];
@@ -105,9 +137,12 @@ export function sampleLuminance(
     const lg = g * a + 255 * (1 - a);
     const lb = b * a + 255 * (1 - a);
     lum[i] = (0.299 * lr + 0.587 * lg + 0.114 * lb) / 255;
+    rgb[i * 3] = SRGB_TO_LINEAR[Math.round(lr)];
+    rgb[i * 3 + 1] = SRGB_TO_LINEAR[Math.round(lg)];
+    rgb[i * 3 + 2] = SRGB_TO_LINEAR[Math.round(lb)];
   }
 
-  return { width: w, height: h, lum };
+  return { width: w, height: h, lum, rgb };
 }
 
 const BRAND_BLUE = 0x3b82f6;
@@ -120,7 +155,8 @@ export function heightfieldToMesh(
   field: Heightfield,
   opts: ImageToMeshOptions,
 ): THREE.Mesh {
-  const { width: w, height: h, lum } = field;
+  const { width: w, height: h, lum, rgb } = field;
+  const withColor = opts.keepColor && rgb.length === w * h * 3;
   const range = Math.max(0.01, opts.maxThicknessMM - opts.baseThicknessMM);
   const scale = opts.widthMM / (w - 1); // mm per pixel step, same on X and Y
   const offX = (opts.widthMM) / 2;
@@ -137,6 +173,15 @@ export function heightfieldToMesh(
 
   const positions: number[] = [];
   const indices: number[] = [];
+  // One colour per vertex. The bottom grid repeats the top colour so the side
+  // walls read as a solid edge of that colour instead of fading to black.
+  const colors: number[] = [];
+
+  const pushColor = (x: number, y: number) => {
+    if (!withColor) return;
+    const i = ((h - 1 - y) * w + x) * 3;
+    colors.push(rgb[i], rgb[i + 1], rgb[i + 2]);
+  };
 
   const top = (x: number, y: number) => y * w + x;
   const bottom = (x: number, y: number) => w * h + y * w + x;
@@ -145,11 +190,13 @@ export function heightfieldToMesh(
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       positions.push(x * scale - offX, y * scale - offY, topZ(x, y));
+      pushColor(x, y);
     }
   }
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       positions.push(x * scale - offX, y * scale - offY, 0);
+      pushColor(x, y);
     }
   }
 
@@ -193,11 +240,17 @@ export function heightfieldToMesh(
 
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  if (withColor) {
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  }
   geo.setIndex(indices);
   geo.computeVertexNormals();
 
   const mat = new THREE.MeshStandardMaterial({
-    color: BRAND_BLUE,
+    // White base so the per-vertex colours come through unmodulated; the brand
+    // blue is only the fallback for the plain, colourless relief.
+    color: withColor ? 0xffffff : BRAND_BLUE,
+    vertexColors: withColor,
     metalness: 0.05,
     roughness: 0.75,
     side: THREE.DoubleSide,

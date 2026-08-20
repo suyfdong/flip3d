@@ -8,7 +8,10 @@ export function buildConverterMetadata(from: Format, to: Format): Metadata {
   const toLabel = FORMAT_LABELS[to];
   const path = `/${from}-to-${to}/`;
   const title = `${fromLabel} to ${toLabel} Converter — Free Online | No Signup Required`;
-  const description = `Convert ${fromLabel} to ${toLabel} files in your browser. Free, instant, 100% local — no upload, no signup, no watermark.`;
+  // Carries both phrasings: the noun form ("X to Y") that titles the page and
+  // the verb/converter forms ("convert X to Y", "free X to Y converter",
+  // "... online") which are a separate, much less contested query cluster.
+  const description = `Convert ${fromLabel} to ${toLabel} online in your browser — a free ${fromLabel} to ${toLabel} converter with no signup. Instant and 100% local: no upload, no watermark, no file-size limit.`;
   const url = `${SITE_URL}${path}`;
 
   return {
@@ -118,11 +121,23 @@ export const IMAGE_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "image-to-stl", title: "Image to STL" },
   { slug: "png-to-stl", title: "PNG to STL" },
   { slug: "jpg-to-stl", title: "JPG to STL" },
+  // ".jpeg" and ".jpg" are both real, in-use spellings of the same extension —
+  // a true alias, not a misspelling, so it gets its own URL + canonical (same
+  // precedent as /stp-to-stl). Evidence: 3dpea ranks #5 for "jpeg to stl" with
+  // its /JPEG-to-STL page but only #39 with /JPG-to-STL — 34 places apart on
+  // the same content. Copy is deliberately distinct (compression artifacts).
+  { slug: "jpeg-to-stl", title: "JPEG to STL" },
   { slug: "lithophane-generator", title: "Lithophane Generator" },
   // Same heightmap pipeline, OBJ output (convert3d png/jpg/image→obj cluster).
   { slug: "image-to-obj", title: "Image to OBJ" },
   { slug: "png-to-obj", title: "PNG to OBJ" },
   { slug: "jpg-to-obj", title: "JPG to OBJ" },
+  // Same heightmap, 3MF output. 3MF is units-aware where STL is not, and the
+  // query has its own (tiny but very low-KD) cluster.
+  { slug: "png-to-3mf", title: "PNG to 3MF" },
+  // "image to color stl" is its own intent: people want colour out, and STL
+  // has no colour channel. The page says so and exports PLY/GLB instead.
+  { slug: "image-to-color-stl", title: "Image to Color STL" },
   // "photo/picture to stl" + "3d print a photo/picture" query clusters
   // (hyper3d.ai keyword analysis). Same heightmap pipeline, distinct queries.
   { slug: "photo-to-stl", title: "Photo to STL" },

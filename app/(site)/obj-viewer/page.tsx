@@ -11,7 +11,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/obj-viewer/`;
 const title = "OBJ Viewer — Free Online .OBJ File Viewer | No Signup";
 const description =
-  "Free online OBJ file viewer. Open a Wavefront .obj file and view the 3D model in your browser — rotate, zoom, inspect. Instant, 100% local, no upload, no signup, nothing installed.";
+  "Free online OBJ viewer and .obj file viewer — view OBJ files online with no signup. Open a Wavefront .obj and rotate, zoom and inspect the 3D model in your browser. 100% local, no upload, nothing installed.";
 
 export const metadata: Metadata = {
   title,
@@ -50,6 +50,14 @@ const config: ViewerConfig = {
     {
       q: "How do I open an OBJ file online?",
       a: "Drop your .obj file into the box above. It opens instantly in a 3D viewer — drag to rotate, scroll to zoom. Nothing is uploaded; the file is read locally in your browser.",
+    },
+    {
+      q: "How do I view an OBJ file without installing anything?",
+      a: "Drop the .obj into the box above — that is the whole process. An online OBJ viewer skips the install entirely, which matters on a work machine where you cannot add software, or when someone emails you a single .obj and you just need to see what it is.",
+    },
+    {
+      q: "Why does my OBJ open with no colors or textures?",
+      a: "An .obj holds geometry only; its materials live in a separate .mtl file and its textures in image files beside it. Dropping the .obj alone gives the viewer the shape but no materials, so it renders in one shaded color. Convert it to GLB if you need the materials travelling inside a single file.",
     },
     {
       q: "What program opens a .obj file?",

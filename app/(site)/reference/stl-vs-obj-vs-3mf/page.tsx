@@ -135,6 +135,10 @@ const FAQ: FaqItem[] = [
     a: "OBJ is text by default. Each vertex and face takes more characters than the binary STL encoding. If size matters, convert to binary STL or compressed GLB.",
   },
   {
+    q: "GLB vs FBX — which one should I use?",
+    a: "GLB if the file has to travel: it is an open Khronos standard, bundles geometry, materials and textures into one binary, and loads natively in browsers, AR viewers and the web. FBX if you are staying inside a DCC or game pipeline — it is Autodesk's format, it carries rigs, skinning and animation data more completely than glTF does, and Maya, 3ds Max, Unity and Unreal all speak it fluently. For 3D printing neither is ideal; convert to STL or 3MF. Flip3D reads both and writes GLB, but not FBX — there is no reliable open writer for it, and shipping a half-correct FBX would be worse than not offering one.",
+  },
+  {
     q: "What about FBX, USD, IGES, STEP?",
     a: "FBX/USD are animation/asset pipelines (game and film). STEP/IGES are CAD parametric formats — they store features, not just meshes. None are interchangeable with the five mesh formats above; they need a different conversion pipeline.",
   },

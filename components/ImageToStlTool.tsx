@@ -38,9 +38,11 @@ export type ImageToStlVariant =
   | "image"
   | "png"
   | "jpg"
+  | "jpeg"
   | "lithophane"
   | "photo"
-  | "picture";
+  | "picture"
+  | "color";
 
 const VARIANT_COPY: Record<
   ImageToStlVariant,
@@ -67,6 +69,17 @@ const VARIANT_COPY: Record<
       "Convert a JPG photo into a printable 3D relief or lithophane. Brightness becomes height. Drop your JPG and download an STL — free, no upload, no signup.",
     sourceExt: "jpg",
   },
+  // Same pipeline as `jpg`, but its own landing copy: ".jpeg" is a real,
+  // widely-used spelling of the extension (scanners, macOS exports, email
+  // attachments), and the page leans on the compression-artifact angle rather
+  // than repeating the /jpg-to-stl text.
+  jpeg: {
+    eyebrow: "JPEG → 3D · Heightmap",
+    title: "JPEG to STL",
+    intro:
+      "Convert a .jpeg into a printable 3D relief or lithophane. Brightness becomes height — drop the JPEG and download an STL. Free, instant, 100% local, no signup.",
+    sourceExt: "jpeg",
+  },
   lithophane: {
     eyebrow: "Lithophane Generator",
     title: "Lithophane Maker",
@@ -80,6 +93,15 @@ const VARIANT_COPY: Record<
     intro:
       "3D print a photo: turn any photo into a printable STL relief or lithophane. Brightness becomes height — drop a photo and download an STL. Free, instant, 100% local, no signup.",
     sourceExt: "photo",
+  },
+  // Colour-relief landing. Same heightmap, but per-vertex colour on by default
+  // and exported as PLY/GLB, because STL has nowhere to put colour.
+  color: {
+    eyebrow: "Image → 3D · Color Relief",
+    title: "Image to Color STL",
+    intro:
+      "Turn a picture into a color 3D relief. Height comes from brightness, and the image's colors ride along as per-vertex color — exported as PLY or GLB, because STL cannot store color at all. Free, instant, 100% local.",
+    sourceExt: "image",
   },
   picture: {
     eyebrow: "Picture → 3D · Heightmap",
@@ -115,10 +137,13 @@ export default function ImageToStlTool({
   defaultMode = "relief",
   variant = "image",
   targetFormat = "stl",
+  defaultKeepColor = false,
 }: {
   defaultMode?: HeightmapMode;
   variant?: ImageToStlVariant;
-  targetFormat?: "stl" | "obj";
+  targetFormat?: "stl" | "obj" | "3mf" | "glb";
+  /** Start with per-vertex colour on (the /image-to-color-stl landing). */
+  defaultKeepColor?: boolean;
 }) {
   const objCopy = targetFormat === "obj" ? OBJ_COPY[variant] : undefined;
   const copy = objCopy ? { ...VARIANT_COPY[variant], ...objCopy } : VARIANT_COPY[variant];
@@ -126,12 +151,18 @@ export default function ImageToStlTool({
   const imageRef = useRef<ImageBitmap | HTMLCanvasElement | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
   const [fileName, setFileName] = useState("");
-  const [opts, setOpts] = useState<ImageToMeshOptions>(MODE_DEFAULTS[defaultMode]);
+  const [opts, setOpts] = useState<ImageToMeshOptions>({
+    ...MODE_DEFAULTS[defaultMode],
+    keepColor: defaultKeepColor,
+  });
   const [object, setObject] = useState<THREE.Mesh | null>(null);
   const [triangles, setTriangles] = useState(0);
   const [sizeMM, setSizeMM] = useState<[number, number, number]>([0, 0, 0]);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Only PLY and GLB can carry per-vertex colour, so "keep colours" swaps the
+  // export target instead of writing an STL that silently loses it.
+  const [colorFormat, setColorFormat] = useState<"ply" | "glb">("ply");
 
   // Dispose the previous mesh whenever it's replaced or on unmount.
   useEffect(() => {
@@ -177,7 +208,7 @@ export default function ImageToStlTool({
         }
         imageRef.current = img;
         setFileName(name);
-        setOpts(MODE_DEFAULTS[mode]);
+        setOpts({ ...MODE_DEFAULTS[mode], keepColor: defaultKeepColor });
         setImageVersion((v) => v + 1);
         if (origin === "drop") trackFileUploaded("stl", "drop");
         else trackSampleLoaded("stl");
@@ -186,7 +217,7 @@ export default function ImageToStlTool({
         setStatus("error");
       }
     },
-    [],
+    [defaultKeepColor],
   );
 
   const handleFile = useCallback(
@@ -230,15 +261,16 @@ export default function ImageToStlTool({
     setFileName("");
     setStatus("idle");
     setErrorMsg(null);
-    setOpts(MODE_DEFAULTS[defaultMode]);
+    setOpts({ ...MODE_DEFAULTS[defaultMode], keepColor: defaultKeepColor });
   };
 
   const handleDownload = async () => {
     if (!object) return;
+    const outFormat = opts.keepColor ? colorFormat : targetFormat;
     try {
-      const blob = await exportToBlob(object, targetFormat);
+      const blob = await exportToBlob(object, outFormat);
       const base = fileName.replace(/\.[^.]+$/, "") || "model";
-      downloadBlob(blob, `${base}-${opts.mode}.${targetFormat}`);
+      downloadBlob(blob, `${base}-${opts.mode}.${outFormat}`);
       trackImageConverted(copy.sourceExt, opts.mode);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Download failed");
@@ -250,7 +282,8 @@ export default function ImageToStlTool({
     value: ImageToMeshOptions[K],
   ) => setOpts((o) => ({ ...o, [key]: value }));
 
-  const setMode = (mode: HeightmapMode) => setOpts(MODE_DEFAULTS[mode]);
+  const setMode = (mode: HeightmapMode) =>
+    setOpts((o) => ({ ...MODE_DEFAULTS[mode], keepColor: o.keepColor }));
 
   const loaded = imageRef.current !== null;
 
@@ -309,7 +342,7 @@ export default function ImageToStlTool({
                   disabled={!object}
                   className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:opacity-90 disabled:opacity-50"
                 >
-                  Download .{targetFormat}
+                  Download .{opts.keepColor ? colorFormat : targetFormat}
                 </button>
                 <button
                   onClick={handleReset}
@@ -393,6 +426,48 @@ export default function ImageToStlTool({
                   />
                   Invert (swap dark / light)
                 </label>
+
+                <div className="pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer select-none mt-4">
+                    <input
+                      type="checkbox"
+                      checked={opts.keepColor}
+                      onChange={(e) => set("keepColor", e.target.checked)}
+                      className="rounded border-zinc-300 dark:border-zinc-600"
+                    />
+                    Keep the image&apos;s colors
+                  </label>
+                  {opts.keepColor ? (
+                    <>
+                      <div className="mt-3 flex items-center gap-1 p-1 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                        {(["ply", "glb"] as const).map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setColorFormat(f)}
+                            className={`flex-1 px-3 py-1.5 text-sm rounded-md uppercase transition-colors ${
+                              colorFormat === f
+                                ? "bg-white dark:bg-zinc-700 shadow-sm font-medium"
+                                : "text-zinc-600 dark:text-zinc-400"
+                            }`}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                        STL, OBJ and 3MF have no place to store per-vertex color,
+                        so the export switches to {colorFormat.toUpperCase()},
+                        which does. PLY is the safest for full-color printing
+                        services; GLB is better for viewing on the web.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                      Off = a single-color relief exported as{" "}
+                      {tgtLabel}. STL itself cannot carry color.
+                    </p>
+                  )}
+                </div>
 
                 {triangles > 350000 && (
                   <p className="text-xs text-amber-700 dark:text-amber-400">

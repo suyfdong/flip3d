@@ -11,7 +11,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/fbx-viewer/`;
 const title = "FBX Viewer — Free Online .FBX File Viewer | No Signup";
 const description =
-  "Free online FBX file viewer. Open a .fbx file and view the 3D model in your browser — rotate, zoom, inspect. Instant, 100% local, no upload, no signup, no Autodesk software.";
+  "Free online FBX viewer and .fbx file viewer — view FBX files online with no signup. Open an .fbx and rotate, zoom and inspect the model in your browser. Works after Windows 11 removed the built-in 3D Viewer. 100% local.";
 
 export const metadata: Metadata = {
   title,
@@ -54,6 +54,10 @@ const config: ViewerConfig = {
     {
       q: "What program opens a .fbx file?",
       a: "Maya, 3ds Max, Blender and Unity all import FBX, but each is a large install and some need a licence. This FBX file viewer opens the model in the browser with none of that.",
+    },
+    {
+      q: "How do I view FBX files on Windows?",
+      a: "Windows 10 shipped a 3D Viewer app that opened .fbx, but Microsoft dropped it from the default Windows 11 install — which is why a lot of people suddenly find nothing happens when they double-click an FBX. You can reinstall 3D Viewer from the Microsoft Store, or skip that and drop the file into this page: no install, no admin rights, and it works the same on macOS and Linux.",
     },
     {
       q: "Is this FBX viewer free?",

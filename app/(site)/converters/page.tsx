@@ -26,7 +26,7 @@ const URL = `${SITE_URL}/converters/`;
 const title =
   "All 3D File Converters — Free Online 3D Model Converter | No Signup";
 const description =
-  "Every Flip3D converter in one place. Pick a source format and a target: STL, OBJ, GLB, 3MF, PLY from STEP, IGES, FBX, DAE, images, SVG and DXF. Free, no signup, 100% local.";
+  "Every Flip3D converter in one place — STL file converter, OBJ converter, GLB converter, 3D model converter. Pick a source and a target: STL, OBJ, GLB, 3MF, PLY from STEP, IGES, FBX, DAE, images, SVG and DXF. Free, no signup, 100% local.";
 
 export const metadata: Metadata = {
   title,
@@ -71,6 +71,10 @@ const FAQ = [
   {
     q: "Is there a free STL file converter here?",
     a: "Yes — STL is both the most common source and the most common target. Read the STL row of the table for STL → OBJ, GLB, 3MF and PLY, or the STL column for everything that converts into STL. All of it is free and runs locally.",
+  },
+  {
+    q: "Is there an OBJ converter and a GLB converter here?",
+    a: "Yes — both, in each direction. The OBJ converter reads a Wavefront .obj and writes STL, GLB, 3MF or PLY, and the GLB converter does the same from binary glTF. Pick the pair you need from the matrix above; every cell is its own page with the format's specifics on it.",
   },
   {
     q: "Which FBX converter should I use?",

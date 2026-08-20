@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/image-to-stl/`;
 const title = "Image to STL Converter — Free Online | No Signup Required";
 const description =
-  "Convert an image to a printable 3D STL in your browser. Turn a photo or picture into a relief or lithophane — brightness becomes height. Free 2D to 3D, instant, 100% local, no signup.";
+  "Free image to STL converter — convert an image to a printable 3D STL in your browser. Turn a photo or picture into a relief or lithophane: brightness becomes height. Instant, 100% local, no signup.";
 
 export const metadata: Metadata = {
   title,
@@ -31,6 +31,14 @@ const FAQ = [
   {
     q: "How do I convert an image to STL?",
     a: "Drop your image (PNG, JPG or WebP) above, choose relief or lithophane, set the size and thickness, and download the STL. Brightness is turned into height, so light areas rise and dark areas stay low.",
+  },
+  {
+    q: "Does this rebuild a full 3D object from one photo?",
+    a: "No, and it is worth being clear about that. This is a heightmap converter: it reads brightness and turns it into height, giving you a relief or lithophane — a surface, not a reconstructed object. Tools that generate a full 3D model from a single photo are guessing at the parts of the object the camera never saw. What you get here is exact and predictable, which is why it prints reliably.",
+  },
+  {
+    q: "Is there a free image to STL converter with no watermark?",
+    a: "This is one. There is no account, no export limit and nothing stamped on the model. Convert an image to an STL file, download it, and it is yours.",
   },
   {
     q: "Can I 3D print a photo or picture with this?",

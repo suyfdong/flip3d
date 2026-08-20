@@ -38,6 +38,10 @@ const FAQ: { q: string; a: string }[] = [
     a: "Yes. No signup, no watermark, and no file-size paywall. Flip3D reads and converts your GLB locally on your own device.",
   },
   {
+    q: "Is \".glb to .obj\" the same as GLB to OBJ?",
+    a: "Yes — the dots are only how the extensions look on disk. One real difference is in the files themselves: a .glb bundles its textures inside a single binary, while the .obj you get back references materials from a separate .mtl file, so a lone .obj will not carry the GLB's textures with it.",
+  },
+  {
     q: "Does it keep materials, textures and colors?",
     a: "No. GLB stores rich PBR materials and embedded textures; OBJ stores geometry only. The OBJ we write has no .mtl file and no textures, so materials and color are dropped. Vertex positions, normals, and UV coordinates are preserved, so textures can be re-applied in your target app. To keep materials, stay in GLB.",
   },

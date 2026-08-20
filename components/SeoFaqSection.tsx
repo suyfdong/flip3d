@@ -15,6 +15,15 @@ type Props = {
   crumbUrl: string;
   aboutTitle?: string;
   about?: string[];
+  /**
+   * Optional numbered "how to <do the thing>" block. Tool pages need this
+   * because the query cluster is almost entirely question-shaped — "how to
+   * edit stl files", "how to modify stl file" — while the page itself only
+   * had noun phrasing. This stays operational (the actual steps in this tool),
+   * not a "what is X" explainer, per the no-explainer-content rule.
+   */
+  stepsTitle?: string;
+  steps?: { title: string; body: string }[];
   faq: { q: string; a: string }[];
   /** Optional internal cross-links (keeps sibling pages from being orphaned). */
   related?: { href: string; title: string; desc: string }[];
@@ -25,6 +34,8 @@ export default function SeoFaqSection({
   crumbUrl,
   aboutTitle,
   about,
+  stepsTitle,
+  steps,
   faq,
   related,
 }: Props) {
@@ -51,6 +62,33 @@ export default function SeoFaqSection({
                 <p key={i}>{p}</p>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {steps && steps.length > 0 && (
+        <section className="border-t border-zinc-200 dark:border-zinc-800 py-14">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl font-bold tracking-tight mb-6">
+              {stepsTitle ?? "How it works"}
+            </h2>
+            <ol className="space-y-5">
+              {steps.map((step, i) => (
+                <li key={step.title} className="flex gap-4">
+                  <span className="flex-none w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-semibold flex items-center justify-center">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">
+                      {step.title}
+                    </div>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mt-1">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
       )}

@@ -11,7 +11,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/stl-viewer/`;
 const title = "Online STL Viewer — Free STL Reader | Open .STL Files in Browser";
 const description =
-  "Free online STL viewer and STL reader. Open an .stl file, view and rotate the 3D model in your browser — instant, 100% local. No upload, no signup, nothing installed.";
+  "Free online STL viewer — view STL online with no signup. Open an .stl file, rotate and inspect the 3D model in your browser. Works as an STL reader and STL model viewer. 100% local, no upload, nothing installed.";
 
 export const metadata: Metadata = {
   title,
@@ -41,7 +41,7 @@ const config: ViewerConfig = {
   intro:
     "Drop an STL file to open it in a fast 3D viewer — drag to rotate, scroll to zoom, and inspect the mesh. Free, instant, and 100% local: your file never leaves the browser.",
   about: [
-    "Works as a plain STL reader and STL model viewer — open the file, look at it, done. Nothing to download or install.",
+    "Works as a plain STL reader, STL file reader and STL model viewer — open the file, look at it, done. Nothing to download or install, and no account.",
     "Views both binary and ASCII STL files — the standard mesh format for 3D printing.",
     "Everything runs on your device with WebGL. There's no upload, no account, and no file-size paywall.",
     "STL stores only triangles (no color or units), so every model renders in a single shaded material — that's expected, not a loading error.",
@@ -55,6 +55,10 @@ const config: ViewerConfig = {
     {
       q: "Is there a free STL reader I don't have to install?",
       a: "This page is one. It's a browser-based STL reader — no download, no licence, no account. Open the page, drop the file, and the model is on screen in a second.",
+    },
+    {
+      q: "How do I read an STL file without CAD software?",
+      a: "Drop it here. An STL is just a list of triangles, so reading one only needs something that can draw those triangles — not a CAD package. This page does that in the browser; you get the shape on screen plus the triangle, vertex and bounding-box numbers underneath, which is usually all anyone needs from an STL file reader.",
     },
     {
       q: "Can I view an STL file online on my phone?",

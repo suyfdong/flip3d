@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
+import { JsonLd } from "@/components/JsonLd";
+import { faqPageSchema } from "@/lib/schema";
 import {
   FORMAT_LABELS,
   SOURCE_ONLY_FORMATS,
@@ -56,9 +58,58 @@ type Props = {
   content?: ConverterContent;
 };
 
+/**
+ * Verb-form FAQ every converter page carries.
+ *
+ * Searchers phrase this two ways and the SERPs are different: the noun form
+ * ("obj to stl") is locked up by convert3d, while the verb/converter forms
+ * ("convert obj to stl" KD13, "how to convert obj file to stl" KD11,
+ * "3mf to stl converter" KD17) are largely unclaimed — sloyd.ai ranks #2 on
+ * several with a single page. Our 31 lean converter routes had no FAQ at all,
+ * so they carried none of that phrasing. This generates it from the format
+ * pair; the 11 rich routes pass their own `content.faq` and opt out.
+ */
+function buildBaselineFaq(
+  fromLabel: string,
+  toLabel: string,
+  toExt: string,
+  sourceOnly: boolean,
+): { q: string; a: string }[] {
+  const faq = [
+    {
+      q: `How do I convert ${fromLabel} to ${toLabel}?`,
+      a: `Drop your ${fromLabel} file into the box above, check it in the 3D preview, then click Convert & Download .${toExt}. The whole conversion runs in your browser, so there is nothing to install and nothing to upload.`,
+    },
+    {
+      q: `Is there a free ${fromLabel} to ${toLabel} converter with no signup?`,
+      a: `This is one. There is no account, no watermark, no email step and no file-size paywall — just drop the file and download the ${toLabel}.`,
+    },
+    {
+      q: `Can I convert ${fromLabel} to ${toLabel} online without installing software?`,
+      a: `Yes. The converter runs entirely in the browser using WebGL, so it works on Windows, macOS, Linux and mobile without any download. Your file is read on your own device and never sent to a server.`,
+    },
+  ];
+  if (sourceOnly) {
+    faq.push({
+      q: `Can I convert ${toLabel} back to ${fromLabel}?`,
+      a: `No — ${fromLabel} is read-only here. Flip3D can open ${fromLabel} files and write ${toLabel}, but it does not write ${fromLabel}. That limit is deliberate: producing a fake ${fromLabel} from mesh data would lose the information the format is meant to carry.`,
+    });
+  }
+  return faq;
+}
+
 export default function ConverterPage({ from, to, content }: Props) {
   const fromLabel = content?.fromLabel ?? FORMAT_LABELS[from];
   const toLabel = FORMAT_LABELS[to];
+
+  // Rich routes supply their own FAQ *and* their own FAQPage JSON-LD, so only
+  // the lean routes get the generated block — otherwise the page would carry
+  // two FAQPage schemas.
+  const faqItems =
+    content?.faq && content.faq.length > 0
+      ? content.faq
+      : buildBaselineFaq(fromLabel, toLabel, to, SOURCE_ONLY_FORMATS.has(from));
+  const emitFaqSchema = !(content?.faq && content.faq.length > 0);
 
   const [object, setObject] = useState<THREE.Object3D | null>(null);
   const [fileName, setFileName] = useState("");
@@ -330,14 +381,15 @@ export default function ConverterPage({ from, to, content }: Props) {
             </section>
           )}
 
-          {content?.faq && content.faq.length > 0 && (
+          {faqItems.length > 0 && (
             <section className="border-t border-zinc-200 dark:border-zinc-800 py-14">
+              {emitFaqSchema && <JsonLd data={faqPageSchema(faqItems)} />}
               <div className="max-w-3xl mx-auto px-4 sm:px-6">
                 <h2 className="text-2xl font-bold tracking-tight mb-5">
                   Frequently asked questions
                 </h2>
                 <div className="divide-y divide-zinc-200 dark:divide-zinc-800 border-y border-zinc-200 dark:border-zinc-800">
-                  {content.faq.map((f) => (
+                  {faqItems.map((f) => (
                     <details key={f.q} className="group py-4">
                       <summary className="flex cursor-pointer items-center justify-between font-medium list-none">
                         {f.q}

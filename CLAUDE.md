@@ -33,6 +33,7 @@ app/
 │   ├── *-viewer/        10 个 viewer 页（复用 ViewerTool，root-level 短 URL）
 │   ├── *-to-dxf/ dxf-*  2D/DXF 管线 7 页
 │   ├── stl-to-jpg/ obj-to-png/ glb-to-png/   3D→图片渲染器 3 页（RenderImageTool）
+│   ├── jpeg-to-stl/ image-to-color-stl/ png-to-3mf/  image 簇新页（复用 ImageToStlTool）
 │   ├── reference/       evergreen：stl-vs-obj-vs-3mf, bambu-vs-prusa, metal-gauge-chart
 │   ├── embed/page.tsx   embed 主页（marketing + code generator）
 │   └── about|privacy|terms/
@@ -184,7 +185,7 @@ npx tsc --noEmit     # TS 检查
 - **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
 - **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
 
-## 当前状态速查（2026-08-20）
+## 当前状态速查（2026-08-20 Day 12）
 
 - ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing** + 别名页（`/stp-to-stl` `/gltf-to-obj`）
 - ✅ **`/converters` 目录 hub** —— 9×5 矩阵链到全部 40 转换页 + 各分区；从 `lib/seo.ts` 常量生成，加新路由自动进目录
@@ -194,11 +195,31 @@ npx tsc --noEmit     # TS 检查
 - ✅ **2D / DXF 管线**（7 页）：jpg/png/image→dxf（位图描边）· stl/step→dxf（截面 + 3DFACE）· dxf→stl（挤出）· `/dxf-viewer`。核心 `lib/dxf/*`，见下方要点
 - ✅ 6 差异化工具：Bambu↔Prusa 3MF · G-code Simulator · STL Repair · **3D Print Checker** · **STL Editor** · iframe Embed v2（4 主题）
 - ✅ **3D→图片渲染器**（`/stl-to-jpg` `/obj-to-png` `/glb-to-png`）—— 离屏 WebGL 出图，见下方要点
-- ✅ 3 reference · 3 legal · sitemap **87 URLs** · GA4 + GSC + 5 种 JSON-LD schema（+ ItemList）
+- ✅ **彩色浮雕**（`/image-to-color-stl`）—— 高度图 + 顶点色 → PLY/GLB，见下方要点
+- ✅ 3 reference · 3 legal · sitemap **90 URLs** · GA4 + GSC + 5 种 JSON-LD schema（+ ItemList）
 - ✅ Cloudflare Pages auto-deploy（push main → 2-3 分钟生效）
 - ✅ Node 测试 **179/179**：`scripts/{dxf,print-check,stl-editor,render}-test.mts`，用 `npx tsx scripts/X-test.mts` 跑
 - ⏳ 待办清单见 `../progress.md` 末尾（GSC 提交 · 功能候选 · 红线维持）。渲染管线已无头端到端验证（套路见下节）；DXF / heightmap 的滑块交互仍待真机
 - ⚠️ **真瓶颈是分发不是功能**（Day 6/7/8/10 反复确认）。再加页前先问一句是否该转分发轨。
+
+### 顶点色 / 彩色浮雕要点（2026-08-20 Day 12 加）
+
+- **⚠️ `color` 属性必须存线性空间**：`PLYExporter` 和 `GLTFExporter` 写文件时都会做 working→sRGB 转换。存 sRGB 会把传递曲线**做两遍**，颜色发灰。`image-to-mesh.ts` 里有 256 项 `SRGB_TO_LINEAR` LUT 做一次性转换。
+  - **回归判据**：用 `#808080` 测。正确 = 导出 PLY 里读回精确 `128`；多做一次 ≈55；少做一次 ≈186。
+- 底面网格**复用顶面颜色**，让侧壁读作实色边而非渐隐到黑。
+- 材质开 `vertexColors` 时基色必须设 **白色**（否则品牌蓝会乘进顶点色）。
+- **STL/OBJ/3MF 没有顶点色**：UI 在开启彩色时把导出目标限制为 **PLY / GLB** 并说明原因，不静默丢色。3MF 有可选 color 扩展，我们的自研 writer 未实现（二期）。
+- `ImageToStlTool` 的 `targetFormat` 已扩到 `stl|obj|3mf|glb`；`defaultKeepColor` 供 `/image-to-color-stl` 落地页默认开启。
+
+### 转换页基线 FAQ 机制（2026-08-20 Day 12 加）
+
+- `ConverterPage` 的 `buildBaselineFaq()` 给**没传 `content.faq` 的 31 个精简页**自动生成动词形态 FAQ（`How do I convert X to Y?` / `Is there a free X to Y converter…` / `Can I convert X to Y online…`），source-only 源格式多一条「为什么不能反向转」。
+- **11 个富内容页跳过基线**（它们在路由里自己注入 `faqPageSchema`）—— 否则同页会有两份 FAQPage schema。改动前先跑：`grep -o '"@type":"FAQPage"' out/<page>/index.html | wc -l` 应恒为 **1**。
+- **为什么做动词形态**：CSV 实测名词形态（`obj to stl`）被 convert3d 占死 #1-#2，但动词形态（`convert obj to stl` **KD13**、`how to convert 3mf to stl` **KD8**）无人认真做。详见 `../progress.md` 的「关键词 → 页面 总表」。
+
+### `SeoFaqSection` 的 `steps` 段（2026-08-20 Day 12 加）
+
+工具页专用的编号操作段（`stepsTitle` + `steps[]`）。用于问题形态占绝对多数的簇（如 STL 编辑器簇 Questions 126 个 / 3.2K）。**必须是本工具的真实操作步骤，不是「什么是 X」科普** —— 后者撞 CLAUDE.md #4。
 
 ### 3D→图片渲染管线要点（2026-08-20 加）
 
