@@ -140,6 +140,8 @@ npx tsc --noEmit     # TS 检查
 - 所有页面：title / description / canonical / og / twitter 必须齐全
 - Internal links 用 `<Link>` 不用 `<a>`
 - **新页必须注册进 `lib/seo.ts` 的路由分组**（否则不进 sitemap、不进 `/converters` 目录 = 孤儿页），并在页脚给个入口
+- **筛关键词一律看 US 量**（第一年只做英文）；**先剔意图污染**再算簇总量；**KD 异常低+量异常大+竞品 CSV 零命中 = 同形词**，看 Questions 栏验证语义
+- **名词形态 vs 动词形态要分开查排名**：`X to Y` 常被头部占死，但 `convert X to Y` / `how to convert X to Y` 经常无人占（`how to convert 3mf to stl` KD8）。`ConverterPage` 已自动给精简页生成动词形态 FAQ
 - **别名页只给"真实存在的另一个扩展名"**（`.stp` vs `.step`、`.gltf` vs `.glb`）。**错拼 / 语序变体不建独立 URL** —— 2026-08-04 实测：`mf3 to stl`(720) 是 imagetostl 用规范页 `/3mf/to/stl` 排 #1、`step in stl`(1000) 用 `/step/to/stl` 排 #2，没有赢家靠错拼 URL。这类词写进规范页的 FAQ/about（且必须是**真回答**，不是塞词）
 
 ---
@@ -162,7 +164,8 @@ npx tsc --noEmit     # TS 检查
 | `../STRATEGY.md` | 38 条 SEO/产品洞察沉淀 |
 | `../PROPOSAL.md` | 融合方案战略立意 |
 | `../PLAN.md` | 12 周按周任务表 |
-| `../progress.md` | 每日进度 |
+| `../progress.md` | 每日进度 · **「关键词 → 页面」总表**（做 SEO 前先看它）· **15 条筛词框架** |
+| `../调研semrush竞品keyword/` | 竞品 Semrush CSV。**裁决任何关键词前先回这里交叉验证**，不看截图下结论 |
 | `node_modules/next/dist/docs/` | Next.js 16 官方文档（必读，跟训练数据不同）|
 
 ---
@@ -199,8 +202,9 @@ npx tsc --noEmit     # TS 检查
 - ✅ 3 reference · 3 legal · sitemap **90 URLs** · GA4 + GSC + 5 种 JSON-LD schema（+ ItemList）
 - ✅ Cloudflare Pages auto-deploy（push main → 2-3 分钟生效）
 - ✅ Node 测试 **179/179**：`scripts/{dxf,print-check,stl-editor,render}-test.mts`，用 `npx tsx scripts/X-test.mts` 跑
-- ⏳ 待办清单见 `../progress.md` 末尾（GSC 提交 · 功能候选 · 红线维持）。渲染管线已无头端到端验证（套路见下节）；DXF / heightmap 的滑块交互仍待真机
-- ⚠️ **真瓶颈是分发不是功能**（Day 6/7/8/10 反复确认）。再加页前先问一句是否该转分发轨。
+- ⏳ 待办清单见 `../progress.md` 末尾。GSC 新页已全部提交/收录；仅 DXF 批的 canvas 滑块交互待真机
+- ✅ **WebGL 已不是验证盲区**：本地静态产物 + playwright 拿得到真 GPU，可端到端验渲染/导出（套路见下节）。老约束只对线上 WAF 成立
+- ⚠️ **真瓶颈是分发不是功能**（Day 6/7/8/10/12 反复确认）。再加页前先问一句是否该转分发轨。
 
 ### 顶点色 / 彩色浮雕要点（2026-08-20 Day 12 加）
 
