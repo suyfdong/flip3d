@@ -101,7 +101,7 @@ export default function SiteFooter() {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-3">Viewers</h3>
+            <h3 className="font-semibold mb-3">Viewers &amp; renders</h3>
             <ul className="space-y-2 text-zinc-600 dark:text-zinc-400">
               <li><Link href="/stl-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">STL Viewer</Link></li>
               <li><Link href="/obj-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">OBJ Viewer</Link></li>
@@ -109,6 +109,9 @@ export default function SiteFooter() {
               <li><Link href="/ply-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">PLY Viewer</Link></li>
               <li><Link href="/glb-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">GLB / glTF Viewer</Link></li>
               <li><Link href="/3mf-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">3MF Viewer</Link></li>
+              <li><Link href="/stl-to-jpg/" className="hover:text-blue-600 dark:hover:text-blue-400">STL to JPG</Link></li>
+              <li><Link href="/obj-to-png/" className="hover:text-blue-600 dark:hover:text-blue-400">OBJ to PNG</Link></li>
+              <li><Link href="/glb-to-png/" className="hover:text-blue-600 dark:hover:text-blue-400">GLB to PNG</Link></li>
             </ul>
           </div>
           <div>

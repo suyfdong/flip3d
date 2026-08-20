@@ -7,6 +7,7 @@ import {
   IMAGE_ROUTES,
   LEGAL_ROUTES,
   REFERENCE_ROUTES,
+  RENDER_ROUTES,
   SITE_URL,
   TOOL_ROUTES,
   VECTOR_ROUTES,
@@ -85,6 +86,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly" as const,
     priority: 0.9, // 2D CAD pipeline — differentiated, convert3d ranks poorly here
   }));
+  const renderers = RENDER_ROUTES.map(({ slug }) => ({
+    url: `${SITE_URL}/${slug}/`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.8, // 3D → image renderer pages (lib/render/*)
+  }));
   const viewers = VIEWER_ROUTES.map(({ slug }) => ({
     url: `${SITE_URL}/${slug}/`,
     lastModified: now,
@@ -103,6 +110,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...aliases,
     ...vectorTools,
     ...dxf,
+    ...renderers,
     ...viewers,
   ];
 }

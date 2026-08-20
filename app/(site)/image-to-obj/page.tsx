@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/image-to-obj/`;
 const title = "Image to OBJ Converter — Free Online | No Signup Required";
 const description =
-  "Convert an image to a 3D OBJ model in your browser. Brightness becomes height — turn a PNG or JPG into a Wavefront OBJ relief. Free, instant, 100% local.";
+  "Convert an image to a 3D OBJ model in your browser. Brightness becomes height — turn a PNG, JPG or WebP into a Wavefront OBJ relief. Free, instant, 100% local.";
 
 export const metadata: Metadata = {
   title,

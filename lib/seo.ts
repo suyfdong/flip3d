@@ -148,6 +148,16 @@ export const DXF_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "dxf-viewer", title: "Online DXF Viewer" },
 ];
 
+// 3D → raster image renderers. Not mesh conversion: the model is rendered
+// offscreen with WebGL and the output is a picture (lib/render/*). Captures the
+// "<format> to png/jpg" cluster — convert3d ranks #2 for "obj to png" with its
+// /render-model page, so the intent is proven; we had nothing on it.
+export const RENDER_ROUTES: Array<{ slug: string; title: string }> = [
+  { slug: "stl-to-jpg", title: "STL to JPG" },
+  { slug: "obj-to-png", title: "OBJ to PNG" },
+  { slug: "glb-to-png", title: "GLB to PNG" },
+];
+
 // Extension-alias converter pages: same engine as a CONVERTER_ROUTE but a
 // distinct search query gets its own URL + canonical (e.g. .stp vs .step).
 export const ALIAS_ROUTES: Array<{ slug: string; title: string }> = [

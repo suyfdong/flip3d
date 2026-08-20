@@ -33,6 +33,10 @@ const FAQ = [
     a: "Drop your .jpg or .jpeg above, choose relief or lithophane, set the size and thickness, and download the STL. Each pixel's brightness sets how tall that point is.",
   },
   {
+    q: "Does it take WebP files too?",
+    a: "Yes. Phone screenshots and downloaded images are often .webp now, so the same box accepts WebP alongside JPG and PNG. Drop it straight in — no need to re-save it as a JPG first.",
+  },
+  {
     q: "Can I 3D print a photo from a JPG?",
     a: "Yes — JPG is the usual format for photos. For a portrait or pet photo, use lithophane mode and print it a few millimetres thick so the image appears when backlit.",
   },

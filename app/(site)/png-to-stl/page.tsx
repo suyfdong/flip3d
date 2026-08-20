@@ -33,6 +33,10 @@ const FAQ = [
     a: "Drop your .png above, pick relief or lithophane, set the size and thickness, and download the STL. Brightness becomes height; transparent pixels flatten to the base of the model.",
   },
   {
+    q: "Can I use a WebP instead of a PNG?",
+    a: "Yes. This page accepts .webp alongside .png and .jpg — WebP is decoded the same way, and its alpha channel is treated like a PNG's, so transparent areas flatten to the base. There's nothing to convert first.",
+  },
+  {
     q: "What happens to transparency in a PNG?",
     a: "Transparent (alpha) areas are treated as the base level, so cut-out PNGs keep a clean flat background instead of a raised block. Opaque areas are raised by their brightness.",
   },

@@ -182,7 +182,7 @@ export default function ImageToStlTool({
         if (origin === "drop") trackFileUploaded("stl", "drop");
         else trackSampleLoaded("stl");
       } catch {
-        setErrorMsg("That image couldn't be decoded. Try a PNG or JPG.");
+        setErrorMsg("That image couldn't be decoded. Try a PNG, JPG or WebP.");
         setStatus("error");
       }
     },
@@ -416,7 +416,10 @@ export default function ImageToStlTool({
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <h2 className="text-2xl font-bold tracking-tight mb-5">How to use it</h2>
             <ol className="text-sm text-zinc-700 dark:text-zinc-300 space-y-2 list-decimal pl-6 mb-8">
-              <li>Drop a PNG or JPG above (high-contrast images give the cleanest result).</li>
+              <li>
+                Drop a PNG, JPG or WebP above (high-contrast images give the
+                cleanest result).
+              </li>
               <li>
                 Pick <strong>Relief</strong> (bright = taller emboss) or{" "}
                 <strong>Lithophane</strong> (dark = thicker, glows when backlit).

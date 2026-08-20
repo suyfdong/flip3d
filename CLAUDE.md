@@ -32,6 +32,7 @@ app/
 │   │                                 print-checker, stl-editor
 │   ├── *-viewer/        10 个 viewer 页（复用 ViewerTool，root-level 短 URL）
 │   ├── *-to-dxf/ dxf-*  2D/DXF 管线 7 页
+│   ├── stl-to-jpg/ obj-to-png/ glb-to-png/   3D→图片渲染器 3 页（RenderImageTool）
 │   ├── reference/       evergreen：stl-vs-obj-vs-3mf, bambu-vs-prusa, metal-gauge-chart
 │   ├── embed/page.tsx   embed 主页（marketing + code generator）
 │   └── about|privacy|terms/
@@ -45,6 +46,7 @@ app/
 components/   ConverterPage / ViewerTool / SeoFaqSection /
               DxfPreview / ImageToDxfTool / MeshToDxfTool / DxfToMeshTool / DxfViewerTool /
               ImageToStlTool / SvgToStlTool / PrintCheckTool / StlEditorTool /
+              RenderImageTool /
               BambuPrusaTool / GcodeSimulator / StlRepairTool /
               EmbedViewer / EmbedCodeGenerator / GcodeViewer / MeshViewer /
               SiteHeader / SiteFooter / Dropzone / JsonLd
@@ -56,6 +58,8 @@ lib/
 ├── repair/      analyze.ts · repair.ts（导出 flattenToGeometry）
 ├── gcode/       parser.ts · stats.ts · sample.ts
 ├── heightmap/   image-to-mesh.ts（图像→高度场）
+├── render/      framing.ts（取景/命名纯数学，Node 可测）· snapshot.ts（离屏
+│               WebGLRenderer → PNG/JPG/WebP Blob，仅浏览器）
 ├── svg/         svg-to-mesh.ts（矢量挤出，需 DOMParser → 仅浏览器）
 ├── dxf/         write.ts（R12 writer）· trace.ts（位图描边）· section.ts（网格截面）
 │               parse.ts（DXF 读取 + BLOCKS/INSERT）· dxf-to-mesh.ts（挤出）
@@ -66,7 +70,7 @@ lib/
 ├── embed-themes.ts  light/dark/paper/neon 主题色
 ├── analytics.ts     window.gtag 直接调用（不用 sendGAEvent）
 └── seo.ts       SITE_URL + buildConverterMetadata + 全部路由分组：CONVERTER /
-                 ALIAS / IMAGE / VECTOR / DXF / VIEWER / TOOL / REFERENCE /
+                 ALIAS / IMAGE / VECTOR / DXF / VIEWER / RENDER / TOOL / REFERENCE /
                  HUB / LEGAL。**新页必须注册进对应分组** —— sitemap 和
                  /converters 目录都从这里生成，漏注册＝孤儿页
 
@@ -180,7 +184,7 @@ npx tsc --noEmit     # TS 检查
 - **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
 - **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
 
-## 当前状态速查（2026-08-04）
+## 当前状态速查（2026-08-20）
 
 - ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing** + 别名页（`/stp-to-stl` `/gltf-to-obj`）
 - ✅ **`/converters` 目录 hub** —— 9×5 矩阵链到全部 40 转换页 + 各分区；从 `lib/seo.ts` 常量生成，加新路由自动进目录
@@ -189,11 +193,23 @@ npx tsc --noEmit     # TS 检查
 - ✅ **10 个 viewer 页**：stl/obj/fbx/ply/glb/3mf + step/stp/iges/dae（CAD 四个走 occt）。全部复用 `components/ViewerTool.tsx`，零新引擎代码
 - ✅ **2D / DXF 管线**（7 页）：jpg/png/image→dxf（位图描边）· stl/step→dxf（截面 + 3DFACE）· dxf→stl（挤出）· `/dxf-viewer`。核心 `lib/dxf/*`，见下方要点
 - ✅ 6 差异化工具：Bambu↔Prusa 3MF · G-code Simulator · STL Repair · **3D Print Checker** · **STL Editor** · iframe Embed v2（4 主题）
-- ✅ 3 reference · 3 legal · sitemap **84 URLs** · GA4 + GSC + 5 种 JSON-LD schema（+ ItemList）
+- ✅ **3D→图片渲染器**（`/stl-to-jpg` `/obj-to-png` `/glb-to-png`）—— 离屏 WebGL 出图，见下方要点
+- ✅ 3 reference · 3 legal · sitemap **87 URLs** · GA4 + GSC + 5 种 JSON-LD schema（+ ItemList）
 - ✅ Cloudflare Pages auto-deploy（push main → 2-3 分钟生效）
-- ✅ Node 测试 **134/134**：`scripts/{dxf,print-check,stl-editor}-test.mts`，用 `npx tsx scripts/X-test.mts` 跑
-- ⏳ 待办清单见 `../progress.md` 末尾（GSC 提交 · 真机验证 canvas/WebGL · 功能候选 · 红线维持）
+- ✅ Node 测试 **179/179**：`scripts/{dxf,print-check,stl-editor,render}-test.mts`，用 `npx tsx scripts/X-test.mts` 跑
+- ⏳ 待办清单见 `../progress.md` 末尾（GSC 提交 · 功能候选 · 红线维持）。渲染管线已无头端到端验证（套路见下节）；DXF / heightmap 的滑块交互仍待真机
 - ⚠️ **真瓶颈是分发不是功能**（Day 6/7/8/10 反复确认）。再加页前先问一句是否该转分发轨。
+
+### 3D→图片渲染管线要点（2026-08-20 加）
+
+- **第四条非 mesh 管线**，输出是**光栅图片不是几何**。每页都写明「渲染不是转格式，图片转不回模型」。
+- **不要复用 `MeshViewer` 的 renderer 去 `toDataURL/toBlob`** —— 它没开 `preserveDrawingBuffer`，多数驱动上读回来是空帧。`lib/render/snapshot.ts` 每次新建一个带 `preserveDrawingBuffer: true` 的离屏 `WebGLRenderer`，顺带让输出分辨率脱离视口尺寸（`setPixelRatio(1)` + `setSize(w,h,false)` = 精确像素）。
+- **⚠️ `scene.add(object)` 会改父节点** —— Object3D 只能有一个 parent，把预览里的对象加进离屏场景 = 从 MeshViewer 场景里摘走，渲一次预览就空了。必须存 `originalParent` 并在 `finally` 里放回（截图实测抓到过这个 bug）。
+- **取景用外接球不用包围盒**：`fitDistance` 按 `r/sin(min(halfV,halfH))`，旋转无关，所以四个视角比例一致；**竖屏（aspect<1）时水平半角才是约束**，只按垂直 fov 算会裁掉两边。
+- **JPG 无 alpha**：选透明会静默编码成黑底 → UI 里禁用该按钮 + 给原因，`snapshot.ts` 里再兜一层回落白底。
+- 纯数学/命名在 `framing.ts`（无 three 无 DOM，Node 测 45 条）；WebGL 部分在 `snapshot.ts`。
+
+**无头验证 WebGL 是可行的（推翻旧约束）**：`npm run build` → `npx serve out`（**不要加 `-s`**，SPA fallback 会让所有路径返回首页）→ playwright 拿到的是真 GPU（ANGLE Metal）。套路：hook `URL.createObjectURL` + `HTMLAnchorElement.prototype.click` 截下 download 的 Blob，再 `createImageBitmap` 解回像素统计（模型像素占比 / alpha 分布 / 视角间像素哈希差异）验证不是空帧。文件上传走 `browser_file_upload`，**文件必须放在仓库根内**（MCP 有 allowed roots 限制）。
 
 ### DXF / 2D 管线要点（2026-08-04 加）
 

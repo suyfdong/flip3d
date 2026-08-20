@@ -17,6 +17,7 @@ import {
   REFERENCE_ROUTES,
   SITE_URL,
   TOOL_ROUTES,
+  RENDER_ROUTES,
   VECTOR_ROUTES,
   VIEWER_ROUTES,
 } from "@/lib/seo";
@@ -148,6 +149,7 @@ export default function Page() {
     ...VECTOR_ROUTES.map((r) => ({ name: r.title, url: `${SITE_URL}/${r.slug}/` })),
     ...DXF_ROUTES.map((r) => ({ name: r.title, url: `${SITE_URL}/${r.slug}/` })),
     ...VIEWER_ROUTES.map((r) => ({ name: r.title, url: `${SITE_URL}/${r.slug}/` })),
+    ...RENDER_ROUTES.map((r) => ({ name: r.title, url: `${SITE_URL}/${r.slug}/` })),
     ...TOOL_ROUTES.map((r) => ({
       name: r.title,
       url: `${SITE_URL}/tools/${r.slug}/`,
@@ -336,6 +338,23 @@ export default function Page() {
                 href: `/${r.slug}/`,
                 title: r.title,
                 desc: "Rotate, zoom and inspect in the browser",
+              }))}
+            />
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-2">
+              3D to image
+            </h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-5">
+              Render a model to a flat picture — thumbnails, product shots and
+              docs images. Output is a raster image, not geometry.
+            </p>
+            <LinkGrid
+              items={RENDER_ROUTES.map((r) => ({
+                href: `/${r.slug}/`,
+                title: r.title,
+                desc: "Pick the angle, size and background",
               }))}
             />
           </div>

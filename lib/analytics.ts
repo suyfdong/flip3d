@@ -66,3 +66,11 @@ export function trackSvgConverted() {
     pair: "svg-to-stl",
   });
 }
+
+export function trackRendered(sourceExt: string, imageFormat: string) {
+  track("file_converted", {
+    source_format: sourceExt,
+    target_format: imageFormat,
+    pair: `${sourceExt}-to-${imageFormat}`,
+  });
+}
