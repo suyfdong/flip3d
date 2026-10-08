@@ -88,9 +88,12 @@ jobs:
           const browser = await chromium.launch({
             args: ["--use-angle=swiftshader", "--use-gl=angle", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
           });
-          const ctx = await browser.newContext({
-            extraHTTPHeaders: { "x-flip3d-uptime": process.env.UPTIME_TOKEN },
-          });
+          const ctx = await browser.newContext();
+          // Add the WAF-skip header ONLY to flip3d.app requests. A context-wide
+          // extraHTTPHeaders would attach it to cross-origin fetches too and
+          // break their CORS preflight (seen with the sample GLB on GitHub).
+          await ctx.route((u) => u.hostname === "flip3d.app", (route) =>
+            route.continue({ headers: { ...route.request().headers(), "x-flip3d-uptime": process.env.UPTIME_TOKEN } }));
           const page = await ctx.newPage();
           const errors = [];
           page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 160)); });
