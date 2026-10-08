@@ -103,6 +103,27 @@ const QUICK_TOOLS: ToolCard[] = [
     href: "/tools/stl-repair/",
   },
   {
+    title: "STL Editor",
+    desc: "Resize, rotate and drop a model onto the bed, then export STL / OBJ / GLB / 3MF",
+    status: "live",
+    badge: "Live now",
+    href: "/tools/stl-editor/",
+  },
+  {
+    title: "STEP / STP Viewer",
+    desc: "Open CAD files in the browser — STEP, IGES, FBX, DAE. No install, no upload.",
+    status: "live",
+    badge: "Live now",
+    href: "/step-viewer/",
+  },
+  {
+    title: "3MF Viewer",
+    desc: "Inspect Bambu / Prusa 3MF projects, parts and colors before slicing",
+    status: "live",
+    badge: "Live now",
+    href: "/3mf-viewer/",
+  },
+  {
     title: "Lithophane Generator",
     desc: "Photo → 3D-printable lithophane that glows when backlit. Tune the thickness.",
     status: "live",
@@ -437,7 +458,7 @@ export default function Home() {
                   <div>
                     <h2 className="text-2xl font-bold tracking-tight">Quick tools</h2>
                     <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-                      Eight tools, all live today — 100% in your browser.
+                      Twelve tools, all live today — 100% in your browser.
                     </p>
                   </div>
                   <a
