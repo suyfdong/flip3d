@@ -11,8 +11,8 @@
 #            zone's "Challenge suspicious user agents" custom rule (managed
 #            challenge, 403). The edge job therefore sends a secret header
 #            (x-flip3d-uptime: ${{ secrets.UPTIME_TOKEN }}) that a Cloudflare
-#            Skip rule, placed first, lets through. Without the Skip rule this
-#            job is expected to fail. Manual + warning-only until verified.
+#            Skip rule ("Skip WAF for uptime check", placed first) lets through.
+#            Verified green 2026-10-08 (run 37734854603).
 name: Uptime
 
 on:
@@ -62,9 +62,7 @@ jobs:
             echo "::warning::wiki.mayako.com no longer sends Access-Control-Allow-Origin for flip3d.app; their embedded viewers will show a CORS error."; exit 1; fi
 
   edge:
-    name: Edge (flip3d.app in Chromium, manual, warning only)
-    if: github.event_name == 'workflow_dispatch'
-    continue-on-error: true
+    name: Edge (flip3d.app in Chromium)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
