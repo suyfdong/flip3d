@@ -1,6 +1,13 @@
-# Uptime check for the pages third parties depend on (embed iframes).
-# GitHub emails the committer when a scheduled run fails.
-# NOTE: GitHub disables scheduled workflows after 60 days without repo activity.
+# Uptime for the pages third parties depend on (embed iframes).
+# A failed scheduled run emails the committer. GitHub pauses schedules after
+# 60 days without repo activity.
+#
+# Two layers:
+#   origin — flip3d.pages.dev via curl. Not behind the zone's Bot Fight Mode,
+#            so a plain HTTP check is reliable. Catches broken deploys.
+#   edge   — flip3d.app in real headless Chromium. Datacenter curl gets a
+#            Cloudflare challenge (403 "Just a moment"), a browser does not.
+#            Also proves the JS bundle, three.js and the CORS sample fetch work.
 name: Uptime
 
 on:
@@ -8,47 +15,37 @@ on:
     - cron: "*/30 * * * *"
   workflow_dispatch:
 
+env:
+  SAMPLE_GLB: https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF-Binary/Box.glb
+
 jobs:
-  check:
+  origin:
+    name: Origin (flip3d.pages.dev)
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    env:
-      UA: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
     steps:
       - name: Pages respond with 200 and expected content
         run: |
           set -uo pipefail
+          base="https://flip3d.pages.dev"
           check() {
             local url="$1" marker="$2" out code body
-            out=$(curl -sS -A "$UA" --max-time 20 -w $'\n%{http_code}' "$url") || { echo "::error::$url -> curl failed"; return 1; }
-            code=${out##*$'\n'}
-            body=${out%$'\n'*}
-            if [ "$code" != "200" ]; then
-              if grep -q "Just a moment" <<<"$body"; then
-                echo "::error::$url -> Cloudflare challenge page (HTTP $code). Real browsers may be fine; check WAF/Bot Fight Mode."
-              else
-                echo "::error::$url -> HTTP $code"
-              fi
-              return 1
-            fi
-            if ! grep -q -- "$marker" <<<"$body"; then
-              echo "::error::$url -> 200 but expected text '$marker' not found"
-              return 1
-            fi
+            out=$(curl -sS --max-time 20 -w $'\n%{http_code}' "$url") || { echo "::error::$url -> curl failed"; return 1; }
+            code=${out##*$'\n'}; body=${out%$'\n'*}
+            [ "$code" = "200" ] || { echo "::error::$url -> HTTP $code"; return 1; }
+            grep -q -- "$marker" <<<"$body" || { echo "::error::$url -> 200 but '$marker' missing"; return 1; }
             echo "ok  $url"
           }
           fail=0
-          check "https://flip3d.app/" "Flip3D" || fail=1
-          check "https://flip3d.app/embed/stl-viewer/?url=https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF-Binary/Box.glb" "Embedded 3D Viewer" || fail=1
-          check "https://flip3d.app/stl-viewer/" "Online STL Viewer" || fail=1
-          # The first JS chunk the embed page references must load — catches half-broken deploys.
-          chunk=$(curl -sS -A "$UA" --max-time 20 "https://flip3d.app/embed/stl-viewer/" | grep -o '/_next/static/[^"]*\.js' | head -1 || true)
+          check "$base/" "Flip3D" || fail=1
+          check "$base/embed/stl-viewer/?url=$SAMPLE_GLB" "Embedded 3D Viewer" || fail=1
+          check "$base/stl-viewer/" "Online STL Viewer" || fail=1
+          chunk=$(curl -sS --max-time 20 "$base/embed/stl-viewer/" | grep -o '/_next/static/[^"]*\.js' | head -1 || true)
           if [ -n "$chunk" ]; then
-            code=$(curl -s -o /dev/null -A "$UA" --max-time 20 -w '%{http_code}' "https://flip3d.app$chunk")
-            if [ "$code" = "200" ]; then echo "ok  chunk $chunk"; else echo "::error::chunk $chunk -> HTTP $code"; fail=1; fi
+            code=$(curl -s -o /dev/null --max-time 20 -w '%{http_code}' "$base$chunk")
+            [ "$code" = "200" ] && echo "ok  chunk $chunk" || { echo "::error::chunk $chunk -> HTTP $code"; fail=1; }
           else
-            echo "::error::embed page HTML references no /_next/static JS chunk"
-            fail=1
+            echo "::error::embed page references no /_next/static JS chunk"; fail=1
           fi
           exit $fail
 
@@ -56,9 +53,58 @@ jobs:
         continue-on-error: true
         run: |
           h=$(curl -sI --max-time 20 -H "Origin: https://flip3d.app" "https://wiki.mayako.com/3d-print-files/5deg-wing-spacer.stl" | tr -d '\r' | grep -i '^access-control-allow-origin' || true)
-          if [ -n "$h" ]; then
-            echo "ok  wiki.mayako.com -> $h"
-          else
-            echo "::warning::wiki.mayako.com no longer sends Access-Control-Allow-Origin for flip3d.app; their embedded viewers will show a CORS error."
-            exit 1
-          fi
+          if [ -n "$h" ]; then echo "ok  wiki.mayako.com -> $h"; else
+            echo "::warning::wiki.mayako.com no longer sends Access-Control-Allow-Origin for flip3d.app; their embedded viewers will show a CORS error."; exit 1; fi
+
+  edge:
+    name: Edge (flip3d.app in Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+    steps:
+      - name: Install playwright package (browsers are in the image)
+        run: npm init -y >/dev/null && npm i --no-save playwright@1.64.0 >/dev/null
+      - name: Pages render in a real browser
+        run: |
+          cat > check.mjs <<'JS'
+          import { chromium } from "playwright";
+          const SAMPLE = process.env.SAMPLE_GLB;
+          const browser = await chromium.launch();
+          const page = await browser.newPage();
+          let fail = 0;
+          async function check(label, url, assert) {
+            try {
+              const resp = await page.goto(url, { waitUntil: "load", timeout: 45000 });
+              const status = resp?.status();
+              if ((await page.title()).includes("Just a moment")) {
+                await page.waitForFunction(() => !document.title.includes("Just a moment"), null, { timeout: 20000 }).catch(() => {});
+              }
+              if ((await page.title()).includes("Just a moment")) {
+                throw new Error(`Cloudflare challenge not solved in headless Chromium (HTTP ${status}). Check Bot Fight Mode / WAF.`);
+              }
+              await assert(status);
+              console.log("ok ", label);
+            } catch (e) {
+              fail = 1;
+              console.log(`::error::${label} -> ${e.message}`);
+            }
+          }
+          await check("home", "https://flip3d.app/", async (s) => {
+            if (s !== 200) throw new Error(`HTTP ${s}`);
+            if (!(await page.title()).includes("Flip3D")) throw new Error("title mismatch");
+          });
+          await check("embed renders model + Open-in-Flip3D badge",
+            `https://flip3d.app/embed/stl-viewer/?url=${encodeURIComponent(SAMPLE)}`, async (s) => {
+            if (s !== 200) throw new Error(`HTTP ${s}`);
+            await page.waitForSelector("canvas", { timeout: 30000 });
+            await page.waitForFunction(() => /Open in/.test(document.body.innerText), null, { timeout: 20000 });
+          });
+          await check("stl-viewer", "https://flip3d.app/stl-viewer/", async (s) => {
+            if (s !== 200) throw new Error(`HTTP ${s}`);
+            if (!(await page.title()).includes("STL Viewer")) throw new Error("title mismatch");
+          });
+          await browser.close();
+          process.exit(fail);
+          JS
+          node check.mjs
