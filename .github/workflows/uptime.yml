@@ -7,10 +7,12 @@
 #            so a plain HTTP check is reliable. Catches broken deploys.
 #   edge   — flip3d.app in real headless Chromium. Proves the JS bundle,
 #            three.js and the CORS sample fetch work end to end.
-#            MANUAL ONLY + warning only: GitHub's datacenter IPs get a Cloudflare
-#            managed challenge (403) that headless Chromium cannot solve while
-#            Bot Fight Mode / challenge rules are on (verified 2026-10-08, runs
-#            37730413416 and 37730977755). Turn those off, then dispatch to check.
+#            GitHub's runners are Azure IPs and headless Chromium's UA trips the
+#            zone's "Challenge suspicious user agents" custom rule (managed
+#            challenge, 403). The edge job therefore sends a secret header
+#            (x-flip3d-uptime: ${{ secrets.UPTIME_TOKEN }}) that a Cloudflare
+#            Skip rule, placed first, lets through. Without the Skip rule this
+#            job is expected to fail. Manual + warning-only until verified.
 name: Uptime
 
 on:
@@ -75,12 +77,18 @@ jobs:
           npm i --no-save playwright@1.64.0 >/dev/null
           npx playwright install --with-deps chromium >/dev/null
       - name: Pages render in a real browser
+        env:
+          UPTIME_TOKEN: ${{ secrets.UPTIME_TOKEN }}
         run: |
+          if [ -z "$UPTIME_TOKEN" ]; then echo "::error::UPTIME_TOKEN secret not set"; exit 1; fi
           cat > check.mjs <<'JS'
           import { chromium } from "playwright";
           const SAMPLE = process.env.SAMPLE_GLB;
           const browser = await chromium.launch();
-          const page = await browser.newPage();
+          const ctx = await browser.newContext({
+            extraHTTPHeaders: { "x-flip3d-uptime": process.env.UPTIME_TOKEN },
+          });
+          const page = await ctx.newPage();
           let fail = 0;
           async function check(label, url, assert) {
             try {
