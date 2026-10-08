@@ -84,11 +84,17 @@ jobs:
           cat > check.mjs <<'JS'
           import { chromium } from "playwright";
           const SAMPLE = process.env.SAMPLE_GLB;
-          const browser = await chromium.launch();
+          // No GPU on the runner: force software WebGL so three.js can render.
+          const browser = await chromium.launch({
+            args: ["--use-angle=swiftshader", "--use-gl=angle", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
+          });
           const ctx = await browser.newContext({
             extraHTTPHeaders: { "x-flip3d-uptime": process.env.UPTIME_TOKEN },
           });
           const page = await ctx.newPage();
+          const errors = [];
+          page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 160)); });
+          page.on("pageerror", (e) => errors.push(String(e).slice(0, 160)));
           let fail = 0;
           async function check(label, url, assert) {
             try {
@@ -104,7 +110,10 @@ jobs:
               console.log("ok ", label);
             } catch (e) {
               fail = 1;
-              console.log(`::error::${label} -> ${e.message}`);
+              console.log(`::error::${label} -> ${e.message.split("\n")[0]}`);
+              const txt = await page.evaluate(() => document.body.innerText.replace(/\s+/g, " ").slice(0, 300)).catch(() => "");
+              console.log(`   page text: ${txt}`);
+              console.log(`   console errors: ${errors.slice(0, 5).join(" | ")}`);
             }
           }
           await check("home", "https://flip3d.app/", async (s) => {
