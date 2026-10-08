@@ -1,13 +1,12 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
 import { parseToObject, disposeObject, type Format } from "@/lib/converters";
-import { fileNameFromUrl } from "@/lib/viewer-url";
+import UrlParamLoader, { withModelUrl } from "@/components/UrlParamLoader";
 import {
   trackFileUploaded,
   trackSampleLoaded,
@@ -60,20 +59,6 @@ function makeSample(): THREE.Mesh {
   return new THREE.Mesh(geometry, material);
 }
 
-/**
- * Reads ?url= once and hands it up. Kept as its own component so the
- * useSearchParams Suspense boundary wraps nothing else (static export
- * requires the boundary).
- */
-function UrlParamLoader({ onUrl }: { onUrl: (url: string) => void }) {
-  const params = useSearchParams();
-  const url = params.get("url");
-  useEffect(() => {
-    if (url) onUrl(url);
-  }, [url, onUrl]);
-  return null;
-}
-
 export default function ViewerTool({ config }: { config: ViewerConfig }) {
   const { format, formatLabel, accept, eyebrow, heading, intro, about, faq, links } =
     config;
@@ -82,7 +67,8 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   const [fileName, setFileName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [fromUrl, setFromUrl] = useState(false);
+  // Set when the model came from ?url= — "Do more" links then carry it along.
+  const [modelUrl, setModelUrl] = useState<string | null>(null);
 
   // Dispose the previous object whenever it's replaced or on unmount — without
   // this, revisiting/leaving the page leaks geometry + GPU buffers.
@@ -117,26 +103,18 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
   // ?url=… — the "Open in Flip3D" badge inside embedded viewers lands here
   // with the same model, so the visitor gets it full-size instead of a logo.
-  const handleUrl = useCallback(
-    async (url: string) => {
-      setStatus("loading");
-      setErrorMsg(null);
-      setFromUrl(true);
+  const handleUrlLoaded = useCallback(
+    async (buffer: ArrayBuffer, name: string) => {
       try {
-        const res = await fetch(url, { mode: "cors" });
-        if (!res.ok) throw new Error(`HTTP ${res.status} fetching model`);
-        const buffer = await res.arrayBuffer();
         const parsed = await parseToObject(buffer, format);
         setObject(parsed);
-        setFileName(fileNameFromUrl(url));
+        setFileName(name);
         setStatus("idle");
         trackFileUploaded(format, "url");
       } catch (err) {
         const msg =
-          err instanceof Error ? err.message : "Could not load model from URL";
-        setErrorMsg(
-          `${msg}. The file host must allow CORS — or drop the file here instead.`,
-        );
+          err instanceof Error ? err.message : `Could not open this .${format} file`;
+        setErrorMsg(msg);
         setStatus("error");
         trackConvertError(format, format, msg);
       }
@@ -155,6 +133,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   const handleReset = () => {
     setObject(null);
     setFileName("");
+    setModelUrl(null);
     setStatus("idle");
     setErrorMsg(null);
   };
@@ -163,9 +142,18 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <UrlParamLoader onUrl={handleUrl} />
-      </Suspense>
+      <UrlParamLoader
+        onStart={() => {
+          setStatus("loading");
+          setErrorMsg(null);
+          setModelUrl(new URLSearchParams(window.location.search).get("url"));
+        }}
+        onLoaded={handleUrlLoaded}
+        onError={(m) => {
+          setErrorMsg(m);
+          setStatus("error");
+        }}
+      />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-12">
         {!loaded ? (
           <>
@@ -202,7 +190,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
               </div>
               {status === "loading" && (
                 <p className="mt-4 text-center text-sm text-zinc-500">
-                  {fromUrl ? "Loading model from URL…" : "Opening model…"}
+                  {modelUrl ? "Loading model from URL…" : "Opening model…"}
                 </p>
               )}
               {errorMsg && (
@@ -245,7 +233,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
                 {links.map((l) => (
                   <Link
                     key={l.href}
-                    href={l.href}
+                    href={withModelUrl(l.href, modelUrl)}
                     className="block px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-700"
                   >
                     <div className="font-semibold text-sm">{l.title}</div>

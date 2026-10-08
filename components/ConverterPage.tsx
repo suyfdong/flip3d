@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
+import UrlParamLoader from "@/components/UrlParamLoader";
 import { JsonLd } from "@/components/JsonLd";
 import { faqPageSchema } from "@/lib/schema";
 import {
@@ -129,7 +130,7 @@ export default function ConverterPage({ from, to, content }: Props) {
   const handleFile = async (
     buffer: ArrayBuffer,
     name: string,
-    source: "drop" | "sample" = "drop",
+    source: "drop" | "sample" | "url" = "drop",
   ) => {
     setStatus("loading");
     setErrorMsg(null);
@@ -208,6 +209,17 @@ export default function ConverterPage({ from, to, content }: Props) {
 
   return (
     <>
+      <UrlParamLoader
+        onStart={() => {
+          setStatus("loading");
+          setErrorMsg(null);
+        }}
+        onLoaded={(buffer, name) => handleFile(buffer, name, "url")}
+        onError={(m) => {
+          setErrorMsg(m);
+          setStatus("error");
+        }}
+      />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-12">
         {!object ? (
           <>

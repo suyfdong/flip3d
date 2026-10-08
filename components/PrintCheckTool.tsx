@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
 import Dropzone, { SUPPORTED_FORMATS } from "@/components/Dropzone";
+import UrlParamLoader from "@/components/UrlParamLoader";
 import {
   parseToObject,
   detectFormat,
@@ -86,7 +87,7 @@ export default function PrintCheckTool() {
   const handleFile = async (
     buffer: ArrayBuffer,
     name: string,
-    source: "drop" | "sample" = "drop",
+    source: "drop" | "sample" | "url" = "drop",
   ) => {
     const fmt = detectFormat(name) ?? "stl";
     setStatus("loading");
@@ -161,6 +162,17 @@ export default function PrintCheckTool() {
 
   return (
     <>
+      <UrlParamLoader
+        onStart={() => {
+          setStatus("loading");
+          setErrorMsg(null);
+        }}
+        onLoaded={(buffer, name) => handleFile(buffer, name, "url")}
+        onError={(m) => {
+          setErrorMsg(m);
+          setStatus("error");
+        }}
+      />
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-12">
         {!object || !report ? (
           <>

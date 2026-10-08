@@ -150,7 +150,7 @@ npx tsc --noEmit     # TS 检查
 
 - **iframe `src` 不是反链**，角标链接在我们自己的 noindex 页里是自链。真反链只能来自宿主页的 `<a>` —— 生成器默认附带一行 credit `<p>3D viewer by <a href="https://flip3d.app/">Flip3D</a></p>`（可勾掉）。
 - 角标是**功能入口**不是 logo：模型加载成功后显示「Open in Flip3D」，指向 `/{fmt}-viewer/?url=<model>&utm_source=embed&utm_medium=iframe&utm_campaign=open_viewer`（`lib/viewer-url.ts`）。加载失败才回退 "Powered by"。依据：Mayako 页 30 天 2,400 次 iframe 加载、旧 logo 角标 0 点击。
-- **所有 viewer 页支持 `?url=`** 自动拉取（`ViewerTool` 的 `UrlParamLoader`，在 Suspense 里读 searchParams —— 静态导出必须有这个边界）。宿主需允许 CORS。
+- **`?url=` 贯穿整条工具链**：viewer 页、`/tools/stl-repair/`、`/tools/print-checker/`、40 个转换页都挂了 `components/UrlParamLoader.tsx`（Suspense 内读 searchParams —— 静态导出必须有边界；handler 存 ref，effect 只依赖 url）。viewer 页从 URL 加载后，「Do more with this file」链接用 `withModelUrl()` 把 `?url=` 传给下一个工具，用户不用重新下载再拖。宿主需允许 CORS。新工具页接入 = 三行：import + `<UrlParamLoader onLoaded={(b,n)=>handleFile(b,n,"url")} …/>`。
 - **GA4 在跨站 iframe 里一条 hit 都不发**（实测 gtag 加载、dataLayer 正常、但零网络调用），embed 曝光量只能看 **Cloudflare Web Analytics**（账号级 → Visits → Referers / Paths），角标点击看 GA4 `embed / iframe`。
 - `.github/workflows/uptime.yml` 每 30 分钟 curl **flip3d.pages.dev**（原始域名，不过 Bot Fight Mode）的首页 / embed 页 / stl-viewer 页 + 第一个 JS chunk，失败 GitHub 发邮件；另以 warning 监控 Mayako 文件的 CORS 头。边缘层（flip3d.app）用真实 headless Chromium 检查 embed 页真的渲染出 canvas + 角标；GitHub runner 是 Azure IP 会被「Challenge suspicious user agents」规则质询，所以请求带 `x-flip3d-uptime` 密钥头（GitHub Secret `UPTIME_TOKEN`），Cloudflare 第 1 条规则「Skip WAF for uptime check」按该头放行。**密钥头只能加在 flip3d.app 的请求上**（context 级 extraHTTPHeaders 会让跨域 fetch 的 CORS 预检失败）。runner 无 GPU，Chromium 需 SwiftShader 参数。
 - `/embed/stl-viewer/` 有意 `noindex,follow`（GSC「被 noindex 排除」= 正常，别修）。
