@@ -59,12 +59,16 @@ jobs:
   edge:
     name: Edge (flip3d.app in Chromium)
     runs-on: ubuntu-latest
-    timeout-minutes: 8
-    container:
-      image: mcr.microsoft.com/playwright:v1.64.0-noble
+    timeout-minutes: 10
     steps:
-      - name: Install playwright package (browsers are in the image)
-        run: npm init -y >/dev/null && npm i --no-save playwright@1.64.0 >/dev/null
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright + Chromium
+        run: |
+          npm init -y >/dev/null
+          npm i --no-save playwright@1.64.0 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
       - name: Pages render in a real browser
         run: |
           cat > check.mjs <<'JS'
