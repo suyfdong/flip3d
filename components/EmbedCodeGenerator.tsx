@@ -39,6 +39,7 @@ export default function EmbedCodeGenerator() {
   const [height, setHeight] = useState(500);
   const [format, setFormat] = useState<"" | Format>("");
   const [theme, setTheme] = useState<EmbedTheme>(DEFAULT_THEME);
+  const [credit, setCredit] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const embedUrl = useMemo(() => {
@@ -52,8 +53,13 @@ export default function EmbedCodeGenerator() {
 
   const iframeHtml = useMemo(() => {
     if (!embedUrl) return "";
-    return `<iframe src="${embedUrl}" width="100%" height="${height}" style="border:none;border-radius:12px" loading="lazy" allowfullscreen></iframe>`;
-  }, [embedUrl, height]);
+    const iframe = `<iframe src="${embedUrl}" width="100%" height="${height}" style="border:none;border-radius:12px" loading="lazy" allowfullscreen></iframe>`;
+    if (!credit) return iframe;
+    // A plain <a> on the host page. The iframe src itself is not a link, so
+    // this line is what actually credits (and links to) Flip3D.
+    const creditLine = `<p style="margin:6px 0 0;font-size:12px;color:#71717a">3D viewer by <a href="https://flip3d.app/" rel="noopener">Flip3D</a></p>`;
+    return `${iframe}\n${creditLine}`;
+  }, [embedUrl, height, credit]);
 
   const handleCopy = async () => {
     if (!iframeHtml) return;
@@ -168,10 +174,24 @@ export default function EmbedCodeGenerator() {
         ))}
       </div>
 
+      <label className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={credit}
+          onChange={(e) => setCredit(e.target.checked)}
+          className="mt-0.5 accent-blue-600"
+        />
+        <span>
+          Add a one-line credit under the viewer (&ldquo;3D viewer by Flip3D&rdquo;).
+          Optional — a plain link that helps other people find the tool. The
+          small badge inside the viewer stays either way.
+        </span>
+      </label>
+
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            iframe HTML
+            {credit ? "iframe HTML + credit line" : "iframe HTML"}
           </span>
           <button
             type="button"

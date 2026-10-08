@@ -1,0 +1,64 @@
+# Uptime check for the pages third parties depend on (embed iframes).
+# GitHub emails the committer when a scheduled run fails.
+# NOTE: GitHub disables scheduled workflows after 60 days without repo activity.
+name: Uptime
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      UA: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
+    steps:
+      - name: Pages respond with 200 and expected content
+        run: |
+          set -uo pipefail
+          check() {
+            local url="$1" marker="$2" out code body
+            out=$(curl -sS -A "$UA" --max-time 20 -w $'\n%{http_code}' "$url") || { echo "::error::$url -> curl failed"; return 1; }
+            code=${out##*$'\n'}
+            body=${out%$'\n'*}
+            if [ "$code" != "200" ]; then
+              if grep -q "Just a moment" <<<"$body"; then
+                echo "::error::$url -> Cloudflare challenge page (HTTP $code). Real browsers may be fine; check WAF/Bot Fight Mode."
+              else
+                echo "::error::$url -> HTTP $code"
+              fi
+              return 1
+            fi
+            if ! grep -q -- "$marker" <<<"$body"; then
+              echo "::error::$url -> 200 but expected text '$marker' not found"
+              return 1
+            fi
+            echo "ok  $url"
+          }
+          fail=0
+          check "https://flip3d.app/" "Flip3D" || fail=1
+          check "https://flip3d.app/embed/stl-viewer/?url=https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF-Binary/Box.glb" "Embedded 3D Viewer" || fail=1
+          check "https://flip3d.app/stl-viewer/" "Online STL Viewer" || fail=1
+          # The first JS chunk the embed page references must load — catches half-broken deploys.
+          chunk=$(curl -sS -A "$UA" --max-time 20 "https://flip3d.app/embed/stl-viewer/" | grep -o '/_next/static/[^"]*\.js' | head -1 || true)
+          if [ -n "$chunk" ]; then
+            code=$(curl -s -o /dev/null -A "$UA" --max-time 20 -w '%{http_code}' "https://flip3d.app$chunk")
+            if [ "$code" = "200" ]; then echo "ok  chunk $chunk"; else echo "::error::chunk $chunk -> HTTP $code"; fail=1; fi
+          else
+            echo "::error::embed page HTML references no /_next/static JS chunk"
+            fail=1
+          fi
+          exit $fail
+
+      - name: Partner CORS still allows flip3d.app (warning only)
+        continue-on-error: true
+        run: |
+          h=$(curl -sI --max-time 20 -H "Origin: https://flip3d.app" "https://wiki.mayako.com/3d-print-files/5deg-wing-spacer.stl" | tr -d '\r' | grep -i '^access-control-allow-origin' || true)
+          if [ -n "$h" ]; then
+            echo "ok  wiki.mayako.com -> $h"
+          else
+            echo "::warning::wiki.mayako.com no longer sends Access-Control-Allow-Origin for flip3d.app; their embedded viewers will show a CORS error."
+            exit 1
+          fi

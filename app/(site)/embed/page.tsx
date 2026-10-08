@@ -65,10 +65,10 @@ export default function Page() {
             documentation.
           </li>
           <li>
-            Done. The viewer loads, runs entirely in the visitor&apos;s
-            browser, and a small{" "}
-            <span className="font-semibold">Powered by Flip3D</span> link sits
-            in the corner.
+            Done. The viewer loads and runs entirely in the visitor&apos;s
+            browser. A small{" "}
+            <span className="font-semibold">Open in Flip3D</span> badge in the
+            corner lets visitors open the same model full-size.
           </li>
         </ol>
       </section>
@@ -105,6 +105,19 @@ export default function Page() {
                   be CORS-accessible.
                 </td>
               </tr>
+              <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                <td className="px-4 py-3 font-mono text-blue-600 dark:text-blue-400">
+                  theme
+                </td>
+                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                  No
+                </td>
+                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                  Background and mesh colors. Values:{" "}
+                  <code className="font-mono text-xs">light | dark | paper | neon</code>
+                  . Default <code className="font-mono text-xs">light</code>.
+                </td>
+              </tr>
               <tr>
                 <td className="px-4 py-3 font-mono text-blue-600 dark:text-blue-400">
                   format
@@ -136,11 +149,15 @@ export default function Page() {
           />
           <Faq
             q="Can I customize colors / background?"
-            a="Not yet — v1 uses Flip3D's default brand color and neutral background for visual consistency. Theme parameters are on the roadmap."
+            a="Yes — pick a theme in the generator or add &theme=dark (or paper / neon) to the URL. Each theme sets the background, grid and mesh color so the viewer matches your page."
           />
           <Faq
             q="Will the embed slow down my site?"
-            a="The iframe is sandboxed and async, so it doesn't block your page load. The 3D engine loads in the iframe only when a visitor scrolls to it (lazy mode is on the roadmap; today it loads when the iframe mounts)."
+            a="No. The iframe is async, so it never blocks your page load, and the generated code uses lazy loading so the 3D engine only loads when a visitor scrolls the viewer into view. Pages with many embeds (a parts list, say) stay fast."
+          />
+          <Faq
+            q="Do I have to credit Flip3D?"
+            a="No. The badge inside the viewer is always there; the optional one-line credit under the iframe is up to you. It's a plain link, nothing is tracked on your page."
           />
         </div>
       </section>

@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
 import { parseToObject, disposeObject, type Format } from "@/lib/converters";
+import { fileNameFromUrl } from "@/lib/viewer-url";
 import {
   trackFileUploaded,
   trackSampleLoaded,
@@ -58,6 +60,20 @@ function makeSample(): THREE.Mesh {
   return new THREE.Mesh(geometry, material);
 }
 
+/**
+ * Reads ?url= once and hands it up. Kept as its own component so the
+ * useSearchParams Suspense boundary wraps nothing else (static export
+ * requires the boundary).
+ */
+function UrlParamLoader({ onUrl }: { onUrl: (url: string) => void }) {
+  const params = useSearchParams();
+  const url = params.get("url");
+  useEffect(() => {
+    if (url) onUrl(url);
+  }, [url, onUrl]);
+  return null;
+}
+
 export default function ViewerTool({ config }: { config: ViewerConfig }) {
   const { format, formatLabel, accept, eyebrow, heading, intro, about, faq, links } =
     config;
@@ -66,6 +82,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   const [fileName, setFileName] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [fromUrl, setFromUrl] = useState(false);
 
   // Dispose the previous object whenever it's replaced or on unmount — without
   // this, revisiting/leaving the page leaks geometry + GPU buffers.
@@ -98,6 +115,35 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
     [format],
   );
 
+  // ?url=… — the "Open in Flip3D" badge inside embedded viewers lands here
+  // with the same model, so the visitor gets it full-size instead of a logo.
+  const handleUrl = useCallback(
+    async (url: string) => {
+      setStatus("loading");
+      setErrorMsg(null);
+      setFromUrl(true);
+      try {
+        const res = await fetch(url, { mode: "cors" });
+        if (!res.ok) throw new Error(`HTTP ${res.status} fetching model`);
+        const buffer = await res.arrayBuffer();
+        const parsed = await parseToObject(buffer, format);
+        setObject(parsed);
+        setFileName(fileNameFromUrl(url));
+        setStatus("idle");
+        trackFileUploaded(format, "url");
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Could not load model from URL";
+        setErrorMsg(
+          `${msg}. The file host must allow CORS — or drop the file here instead.`,
+        );
+        setStatus("error");
+        trackConvertError(format, format, msg);
+      }
+    },
+    [format],
+  );
+
   const handleSample = useCallback(() => {
     setObject(makeSample());
     setFileName(`sample.${format}`);
@@ -117,6 +163,9 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <UrlParamLoader onUrl={handleUrl} />
+      </Suspense>
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-8 sm:pt-12">
         {!loaded ? (
           <>
@@ -153,7 +202,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
               </div>
               {status === "loading" && (
                 <p className="mt-4 text-center text-sm text-zinc-500">
-                  Opening model…
+                  {fromUrl ? "Loading model from URL…" : "Opening model…"}
                 </p>
               )}
               {errorMsg && (

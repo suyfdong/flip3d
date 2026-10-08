@@ -17,6 +17,7 @@ import {
   isTheme,
   type EmbedTheme,
 } from "@/lib/embed-themes";
+import { buildOpenInFlip3dUrl } from "@/lib/viewer-url";
 
 const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
   ssr: false,
@@ -41,6 +42,7 @@ export default function EmbedViewer() {
   const [object, setObject] = useState<THREE.Object3D | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loadedFormat, setLoadedFormat] = useState<Format | null>(null);
 
   useEffect(() => {
     if (!url) return;
@@ -70,6 +72,7 @@ export default function EmbedViewer() {
         }
         loaded = parsed;
         setObject(parsed);
+        setLoadedFormat(fmt);
         setStatus("idle");
       } catch (err) {
         if (cancelled) return;
@@ -85,6 +88,14 @@ export default function EmbedViewer() {
       if (loaded) disposeObject(loaded);
     };
   }, [url, formatParam]);
+
+  // Badge: once the model is on screen the badge becomes a utility link
+  // ("Open in Flip3D" → same model, full-size viewer page). 2,400 iframe loads
+  // with zero clicks on the old "Powered by" logo-badge made the case.
+  const openHref =
+    url && object && loadedFormat
+      ? buildOpenInFlip3dUrl(url, loadedFormat, theme)
+      : null;
 
   return (
     <div
@@ -116,24 +127,77 @@ export default function EmbedViewer() {
         </div>
       )}
 
-      <a
-        href={`https://flip3d.app/?utm_source=embed&utm_medium=iframe&utm_content=${theme}`}
-        target="_blank"
-        rel="noopener"
-        className="absolute bottom-2 right-2 text-xs px-2.5 py-1 rounded-full backdrop-blur shadow-sm transition-opacity hover:opacity-100"
-        style={{
-          background: themeSpec.badgeBg,
-          border: `1px solid ${themeSpec.badgeBorder}`,
-          color: themeSpec.badgeText,
-          opacity: 0.85,
-        }}
-      >
-        Powered by{" "}
-        <span className="font-semibold" style={{ color: themeSpec.badgeAccent }}>
-          Flip3D
-        </span>
-      </a>
+      <BadgeLink
+        href={openHref}
+        canOpen={openHref !== null}
+        themeSpec={themeSpec}
+      />
     </div>
+  );
+}
+
+function BadgeLink({
+  href,
+  canOpen,
+  themeSpec,
+}: {
+  href: string | null;
+  canOpen: boolean;
+  themeSpec: (typeof THEME_SPECS)[EmbedTheme];
+}) {
+  const theme = themeSpec; // alias for readability
+  return (
+    <a
+      href={
+        href ??
+        "https://flip3d.app/?utm_source=embed&utm_medium=iframe&utm_campaign=powered_by"
+      }
+      target="_blank"
+      rel="noopener"
+      title={
+        canOpen
+          ? "Open this model full-size in Flip3D's free viewer"
+          : "Flip3D — free 3D file tools"
+      }
+      className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full backdrop-blur shadow-sm transition-opacity hover:opacity-100"
+      style={{
+        background: theme.badgeBg,
+        border: `1px solid ${theme.badgeBorder}`,
+        color: theme.badgeText,
+        opacity: 0.9,
+      }}
+    >
+      {canOpen ? (
+        <>
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M14 4h6v6" />
+            <path d="M20 4l-9 9" />
+            <path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5" />
+          </svg>
+          Open in{" "}
+          <span className="font-semibold" style={{ color: theme.badgeAccent }}>
+            Flip3D
+          </span>
+        </>
+      ) : (
+        <>
+          Powered by{" "}
+          <span className="font-semibold" style={{ color: theme.badgeAccent }}>
+            Flip3D
+          </span>
+        </>
+      )}
+    </a>
   );
 }
 

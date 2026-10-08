@@ -146,13 +146,14 @@ npx tsc --noEmit     # TS 检查
 
 ---
 
-## 反链战术（W7 起加 `/embed/`）
+## Embed 分发线（2026-10-08 修正）
 
-每个 viewer 工具页底部加 "Embed on Your Site" 按钮，生成：
-```html
-<iframe src="https://flip3d.app/embed/stl-viewer?url=..." width="100%" height="500"></iframe>
-```
-嵌入页底部带 "Powered by Flip3D" dofollow 链接 → 自动生长反链网络（参考 viewstl.com 67% Frame 反链）。
+- **iframe `src` 不是反链**，角标链接在我们自己的 noindex 页里是自链。真反链只能来自宿主页的 `<a>` —— 生成器默认附带一行 credit `<p>3D viewer by <a href="https://flip3d.app/">Flip3D</a></p>`（可勾掉）。
+- 角标是**功能入口**不是 logo：模型加载成功后显示「Open in Flip3D」，指向 `/{fmt}-viewer/?url=<model>&utm_source=embed&utm_medium=iframe&utm_campaign=open_viewer`（`lib/viewer-url.ts`）。加载失败才回退 "Powered by"。依据：Mayako 页 30 天 2,400 次 iframe 加载、旧 logo 角标 0 点击。
+- **所有 viewer 页支持 `?url=`** 自动拉取（`ViewerTool` 的 `UrlParamLoader`，在 Suspense 里读 searchParams —— 静态导出必须有这个边界）。宿主需允许 CORS。
+- **GA4 在跨站 iframe 里一条 hit 都不发**（实测 gtag 加载、dataLayer 正常、但零网络调用），embed 曝光量只能看 **Cloudflare Web Analytics**（账号级 → Visits → Referers / Paths），角标点击看 GA4 `embed / iframe`。
+- `.github/workflows/uptime.yml` 每 30 分钟 curl 首页 / embed 页 / stl-viewer 页 + 第一个 JS chunk，失败 GitHub 发邮件；另以 warning 监控 Mayako 文件的 CORS 头。
+- `/embed/stl-viewer/` 有意 `noindex,follow`（GSC「被 noindex 排除」= 正常，别修）。
 
 ---
 
