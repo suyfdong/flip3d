@@ -5,9 +5,12 @@
 # Two layers:
 #   origin — flip3d.pages.dev via curl. Not behind the zone's Bot Fight Mode,
 #            so a plain HTTP check is reliable. Catches broken deploys.
-#   edge   — flip3d.app in real headless Chromium. Datacenter curl gets a
-#            Cloudflare challenge (403 "Just a moment"), a browser does not.
-#            Also proves the JS bundle, three.js and the CORS sample fetch work.
+#   edge   — flip3d.app in real headless Chromium. Proves the JS bundle,
+#            three.js and the CORS sample fetch work end to end.
+#            MANUAL ONLY + warning only: GitHub's datacenter IPs get a Cloudflare
+#            managed challenge (403) that headless Chromium cannot solve while
+#            Bot Fight Mode / challenge rules are on (verified 2026-10-08, runs
+#            37730413416 and 37730977755). Turn those off, then dispatch to check.
 name: Uptime
 
 on:
@@ -57,7 +60,9 @@ jobs:
             echo "::warning::wiki.mayako.com no longer sends Access-Control-Allow-Origin for flip3d.app; their embedded viewers will show a CORS error."; exit 1; fi
 
   edge:
-    name: Edge (flip3d.app in Chromium)
+    name: Edge (flip3d.app in Chromium, manual, warning only)
+    if: github.event_name == 'workflow_dispatch'
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

@@ -152,7 +152,7 @@ npx tsc --noEmit     # TS 检查
 - 角标是**功能入口**不是 logo：模型加载成功后显示「Open in Flip3D」，指向 `/{fmt}-viewer/?url=<model>&utm_source=embed&utm_medium=iframe&utm_campaign=open_viewer`（`lib/viewer-url.ts`）。加载失败才回退 "Powered by"。依据：Mayako 页 30 天 2,400 次 iframe 加载、旧 logo 角标 0 点击。
 - **所有 viewer 页支持 `?url=`** 自动拉取（`ViewerTool` 的 `UrlParamLoader`，在 Suspense 里读 searchParams —— 静态导出必须有这个边界）。宿主需允许 CORS。
 - **GA4 在跨站 iframe 里一条 hit 都不发**（实测 gtag 加载、dataLayer 正常、但零网络调用），embed 曝光量只能看 **Cloudflare Web Analytics**（账号级 → Visits → Referers / Paths），角标点击看 GA4 `embed / iframe`。
-- `.github/workflows/uptime.yml` 每 30 分钟 curl 首页 / embed 页 / stl-viewer 页 + 第一个 JS chunk，失败 GitHub 发邮件；另以 warning 监控 Mayako 文件的 CORS 头。
+- `.github/workflows/uptime.yml` 每 30 分钟 curl **flip3d.pages.dev**（原始域名，不过 Bot Fight Mode）的首页 / embed 页 / stl-viewer 页 + 第一个 JS chunk，失败 GitHub 发邮件；另以 warning 监控 Mayako 文件的 CORS 头。**flip3d.app 边缘层无法从 GitHub 监控**：数据中心 IP 连 headless Chromium 都过不了 Cloudflare 质询（实测），edge job 仅手动触发且不计失败。
 - `/embed/stl-viewer/` 有意 `noindex,follow`（GSC「被 noindex 排除」= 正常，别修）。
 
 ---
