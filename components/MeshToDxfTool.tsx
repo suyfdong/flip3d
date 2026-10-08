@@ -110,7 +110,7 @@ export default function MeshToDxfTool({
         const msg = err instanceof Error ? err.message : "Could not read this model";
         setErrorMsg(msg);
         setStatus("error");
-        trackConvertError(copy.format, "stl", msg);
+        trackConvertError(copy.format, "dxf", msg);
       }
     },
     [copy.format],

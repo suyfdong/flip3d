@@ -92,7 +92,7 @@ export default function DxfToMeshTool({
         setResult(null);
         setErrorMsg(msg);
         setStatus("error");
-        trackConvertError("stl", "stl", msg);
+        trackConvertError("dxf", "stl", msg);
       }
     }, 120);
     return () => clearTimeout(handle);

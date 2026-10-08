@@ -72,7 +72,7 @@ export default function SvgToStlTool() {
         const msg = err instanceof Error ? err.message : "Could not build the model";
         setErrorMsg(msg);
         setStatus("error");
-        trackConvertError("stl", "stl", msg);
+        trackConvertError("svg", "stl", msg);
       }
     }, 140);
     return () => clearTimeout(handle);

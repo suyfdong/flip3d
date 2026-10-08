@@ -92,6 +92,36 @@ function luminanceMask(img: RgbaImage, threshold: number, invert: boolean): Uint
  * Otsu's method — picks the brightness cut that best separates the histogram
  * into two clusters. Used when the caller asks for an automatic threshold.
  */
+/**
+ * Mask from the alpha channel alone (opaque = ink). Returns null when the
+ * image has no meaningful transparency, i.e. alpha can't define a shape.
+ */
+function alphaMask(
+  img: RgbaImage,
+  invert: boolean,
+): { mask: Uint8Array; ink: number } | null {
+  const { data, width, height } = img;
+  const n = width * height;
+  let opaque = 0;
+  for (let p = 0; p < n; p++) if (data[p * 4 + 3] >= 128) opaque++;
+  // Need both sides present, each at least 0.5% of the image.
+  if (opaque < n * 0.005 || n - opaque < n * 0.005) return null;
+
+  const mask = new Uint8Array(n);
+  let ink = 0;
+  for (let y = 0; y < height; y++) {
+    const srcRow = (height - 1 - y) * width;
+    const dstRow = y * width;
+    for (let x = 0; x < width; x++) {
+      const isInk = data[(srcRow + x) * 4 + 3] >= 128;
+      const v = (invert ? !isInk : isInk) ? 1 : 0;
+      mask[dstRow + x] = v;
+      ink += v;
+    }
+  }
+  return { mask, ink };
+}
+
 export function autoThreshold(img: RgbaImage): number {
   const hist = new Array(256).fill(0);
   const { data, width, height } = img;
@@ -305,10 +335,22 @@ export function traceImage(img: RgbaImage, opts: TraceOptions): TraceResult {
     THRESHOLD_MAX,
     Math.max(THRESHOLD_MIN, Math.round(opts.threshold)),
   );
-  const mask = luminanceMask(img, threshold, opts.invert);
+  let mask = luminanceMask(img, threshold, opts.invert);
 
   let ink = 0;
   for (let i = 0; i < mask.length; i++) ink += mask[i];
+
+  // Fallback: a logo on a transparent background whose opaque pixels are all
+  // one brightness (white-on-transparent is the classic) has nothing for the
+  // luminance threshold to split, and Otsu degenerates to "no ink" / "all
+  // ink". In that case the alpha channel *is* the shape, so trace that.
+  if (ink === 0 || ink === mask.length) {
+    const alpha = alphaMask(img, opts.invert);
+    if (alpha) {
+      mask = alpha.mask;
+      ink = alpha.ink;
+    }
+  }
   if (ink === 0) {
     throw new Error(
       "Nothing to trace — every pixel fell on the background side of the threshold. Try moving the threshold slider, or tick Invert.",
@@ -322,11 +364,21 @@ export function traceImage(img: RgbaImage, opts: TraceOptions): TraceResult {
 
   const raw = traceCracks(mask, w, h);
 
+  // Speckle filter: absolute px² by default, but if that would delete *every*
+  // island (tiny icons, heavily downscaled images) fall back to a filter
+  // relative to the largest island so the user still gets a drawing.
+  let minArea = opts.minAreaPx;
+  if (raw.length > 0) {
+    let largest = 0;
+    for (const loop of raw) largest = Math.max(largest, Math.abs(signedArea(loop)));
+    if (largest < minArea) minArea = largest / 50;
+  }
+
   const scale = opts.widthMM / w;
   const polylines: Polyline[] = [];
   let pointCount = 0;
   for (const loop of raw) {
-    if (Math.abs(signedArea(loop)) < opts.minAreaPx) continue;
+    if (Math.abs(signedArea(loop)) < minArea) continue;
     const simplified = simplifyClosed(loop, opts.simplifyPx);
     if (simplified.length < 3) continue;
     polylines.push({

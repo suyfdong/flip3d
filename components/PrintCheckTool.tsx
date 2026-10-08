@@ -123,7 +123,7 @@ export default function PrintCheckTool() {
       const msg = err instanceof Error ? err.message : "Could not analyze file";
       setErrorMsg(msg);
       setStatus("error");
-      trackConvertError(fmt, "stl", msg);
+      trackConvertError(fmt, fmt, msg);
     }
   };
 

@@ -81,6 +81,29 @@ function reverseWinding(geo: THREE.BufferGeometry): void {
   p.needsUpdate = true;
 }
 
+/**
+ * Explain *why* an SVG produced no shapes, so the user knows what to fix and
+ * the GA4 `error` dimension tells us which case is common. Live `<text>` and
+ * embedded `<image>` are the usual culprits — SVGLoader can't render either.
+ */
+function describeEmptySvg(svgText: string): string {
+  const count = (tag: string) =>
+    (svgText.match(new RegExp(`<${tag}[\\s>/]`, "gi")) ?? []).length;
+  const text = count("text");
+  const image = count("image");
+  const paths = count("path") + count("polygon") + count("rect") + count("circle") + count("ellipse") + count("polyline");
+  if (text > 0 && paths === 0) {
+    return `No shapes found — this SVG is live text (${text} <text> element${text === 1 ? "" : "s"}). Convert the text to outlines/paths in your editor (Illustrator: Type → Create Outlines; Inkscape: Path → Object to Path) and re-export.`;
+  }
+  if (image > 0 && paths === 0) {
+    return "No shapes found — this SVG only wraps a raster <image>. Use Image to STL for photos/PNGs, or trace the bitmap to paths first.";
+  }
+  if (paths === 0) {
+    return "No shapes found — the SVG has no path, polygon, rect, circle or polyline elements to extrude.";
+  }
+  return `No fillable shapes found (${paths} shape element${paths === 1 ? "" : "s"}, ${text} text, ${image} image). Shapes may be hidden, zero-size, or made only of straight 2-point lines — give them a closed outline and a fill.`;
+}
+
 export function svgToMesh(svgText: string, opts: SvgExtrudeOptions): SvgMeshResult {
   const data = new SVGLoader().parse(svgText);
 
@@ -89,9 +112,7 @@ export function svgToMesh(svgText: string, opts: SvgExtrudeOptions): SvgMeshResu
     for (const shape of SVGLoader.createShapes(path)) shapes.push(shape);
   }
   if (shapes.length === 0) {
-    throw new Error(
-      "No filled shapes found. Outline / stroke-only SVGs aren't supported yet — give the paths a fill.",
-    );
+    throw new Error(describeEmptySvg(svgText));
   }
 
   // Extrude with unit depth, then scale Z to the requested thickness. This keeps

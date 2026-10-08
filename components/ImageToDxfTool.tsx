@@ -125,7 +125,7 @@ export default function ImageToDxfTool({
         setStats(null);
         setErrorMsg(msg);
         setStatus("error");
-        trackConvertError("stl", "stl", msg);
+        trackConvertError(copy.sourceExt, "dxf", msg);
       }
     }, 140);
     return () => clearTimeout(handle);

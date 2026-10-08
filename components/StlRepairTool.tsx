@@ -155,7 +155,7 @@ export default function StlRepairTool() {
       const msg = err instanceof Error ? err.message : "Repair failed";
       setErrorMsg(msg);
       setStatus("error");
-      trackConvertError("stl", "stl", msg);
+      trackConvertError(fmt, fmt, msg);
     }
   };
 

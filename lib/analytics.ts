@@ -24,7 +24,7 @@ function track(event: string, params: Record<string, unknown>) {
 }
 
 export function trackFileUploaded(
-  format: Format,
+  format: string,
   source: "drop" | "sample" | "url",
 ) {
   // Param must NOT be named "source": gtag treats it as a campaign source and
@@ -32,7 +32,7 @@ export function trackFileUploaded(
   track("file_uploaded", { format, input_method: source });
 }
 
-export function trackSampleLoaded(format: Format) {
+export function trackSampleLoaded(format: string) {
   track("sample_loaded", { format });
 }
 
@@ -44,10 +44,14 @@ export function trackFileConverted(from: Format, to: Format) {
   });
 }
 
-export function trackConvertError(from: Format, to: Format, message: string) {
+// `from`/`to` are free strings so image/svg/dxf/gcode tools can label errors
+// honestly (they used to all report "stl" → "stl", which made the
+// source_format breakdown in GA4 useless).
+export function trackConvertError(from: string, to: string, message: string) {
   track("convert_error", {
     source_format: from,
     target_format: to,
+    pair: `${from}-to-${to}`,
     error: message.slice(0, 100),
   });
 }

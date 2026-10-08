@@ -40,13 +40,13 @@ export default function DxfViewerTool() {
       setDoc(parseDxf(text));
       setFileName(name);
       setErrorMsg(null);
-      if (origin === "drop") trackFileUploaded("stl", "drop");
-      else trackSampleLoaded("stl");
+      if (origin === "drop") trackFileUploaded("dxf", "drop");
+      else trackSampleLoaded("dxf");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not read this DXF";
       setDoc(null);
       setErrorMsg(msg);
-      trackConvertError("stl", "stl", msg);
+      trackConvertError("dxf", "dxf", msg);
     }
   }, []);
 

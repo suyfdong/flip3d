@@ -77,13 +77,13 @@ export default function GcodeSimulator() {
       // obvious.
       setProgressPct(100);
       setStatus("ready");
-      trackFileUploaded("stl", "drop"); // reuse: format param unused for tools
+      trackFileUploaded("gcode", "drop");
     } catch (err) {
       console.error("G-code parse failed", err);
       const msg = err instanceof Error ? err.message : "Failed to parse G-code";
       setErrorMsg(msg);
       setStatus("error");
-      trackConvertError("stl", "stl", msg);
+      trackConvertError("gcode", "gcode", msg);
     }
   };
 
