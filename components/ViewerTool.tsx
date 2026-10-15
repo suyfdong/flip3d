@@ -7,6 +7,7 @@ import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
 import { parseToObject, disposeObject, type Format } from "@/lib/converters";
 import UrlParamLoader, { withModelUrl } from "@/components/UrlParamLoader";
+import ModelInfoPanel, { unitLabelFor } from "@/components/ModelInfoPanel";
 import {
   trackFileUploaded,
   trackSampleLoaded,
@@ -69,6 +70,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   // Set when the model came from ?url= — "Do more" links then carry it along.
   const [modelUrl, setModelUrl] = useState<string | null>(null);
+  const [measuring, setMeasuring] = useState(false);
 
   // Dispose the previous object whenever it's replaced or on unmount — without
   // this, revisiting/leaving the page leaks geometry + GPU buffers.
@@ -131,6 +133,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   }, [format]);
 
   const handleReset = () => {
+    setMeasuring(false);
     setObject(null);
     setFileName("");
     setModelUrl(null);
@@ -214,6 +217,17 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <button
+                  onClick={() => setMeasuring((m) => !m)}
+                  aria-pressed={measuring}
+                  className={`px-4 py-2 text-sm rounded-lg border ${
+                    measuring
+                      ? "border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300"
+                      : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  📏 {measuring ? "Measuring" : "Measure"}
+                </button>
+                <button
                   onClick={handleReset}
                   className="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900"
                 >
@@ -224,10 +238,12 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
               <div className="h-[55vh] sm:h-[480px] lg:h-[560px] order-2 lg:order-1">
-                <MeshViewer object={object} />
+                <MeshViewer object={object} measure={measuring} unitLabel={unitLabelFor(object)} />
               </div>
 
-              <div className="order-1 lg:order-2 space-y-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+              <div className="order-1 lg:order-2 space-y-4">
+              <ModelInfoPanel object={object} />
+              <div className="space-y-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
                 <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                   Do more with this file
                 </p>
@@ -246,6 +262,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
                 <p className="text-xs text-zinc-400 dark:text-zinc-500 pt-1">
                   🔒 This file never left your browser.
                 </p>
+              </div>
               </div>
             </div>
 

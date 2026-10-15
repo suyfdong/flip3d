@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { VIEWER_PATH_BY_FORMAT } from "@/lib/viewer-url";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
 import UrlParamLoader from "@/components/UrlParamLoader";
@@ -52,6 +53,24 @@ export type ConverterContent = {
    * which parses as the "step" format). Does not change parsing. */
   fromLabel?: string;
 };
+
+// Every source format has a viewer page; point converters at it so users can
+// inspect the file first (and so the viewer pages get contextual links).
+const VIEWER_BLURB: Partial<Record<Format, string>> = {
+  "3mf": "See plates, filament colors and parts",
+  ply: "Point clouds, scan colors and splat previews",
+  step: "Assembly tree, part colors and measuring",
+  iges: "Part list, colors and measuring",
+};
+
+function viewerLink(from: Format, fromLabel: string): { href: string; title: string; desc: string } {
+  const href = from === "step" && fromLabel === "STP" ? "/stp-viewer/" : VIEWER_PATH_BY_FORMAT[from];
+  return {
+    href,
+    title: `${fromLabel} Viewer`,
+    desc: VIEWER_BLURB[from] ?? `Open and inspect the ${fromLabel} file in 3D`,
+  };
+}
 
 type Props = {
   from: Format;
@@ -425,7 +444,12 @@ export default function ConverterPage({ from, to, content }: Props) {
                 Related converters
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {content?.related?.map((r) => (
+                {[
+                  ...(content?.related ?? []),
+                  ...(content?.related?.some((r) => r.href === viewerLink(from, fromLabel).href)
+                    ? []
+                    : [viewerLink(from, fromLabel)]),
+                ].map((r) => (
                   <Link
                     key={r.href}
                     href={r.href}

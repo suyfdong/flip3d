@@ -10,9 +10,11 @@ type OcctMesh = {
   index: { array: number[] };
 };
 
+type OcctNode = { name?: string; meshes: number[]; children: OcctNode[] };
+
 type OcctResult = {
   success: boolean;
-  root: { name?: string; meshes: number[]; children: unknown[] };
+  root: OcctNode;
   meshes: OcctMesh[];
 };
 
@@ -49,10 +51,7 @@ function resultToGroup(result: OcctResult, fallbackName: string): THREE.Group {
     throw new Error(`${fallbackName} file contained no triangulated meshes`);
   }
 
-  const group = new THREE.Group();
-  group.name = result.root.name ?? `${fallbackName.toLowerCase()}-import`;
-
-  for (const mesh of result.meshes) {
+  const meshes = result.meshes.map((mesh) => {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute(
       "position",
@@ -79,8 +78,31 @@ function resultToGroup(result: OcctResult, fallbackName: string): THREE.Group {
     const threeMesh = new THREE.Mesh(geometry, material);
     threeMesh.name = mesh.name ?? "";
     if (mesh.color) threeMesh.userData.keepColor = true;
-    group.add(threeMesh);
-  }
+    return threeMesh;
+  });
+
+  // Mirror the file's assembly tree (sub-assemblies → parts) so the viewer can
+  // list and toggle parts. A mesh referenced twice is cloned (shares geometry).
+  const used = new Set<number>();
+  const buildNode = (node: OcctNode): THREE.Group => {
+    const g = new THREE.Group();
+    g.name = node.name ?? "";
+    for (const i of node.meshes ?? []) {
+      const m = meshes[i];
+      if (!m) continue;
+      g.add(used.has(i) ? m.clone() : m);
+      used.add(i);
+    }
+    for (const child of node.children ?? []) g.add(buildNode(child));
+    return g;
+  };
+  const group = buildNode(result.root);
+  if (!group.name) group.name = `${fallbackName.toLowerCase()}-import`;
+  // Meshes the tree never referenced still belong in the model.
+  meshes.forEach((m, i) => {
+    if (!used.has(i)) group.add(m);
+  });
+  group.userData.assembly = true;
 
   return group;
 }

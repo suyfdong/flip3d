@@ -41,10 +41,34 @@ export async function parseToObject(
       return scene;
     }
     case "3mf": {
+      const { read3MFMeta, colorForObject } = await import("./3mf-meta");
+      const meta = await read3MFMeta(buffer).catch(() => null);
       const { buffer: flat, flattenedParts } = await flattenProduction3MF(buffer);
       const group = new ThreeMFLoader().parse(flat);
+      // Children follow <build> item order, so meta.buildObjectIds[i] names child i.
+      group.children.forEach((child, i) => {
+        const id = meta?.buildObjectIds[i];
+        const objMeta = id ? meta?.objects.find((o) => o.id === id) : undefined;
+        if (objMeta?.name) child.name = objMeta.name;
+        if (id) child.userData.objectId = id;
+      });
       keepNativeOrBrand(group, (m) => m.name !== THREE.Loader.DEFAULT_MATERIAL_NAME);
+      // Slicer projects carry color per filament slot, not in the mesh: paint
+      // each object with the filament it is assigned to.
+      if (meta?.filaments.length) {
+        group.children.forEach((child) => {
+          const hex = child.userData.objectId && colorForObject(meta, child.userData.objectId);
+          if (!hex) return;
+          child.traverse((n) => {
+            if (!(n instanceof THREE.Mesh) || n.userData.keepColor) return;
+            (n.material as THREE.Material).dispose();
+            n.material = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), metalness: 0.05, roughness: 0.7 });
+            n.userData.keepColor = true;
+          });
+        });
+      }
       if (flattenedParts > 0) group.userData.flattenedParts = flattenedParts;
+      if (meta) group.userData.threeMF = meta;
       return group;
     }
     case "ply": {
@@ -117,8 +141,29 @@ async function flattenProduction3MF(
 // 3D Gaussian Splat PLYs store color as spherical-harmonic DC terms.
 const SH_C0 = 0.28209479177387814;
 
+export type PlyHeader = {
+  format: string;
+  elements: { name: string; count: number; properties: string[] }[];
+};
+
+function parsePlyHeader(header: string): PlyHeader {
+  const end = header.indexOf("end_header");
+  const lines = (end >= 0 ? header.slice(0, end) : header).split(/\r?\n/);
+  const out: PlyHeader = { format: "", elements: [] };
+  for (const line of lines) {
+    const t = line.trim().split(/\s+/);
+    if (t[0] === "format") out.format = t[1] ?? "";
+    else if (t[0] === "element") out.elements.push({ name: t[1], count: Number(t[2]) || 0, properties: [] });
+    else if (t[0] === "property" && out.elements.length) {
+      out.elements[out.elements.length - 1].properties.push(t[t.length - 1]);
+    }
+  }
+  return out;
+}
+
 function parsePly(buffer: ArrayBuffer): THREE.Object3D {
-  const header = new TextDecoder().decode(buffer.slice(0, Math.min(buffer.byteLength, 4096)));
+  const header = new TextDecoder().decode(buffer.slice(0, Math.min(buffer.byteLength, 16384)));
+  const plyHeader = parsePlyHeader(header);
   const isSplat = /property\s+\S+\s+f_dc_0\b/.test(header);
   const loader = new PLYLoader();
   if (isSplat) loader.setCustomPropertyNameMapping({ shDc: ["f_dc_0", "f_dc_1", "f_dc_2"] });
@@ -163,6 +208,7 @@ function parsePly(buffer: ArrayBuffer): THREE.Object3D {
     );
     points.userData.keepColor = hasColor;
     points.userData.pointCloud = { points: position.count, splat: isSplat, color: hasColor };
+    points.userData.ply = plyHeader;
     return points;
   }
 
@@ -173,9 +219,12 @@ function parsePly(buffer: ArrayBuffer): THREE.Object3D {
       new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xffffff, metalness: 0, roughness: 0.8 }),
     );
     mesh.userData.keepColor = true;
+    mesh.userData.ply = plyHeader;
     return mesh;
   }
-  return new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
+  const plain = new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
+  plain.userData.ply = plyHeader;
+  return plain;
 }
 
 function applyBrandMaterial(root: THREE.Object3D): void {

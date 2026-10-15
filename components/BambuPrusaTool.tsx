@@ -405,6 +405,15 @@ export default function BambuPrusaTool({ direction }: Props) {
                     Why these files don&apos;t cross over cleanly
                   </div>
                 </Link>
+                <Link
+                  href="/3mf-viewer/"
+                  className="block px-5 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-400 dark:hover:border-blue-700 transition-colors"
+                >
+                  <div className="font-semibold">3MF Viewer</div>
+                  <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                    Check plates, filament colors and parts before you convert
+                  </div>
+                </Link>
               </div>
             </div>
           </section>

@@ -307,7 +307,7 @@ export default function Page() {
             STL → 3MF
           </Link>
           <Link
-            href="/3mf-to-stl/"
+            href="/3mf-viewer/"
             className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-700 text-center font-mono text-xs"
           >
             View 3MF

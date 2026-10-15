@@ -10,9 +10,9 @@ import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/step-viewer/`;
 const title =
-  "Online STEP Viewer — Free, No Signup | View STEP & STP CAD Files";
+  "STEP Viewer Online — Free & Private | Assemblies, Parts & Measure";
 const description =
-  "Open and view STEP files online in your browser. Drag to rotate, zoom and inspect any .step or .stp CAD model — free, instant, 100% local. No upload, no signup, no CAD software.";
+  "View STEP/STP files online: browse the assembly tree, isolate parts, see part colors and measure distances. Free, and nothing is uploaded — safe for NDA parts.";
 
 export const metadata: Metadata = {
   title,
@@ -40,12 +40,14 @@ const config: ViewerConfig = {
   eyebrow: "STEP · STP · CAD Viewer",
   heading: "Online STEP Viewer",
   intro:
-    "Drop a .step or .stp file to open it in a fast 3D viewer — drag to rotate, scroll to zoom, and inspect the CAD model. Free, instant, and 100% local: no CAD software and no upload.",
+    "Drop a .step or .stp file to see it in 3D with its original part colors, browse the assembly tree, hide or isolate parts, and measure distances. Free, no CAD software, and the file never leaves your browser.",
   about: [
     "Opens STEP (AP203 / AP214 / AP242) and the .stp extension — the neutral CAD exchange format written by SolidWorks, Fusion 360, CATIA, Inventor and Onshape.",
     "The B-rep solid is tessellated in your browser by an OpenCascade WASM engine, so the first file takes a few seconds to load the engine — after that it's instant.",
     "Everything runs on your device. There's no upload, no account, and no file-size paywall — useful when the CAD file is under NDA.",
-    "This is a geometry viewer: it shows the shape, not the feature tree, dimensions or PMI annotations.",
+    "The parts panel mirrors the file's assembly structure (sub-assemblies → parts) with their names; untick a part to hide it or click “only” to isolate it. Part colors from the CAD file are kept.",
+    "Measure: click two points on any surface to get the distance and X/Y/Z offsets in millimeters — files saved in inches are converted on import.",
+    "It doesn't show the parametric feature history or PMI annotations (GD&T, tolerances), and measuring is point-to-point rather than hole diameters or angles.",
     "Need the model elsewhere? Convert the STEP to STL, OBJ, GLB, 3MF or PLY below.",
   ],
   faq: [
@@ -60,6 +62,14 @@ const config: ViewerConfig = {
     {
       q: "What's the difference between .step and .stp?",
       a: "Nothing — they're the same ISO 10303 format with two extensions. Older Windows software preferred the three-letter .stp. This viewer accepts both.",
+    },
+    {
+      q: "Can I see the parts of a STEP assembly?",
+      a: "Yes. The File details panel lists the assembly tree from the file — sub-assemblies and parts by name. Untick any part to hide it, or click “only” to isolate a single part, then “show all” to bring everything back.",
+    },
+    {
+      q: "Can I measure a STEP file online?",
+      a: "Yes. Click Measure and pick two points on the model; you get the straight-line distance and the X/Y/Z offsets in millimeters. It's point-to-point measuring on the tessellated surface — enough to check overall sizes and clearances, not a replacement for CAD inspection tools.",
     },
     {
       q: "Is my CAD file uploaded to a server?",

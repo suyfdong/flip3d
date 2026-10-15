@@ -73,6 +73,7 @@ export default function Page() {
           { href: "/image-to-color-stl/", title: "Image to Color STL", desc: "Keep the image's colors (PLY / GLB)" },
           { href: "/stl-to-3mf/", title: "STL to 3MF", desc: "Already have an STL? Repackage it" },
           { href: "/lithophane-generator/", title: "Lithophane Generator", desc: "Backlit photo prints" },
+          { href: "/3mf-viewer/", title: "3MF Viewer", desc: "Open the 3MF you made — or any Bambu / Prusa project" },
         ]}
       />
     </>

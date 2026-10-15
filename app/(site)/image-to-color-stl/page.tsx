@@ -77,6 +77,7 @@ export default function Page() {
           { href: "/lithophane-generator/", title: "Lithophane Generator", desc: "Photo in light and shadow — works on any printer" },
           { href: "/png-to-3mf/", title: "PNG to 3MF", desc: "Same relief, 3MF for modern slicers" },
           { href: "/glb-viewer/", title: "GLB Viewer", desc: "Check the colored GLB in the browser" },
+          { href: "/ply-viewer/", title: "PLY Viewer", desc: "Check the colored PLY — vertex colors are shown" },
         ]}
       />
     </>

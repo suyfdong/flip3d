@@ -10,7 +10,13 @@ type Props = {
   object: THREE.Object3D | null;
   compact?: boolean;
   theme?: EmbedTheme;
+  /** Click two points on the model to measure the straight-line distance. */
+  measure?: boolean;
+  /** Label for model units in the measurement readout (e.g. "mm"). */
+  unitLabel?: string;
 };
+
+type Measurement = { points: THREE.Vector3[]; distance: number | null };
 
 function fitCamera(
   camera: THREE.PerspectiveCamera,
@@ -40,7 +46,13 @@ function fitCamera(
   controls.update();
 }
 
-export default function MeshViewer({ object, compact = false, theme }: Props) {
+export default function MeshViewer({
+  object,
+  compact = false,
+  theme,
+  measure = false,
+  unitLabel = "mm",
+}: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -51,6 +63,7 @@ export default function MeshViewer({ object, compact = false, theme }: Props) {
   const animationFrameRef = useRef<number | null>(null);
 
   const [stats, setStats] = useState<ModelStats | null>(null);
+  const [measurement, setMeasurement] = useState<Measurement>({ points: [], distance: null });
 
   const themeSpec = theme ? THEME_SPECS[theme] : null;
 
@@ -222,16 +235,121 @@ export default function MeshViewer({ object, compact = false, theme }: Props) {
     setStats(computeStats(object));
   }, [object]);
 
+  // Two-click measuring. Markers/line draw on top (no depth test) and live in
+  // their own group so clearing never touches the model.
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    const scene = sceneRef.current;
+    const camera = cameraRef.current;
+    setMeasurement({ points: [], distance: null });
+    if (!measure || !renderer || !scene || !camera || !object) return;
+
+    const overlay = new THREE.Group();
+    overlay.renderOrder = 999;
+    scene.add(overlay);
+    const box = new THREE.Box3().setFromObject(object);
+    const diag = box.getSize(new THREE.Vector3()).length() || 1;
+    const markerGeo = new THREE.SphereGeometry(diag / 150, 16, 12);
+    const markerMat = new THREE.MeshBasicMaterial({ color: 0xf97316, depthTest: false });
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xf97316, depthTest: false });
+    const raycaster = new THREE.Raycaster();
+    raycaster.params.Points = { threshold: diag / 300 };
+    let picked: THREE.Vector3[] = [];
+    let down: { x: number; y: number } | null = null;
+
+    const clearOverlay = () => {
+      overlay.children.slice().forEach((c) => {
+        overlay.remove(c);
+        if (c instanceof THREE.Line) c.geometry.dispose();
+      });
+    };
+
+    const onDown = (e: PointerEvent) => {
+      down = { x: e.clientX, y: e.clientY };
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!down || e.button !== 0) return;
+      const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+      down = null;
+      if (moved > 4) return; // that was an orbit drag, not a pick
+      const rect = renderer.domElement.getBoundingClientRect();
+      const ndc = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      raycaster.setFromCamera(ndc, camera);
+      const hit = raycaster
+        .intersectObject(object, true)
+        .find((h) => h.object.visible && !overlay.children.includes(h.object));
+      if (!hit) return;
+      if (picked.length === 2) {
+        picked = [];
+        clearOverlay();
+      }
+      picked.push(hit.point.clone());
+      const marker = new THREE.Mesh(markerGeo, markerMat);
+      marker.position.copy(hit.point);
+      overlay.add(marker);
+      if (picked.length === 2) {
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(picked), lineMat);
+        overlay.add(line);
+      }
+      setMeasurement({
+        points: [...picked],
+        distance: picked.length === 2 ? picked[0].distanceTo(picked[1]) : null,
+      });
+    };
+
+    const el = renderer.domElement;
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointerup", onUp);
+    el.style.cursor = "crosshair";
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointerup", onUp);
+      el.style.cursor = "";
+      clearOverlay();
+      scene.remove(overlay);
+      markerGeo.dispose();
+      markerMat.dispose();
+      lineMat.dispose();
+    };
+  }, [measure, object]);
+
   return (
     <div className="flex flex-col h-full">
-      <div
-        ref={containerRef}
-        className={
-          compact
-            ? "flex-1 min-h-0 overflow-hidden"
-            : "flex-1 min-h-[300px] sm:min-h-[400px] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
-        }
-      />
+      <div className="relative flex-1 min-h-0 flex flex-col">
+        <div
+          ref={containerRef}
+          className={
+            compact
+              ? "flex-1 min-h-0 overflow-hidden"
+              : "flex-1 min-h-[300px] sm:min-h-[400px] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+          }
+        />
+        {measure && (
+          <div className="pointer-events-none absolute left-3 top-3 rounded-lg bg-white/90 dark:bg-zinc-900/90 px-3 py-2 text-xs shadow border border-zinc-200 dark:border-zinc-700">
+            {measurement.distance !== null ? (
+              <>
+                <span className="font-mono text-sm font-semibold text-orange-600 dark:text-orange-400">
+                  {formatLength(measurement.distance)} {unitLabel}
+                </span>
+                <span className="block text-zinc-500 mt-0.5">
+                  Δx {formatLength(Math.abs(measurement.points[1].x - measurement.points[0].x))} · Δy{" "}
+                  {formatLength(Math.abs(measurement.points[1].y - measurement.points[0].y))} · Δz{" "}
+                  {formatLength(Math.abs(measurement.points[1].z - measurement.points[0].z))}
+                </span>
+              </>
+            ) : (
+              <span className="text-zinc-600 dark:text-zinc-300">
+                {measurement.points.length === 1
+                  ? "Click a second point"
+                  : "Click two points on the model to measure"}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
       {!compact && stats && (
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-zinc-600 dark:text-zinc-400">
           {stats.points > 0 && stats.meshes === 0 ? (
@@ -264,4 +382,10 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div>{label}</div>
     </div>
   );
+}
+
+function formatLength(v: number): string {
+  if (v >= 1000) return v.toFixed(0);
+  if (v >= 100) return v.toFixed(1);
+  return v.toFixed(2);
 }
