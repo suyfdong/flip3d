@@ -189,7 +189,23 @@ npx tsc --noEmit     # TS 检查
 - **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
 - **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
 
-## 当前状态速查（2026-08-20 Day 12）
+## 当前状态速查（2026-10-15 更新 · 下次先读 `../progress.md` 末尾「2026-10-15 收工」）
+
+- ✅ 10/15 起 viewer 按搜索意图重做（详见下方「Viewer 要点」），新增 `/stl-to-svg/`，首页 → viewer 带文件跳转。
+- ✅ Node 测试 **244/244**：`npx tsx scripts/{dxf,print-check,stl-editor,render,3mf-meta,heightmap}-test.mts`（114/26/9/45/36/14）。真实样本在 `.tmp-e2e/`（gitignored）：`pouring-cat.3mf`（MakerWorld 7 色涂色）、`bambu-*.3mf`、`f3d/Cube02ProfileMini.3mf`、`scan-pointcloud.ply` / `splat.ply` / `color-mesh.ply`、`as1_pe_203.stp`。
+- 分发由用户用自己账号发（dev.to / GitHub / Stack Exchange），我负责找帖子、核实、起草，草稿放 `../launch/`。**Reddit、付费目录不碰。回复要短，2–4 句，先读楼上再写，不复述已有内容；SE 回答必须写 disclosure。**
+
+### Viewer 要点（2026-10-15 加）
+
+- **3MF**：Bambu 生产扩展先 `flattenProduction3MF`（复用 `3mf-sanitizer.ts`）再交给 ThreeMFLoader。`lib/converters/3mf-meta.ts` 读软件/打印机/单位/盘/对象→耗材槽/耗材色/缩略图；`3mf-paint.ts` 解 `paint_color` / `slic3rpe:mmu_segmentation`（TriangleSelector 序列化，**从末尾倒读**，每个三角取主导状态），按三角数 + 首顶点匹配网格后写顶点色。
+- **颜色保留**：`userData.keepColor` 的网格不被主题染色。只有 glTF 默认材质（未命名白色 metalness 1）、无色 STL/OBJ 才用品牌蓝。GLB 有 PBR 时加 RoomEnvironment 环境光，内置动画只在 viewer 页播放。
+- **PLY**：没有面就按点云渲染（`THREE.Points`）；高斯泼溅取 SH DC 系数（`f_dc_*`）上色，只是预览，不是完整的泼溅渲染。点云导出 STL/3MF 或修复时，`assertHasSurface` 会给出明确报错。
+- **Z-up**：3MF/STL 和浮雕/SVG/DXF 挤出模型 `userData.upAxis="z"`，显示时只在包装 Group 上转 -90°X；STEP/IGES 保持文件坐标系，提供「Flip upright」切换。**导出、修复、打印检查一律走 `inOwnFrame`（先从父节点摘下来再算）**，否则导出的坐标会被旋转。
+- **取景**用外接球（`MeshViewer.fitCamera`），算之前先 `updateMatrixWorld(true)`。
+- **首页 → viewer**：`lib/file-handoff.ts` 用 IndexedDB 暂存文件（sessionStorage 装不下大 3MF/STEP，最长 10 分钟，读一次即删）；viewer 读到 `?handoff=1` 自动打开，GA4 记 `input_method=handoff`。
+- 侧栏 `ModelInfoPanel`：3MF 信息、PLY 文件头、零件树（隐藏 / 只看此零件）。**只有专门的 viewer 页才有**，首页和转换页没有。
+
+## 状态速查（2026-08-20 Day 12，历史）
 
 - ✅ 9 源格式 / 5 目标格式 / **40 个 converter landing** + 别名页（`/stp-to-stl` `/gltf-to-obj`）
 - ✅ **`/converters` 目录 hub** —— 9×5 矩阵链到全部 40 转换页 + 各分区；从 `lib/seo.ts` 常量生成，加新路由自动进目录
