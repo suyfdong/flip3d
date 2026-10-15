@@ -5,7 +5,8 @@ import {
   type Polyline,
   type Triangle3,
 } from "@/lib/dxf/write";
-import { sliceAtZ, meshToTriangles, zRange } from "@/lib/dxf/section";
+import { sliceAtZ, meshToTriangles, zRange, alignAxisToZ } from "@/lib/dxf/section";
+import { writeSvgPolylines } from "@/lib/dxf/svg";
 import { parseDxf, dxfToLoops } from "@/lib/dxf/parse";
 import { dxfToMesh, DEFAULT_DXF_EXTRUDE } from "@/lib/dxf/dxf-to-mesh";
 import { analyzePrintReadiness } from "@/lib/print-check/analyze";
@@ -493,6 +494,64 @@ console.log("\n[23] Error paths");
   ].join("\n"));
   check("open line can't be extruded",
     msg(() => dxfToMesh(openOnly, DEFAULT_DXF_EXTRUDE)).includes("closed"));
+}
+
+// ---------------------------------------------------------------------------
+// Cut axis: a 10 (x) × 20 (y) × 30 (z) box cut across each axis.
+// ---------------------------------------------------------------------------
+{
+  const box = new THREE.BoxGeometry(10, 20, 30);
+  const bboxOf = (polys: { points: [number, number][] }[]) => {
+    let mx = -Infinity, my = -Infinity, nx = Infinity, ny = Infinity;
+    for (const p of polys) for (const [x, y] of p.points) { mx = Math.max(mx, x); my = Math.max(my, y); nx = Math.min(nx, x); ny = Math.min(ny, y); }
+    return [mx - nx, my - ny];
+  };
+  const z = alignAxisToZ(box, "z");
+  check("z-cut keeps geometry", z === box);
+  const zs = sliceAtZ(z, 0);
+  const [zw, zh] = bboxOf(zs.polylines);
+  check("z-cut outline 10×20", near(zw, 10, 1e-4) && near(zh, 20, 1e-4), `${zw}×${zh}`);
+
+  const x = alignAxisToZ(box, "x");
+  const [xlo, xhi] = zRange(x);
+  check("x-cut range = x extent", near(xlo, -5, 1e-4) && near(xhi, 5, 1e-4), `${xlo}..${xhi}`);
+  const xs = sliceAtZ(x, 0);
+  const [xw, xh] = bboxOf(xs.polylines);
+  check("x-cut outline is the YZ face 20×30", near(xw, 20, 1e-4) && near(xh, 30, 1e-4), `${xw}×${xh}`);
+  check("x-cut one closed loop", xs.closedLoops === 1 && xs.openChains === 0);
+
+  const y = alignAxisToZ(box, "y");
+  const ys = sliceAtZ(y, 0);
+  const [yw, yh] = bboxOf(ys.polylines);
+  check("y-cut outline is the ZX face 30×10", near(yw, 30, 1e-4) && near(yh, 10, 1e-4), `${yw}×${yh}`);
+  check("source geometry untouched by alignment", zRange(box)[1] === 15);
+
+  // A plate with a hole cut across X: hole must survive as its own loop.
+  const shape = new THREE.Shape([new THREE.Vector2(-30, -20), new THREE.Vector2(30, -20), new THREE.Vector2(30, 20), new THREE.Vector2(-30, 20)]);
+  const hole = new THREE.Path(); hole.absarc(0, 0, 6, 0, Math.PI * 2, true); shape.holes.push(hole);
+  const plate = new THREE.ExtrudeGeometry(shape, { depth: 8, bevelEnabled: false });
+  const ps = sliceAtZ(alignAxisToZ(plate, "x"), 0);
+  check("x-cut through a hole gives 2 closed loops", ps.closedLoops === 2 && ps.openChains === 0, `${ps.closedLoops}/${ps.openChains}`);
+}
+
+// ---------------------------------------------------------------------------
+// SVG writer
+// ---------------------------------------------------------------------------
+{
+  const svg = writeSvgPolylines(
+    [
+      { points: [[0, 0], [40, 0], [40, 10], [0, 10]], closed: true },
+      { points: [[5, 2], [10, 8]], closed: false },
+    ],
+    { units: "mm", title: "a <b> & c" },
+  );
+  check("svg size in mm", svg.includes('width="40mm"') && svg.includes('height="10mm"') && svg.includes('viewBox="0 0 40 10"'));
+  check("svg closed path ends with Z", /<path d="M0 10 L40 10 L40 0 L0 0 Z"\/>/.test(svg), svg);
+  check("svg y flipped (y=8 → 2)", svg.includes("L5 2") || svg.includes("M5 8 L10 2"));
+  check("svg open path has no Z", /<path d="M5 8 L10 2"\/>/.test(svg));
+  check("svg stroke-only hairline", svg.includes('fill="none"') && svg.includes('stroke-width="0.1"'));
+  check("svg title escaped", svg.includes("a &lt;b&gt; &amp; c"));
+  check("svg inch units", writeSvgPolylines([{ points: [[0, 0], [2, 1]], closed: false }], { units: "in" }).includes('width="2in"'));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

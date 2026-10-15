@@ -158,6 +158,7 @@ export const DXF_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "png-to-dxf", title: "PNG to DXF" },
   { slug: "image-to-dxf", title: "Image to DXF" },
   { slug: "stl-to-dxf", title: "STL to DXF" },
+  { slug: "stl-to-svg", title: "STL to SVG" },
   { slug: "step-to-dxf", title: "STEP to DXF" },
   { slug: "dxf-to-stl", title: "DXF to STL" },
   { slug: "dxf-viewer", title: "Online DXF Viewer" },

@@ -8,7 +8,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/stl-to-dxf/`;
 const title = "STL to DXF Converter — Free Online | No Signup Required";
 const description =
-  "Convert STL to DXF in your browser. Take a cross-section through the model for laser cutting and CNC, or export every triangle as DXF 3DFACE entities. Free, instant, 100% local.";
+  "Convert STL to DXF in your browser: cut a 2D section across X, Y or Z for laser cutting and CNC (DXF or SVG), or export every triangle as 3DFACE. Free, 100% local.";
 
 export const metadata: Metadata = {
   title,
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 
 const ABOUT = [
   "STL is a 3D triangle mesh; DXF is a 2D drawing format. There's no conversion that keeps everything, so this tool gives you the two that are actually useful — and tells you which one you're getting.",
-  "A 2D section cuts the model with a horizontal plane at a height you choose and exports the outline of that cut as closed DXF polylines. This is what you want for laser cutting, waterjet, plasma or CNC profiling, and for dropping a real footprint into a 2D drawing.",
+  "A 2D section cuts the model with a plane — across Z for the top view, or across Y / X for the front and side — at a position you choose, and exports the outline of that cut as closed DXF polylines. This is what you want for laser cutting, waterjet, plasma or CNC profiling, and for dropping a real profile into a 2D drawing. The same outline also downloads as a millimetre-sized SVG.",
   "3D faces writes every triangle straight through as a DXF 3DFACE entity. The shape is unchanged, so a CAD package that imports faceted geometry gets the whole model — but the file is large and it's still a mesh, not a solid with feature history.",
   "Because it's a genuine section and not a flattened silhouette, curved or tapered walls give a different outline at different heights. Pick the height that matters for your cut — the slider updates the preview live.",
 ];
@@ -39,7 +39,19 @@ const ABOUT = [
 const FAQ = [
   {
     q: "How do I convert an STL to DXF?",
-    a: "Drop the STL above, leave the mode on 2D section, and drag the cut-height slider until the preview shows the outline you need. Then click Download DXF. Nothing is uploaded.",
+    a: "Drop the STL above, leave the mode on 2D section, pick the cut direction, and drag the slider until the preview shows the outline you need. Then click Download DXF. Nothing is uploaded.",
+  },
+  {
+    q: "Can I convert STL to DXF for laser cutting?",
+    a: "Yes — that's what the 2D section is for. It gives a real closed outline (holes included) in millimetres, written as R12 POLYLINE entities that LightBurn, LaserGRBL and CAM packages read. Many online converters instead hand you a 3D mesh DXF, which laser software can't cut.",
+  },
+  {
+    q: "My part was modelled standing up — how do I get its face?",
+    a: "Change the cut direction to Y (front) or X (side). The section is then taken across that axis, so you get the profile you'd see looking at the part face-on.",
+  },
+  {
+    q: "Can I get an SVG instead of a DXF?",
+    a: "Yes. In 2D section mode there's a Download SVG button next to Download DXF; the SVG is a hairline-stroke outline sized in millimetres for laser and craft-cutter software. There's also a dedicated STL to SVG page.",
   },
   {
     q: "Is this STL to DXF converter free?",
@@ -91,6 +103,7 @@ export default function Page() {
         related={[
           { href: "/dxf-to-stl/", title: "DXF to STL", desc: "The reverse — extrude a drawing into a solid" },
           { href: "/step-to-dxf/", title: "STEP to DXF", desc: "Section a CAD part instead of a mesh" },
+          { href: "/stl-to-svg/", title: "STL to SVG", desc: "Same section as a laser-ready SVG" },
           { href: "/dxf-viewer/", title: "DXF Viewer", desc: "Open the result and check it" },
           { href: "/tools/stl-repair/", title: "STL Repair", desc: "Close holes so sections come out clean" },
         ]}

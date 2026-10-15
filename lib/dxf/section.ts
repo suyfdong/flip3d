@@ -41,6 +41,30 @@ function positionsOf(geometry: THREE.BufferGeometry): Float32Array {
     : new Float32Array(attr.array as ArrayLike<number>);
 }
 
+export type CutAxis = "x" | "y" | "z";
+
+/**
+ * Re-express the mesh so the chosen cut axis becomes Z (a cyclic axis swap,
+ * i.e. a rotation — loop winding and hole orientation are preserved):
+ *   x-cut: (x, y, z) → (y, z, x)   — outline seen along +X, in the YZ plane
+ *   y-cut: (x, y, z) → (z, x, y)   — outline seen along +Y, in the ZX plane
+ * so sliceAtZ / zRange work unchanged for every axis.
+ */
+export function alignAxisToZ(geometry: THREE.BufferGeometry, axis: CutAxis): THREE.BufferGeometry {
+  if (axis === "z") return geometry;
+  const out = geometry.clone();
+  const pos = out.getAttribute("position");
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    if (axis === "x") pos.setXYZ(i, y, z, x);
+    else pos.setXYZ(i, z, x, y);
+  }
+  pos.needsUpdate = true;
+  out.deleteAttribute("normal");
+  out.computeBoundingBox();
+  return out;
+}
+
 /** Z range of the mesh — the usable span for a cutting plane. */
 export function zRange(geometry: THREE.BufferGeometry): [number, number] {
   geometry.computeBoundingBox();

@@ -26,10 +26,13 @@ export default function DxfPreview({
     if (!canvas || !wrap) return;
 
     const draw = () => {
-      const rect = wrap.getBoundingClientRect();
+      // clientWidth/Height = content box (no border). The canvas is absolutely
+      // positioned, so sizing it never feeds back into the wrapper's size —
+      // using the border-box rect with an in-flow canvas grew the page 2px per
+      // ResizeObserver tick, forever.
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.max(1, Math.floor(rect.width));
-      const h = Math.max(1, Math.floor(rect.height));
+      const w = Math.max(1, Math.floor(wrap.clientWidth));
+      const h = Math.max(1, Math.floor(wrap.clientHeight));
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       canvas.style.width = `${w}px`;
@@ -92,9 +95,9 @@ export default function DxfPreview({
   return (
     <div
       ref={wrapRef}
-      className={`relative w-full h-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 ${className}`}
+      className={`relative w-full h-full min-w-0 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 ${className}`}
     >
-      <canvas ref={canvasRef} className="block" />
+      <canvas ref={canvasRef} className="absolute inset-0 block" />
     </div>
   );
 }

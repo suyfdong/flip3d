@@ -8,7 +8,8 @@ import DxfPreview from "@/components/DxfPreview";
 import { parseToObject, downloadBlob, detectFormat, type Format } from "@/lib/converters";
 import { flattenToGeometry } from "@/lib/repair/repair";
 import { writeDxfPolylines, writeDxf3dFaces, type Polyline } from "@/lib/dxf/write";
-import { sliceAtZ, meshToTriangles, zRange } from "@/lib/dxf/section";
+import { sliceAtZ, meshToTriangles, zRange, alignAxisToZ, type CutAxis } from "@/lib/dxf/section";
+import { writeSvgPolylines } from "@/lib/dxf/svg";
 import {
   trackFileUploaded,
   trackSampleLoaded,
@@ -16,7 +17,7 @@ import {
   trackConvertError,
 } from "@/lib/analytics";
 
-export type MeshToDxfVariant = "stl" | "step";
+export type MeshToDxfVariant = "stl" | "step" | "stl-svg";
 
 const VARIANT_COPY: Record<
   MeshToDxfVariant,
@@ -27,25 +28,39 @@ const VARIANT_COPY: Record<
     accept: string[];
     label: string;
     format: Format;
+    /** Primary download. SVG pages only offer the 2D section. */
+    output: "dxf" | "svg";
   }
 > = {
   stl: {
     eyebrow: "STL → DXF · Section & outline",
     title: "STL to DXF",
     intro:
-      "Cut a horizontal section through an STL and export it as a DXF outline for laser cutting or CNC — or hand the whole mesh over as DXF 3DFACE triangles. Free, instant, 100% local.",
+      "Cut a section through an STL — across X, Y or Z — and export the outline as DXF (or SVG) for laser cutting and CNC, or hand the whole mesh over as DXF 3DFACE triangles. Free, instant, 100% local.",
     accept: [...SUPPORTED_FORMATS],
     label: "STL file",
     format: "stl",
+    output: "dxf",
   },
   step: {
-    eyebrow: "STEP → DXF · Section & outline",
+    eyebrow: "STEP → 2D DXF · Part outline",
     title: "STEP to DXF",
     intro:
-      "Take a horizontal section through a STEP or STP part and export it as a DXF outline for laser cutting, waterjet or CNC. Free, in the browser, no CAD licence needed.",
+      "Turn a 3D STEP or STP part into a flat 2D DXF profile: pick the cut direction (X, Y or Z) and position, and export the outline in millimetres for laser cutting, waterjet, plasma or CNC. Free, in the browser, no CAD licence needed.",
     accept: [".step", ".stp"],
     label: "STEP file",
     format: "step",
+    output: "dxf",
+  },
+  "stl-svg": {
+    eyebrow: "STL → SVG · Laser-ready outline",
+    title: "STL to SVG",
+    intro:
+      "Cut a section through an STL — across X, Y or Z — and download the outline as an SVG at true millimetre size, ready for LightBurn, Inkscape or a Glowforge. Free, instant, 100% local.",
+    accept: [...SUPPORTED_FORMATS],
+    label: "STL file",
+    format: "stl",
+    output: "svg",
   },
 };
 
@@ -63,7 +78,7 @@ export default function MeshToDxfTool({
   const [fileName, setFileName] = useState("");
   const [mode, setMode] = useState<Mode>("section");
   const [z, setZ] = useState(0);
-  const [bounds, setBounds] = useState<[number, number]>([0, 1]);
+  const [axis, setAxis] = useState<CutAxis>("z");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -73,14 +88,33 @@ export default function MeshToDxfTool({
     };
   }, [geometry]);
 
+  // The cut axis is handled by re-expressing the mesh with that axis as Z.
+  const aligned = useMemo(
+    () => (geometry ? alignAxisToZ(geometry, axis) : null),
+    [geometry, axis],
+  );
+  useEffect(() => {
+    return () => {
+      if (aligned && aligned !== geometry) aligned.dispose();
+    };
+  }, [aligned, geometry]);
+  const bounds = useMemo<[number, number]>(
+    () => (aligned ? zRange(aligned) : [0, 1]),
+    [aligned],
+  );
+  // Re-centre the cut whenever the axis (or model) changes.
+  useEffect(() => {
+    setZ((bounds[0] + bounds[1]) / 2);
+  }, [bounds]);
+
   const slice = useMemo(() => {
-    if (!geometry || mode !== "section") return null;
+    if (!aligned || mode !== "section") return null;
     try {
-      return sliceAtZ(geometry, z);
+      return sliceAtZ(aligned, z);
     } catch {
       return null;
     }
-  }, [geometry, mode, z]);
+  }, [aligned, mode, z]);
 
   const triangles = useMemo(
     () => (geometry && mode === "faces" ? meshToTriangles(geometry) : null),
@@ -99,9 +133,8 @@ export default function MeshToDxfTool({
         if (!(hi > lo)) {
           throw new Error("This model is flat in Z, so there's no section to take.");
         }
+        setAxis("z");
         setGeometry(geo);
-        setBounds([lo, hi]);
-        setZ((lo + hi) / 2);
         setFileName(name);
         setStatus("ready");
         if (origin === "drop") trackFileUploaded(fmt, "drop");
@@ -135,10 +168,8 @@ export default function MeshToDxfTool({
       shape.holes.push(hole);
     }
     const geo = new THREE.ExtrudeGeometry(shape, { depth: 8, bevelEnabled: false });
-    const [lo, hi] = zRange(geo);
+    setAxis("z");
     setGeometry(geo);
-    setBounds([lo, hi]);
-    setZ((lo + hi) / 2);
     setFileName(`flip3d-sample.${variant === "step" ? "step" : "stl"}`);
     setStatus("ready");
     trackSampleLoaded(copy.format);
@@ -151,9 +182,19 @@ export default function MeshToDxfTool({
     setErrorMsg(null);
   };
 
-  const handleDownload = () => {
+  const handleDownload = (as: "dxf" | "svg" = copy.output) => {
     try {
       const base = fileName.replace(/\.[^.]+$/, "") || "model";
+      if (as === "svg") {
+        const polys: Polyline[] = slice?.polylines ?? [];
+        if (polys.length === 0) {
+          throw new Error("This section is empty — move the cut position into the model.");
+        }
+        const svg = writeSvgPolylines(polys, { units: "mm", title: `${base} — section ${axis.toUpperCase()} ${z.toFixed(2)} mm` });
+        downloadBlob(new Blob([svg], { type: "image/svg+xml" }), `${base}.svg`);
+        trackFileConverted(copy.format, "stl");
+        return;
+      }
       let dxf: string;
       if (mode === "faces") {
         if (!triangles?.length) throw new Error("Nothing to export.");
@@ -161,7 +202,7 @@ export default function MeshToDxfTool({
       } else {
         const polys: Polyline[] = slice?.polylines ?? [];
         if (polys.length === 0) {
-          throw new Error("This section is empty — move the cut height into the model.");
+          throw new Error("This section is empty — move the cut position into the model.");
         }
         dxf = writeDxfPolylines(polys, { units: "mm", layer: "SECTION" });
       }
@@ -229,7 +270,7 @@ export default function MeshToDxfTool({
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             {mode === "section"
               ? slice
-                ? `${slice.closedLoops} closed outline${slice.closedLoops === 1 ? "" : "s"}${slice.openChains > 0 ? ` · ${slice.openChains} open chain${slice.openChains === 1 ? "" : "s"}` : ""} at Z ${z.toFixed(2)} mm`
+                ? `${slice.closedLoops} closed outline${slice.closedLoops === 1 ? "" : "s"}${slice.openChains > 0 ? ` · ${slice.openChains} open chain${slice.openChains === 1 ? "" : "s"}` : ""} at ${axis.toUpperCase()} ${z.toFixed(2)} mm`
                 : "Sectioning…"
               : `${triangles?.length ?? 0} triangles as 3DFACE entities`}
           </p>
@@ -241,11 +282,19 @@ export default function MeshToDxfTool({
           >
             ← New file
           </button>
+          {mode === "section" && (
+            <button
+              onClick={() => handleDownload(copy.output === "svg" ? "dxf" : "svg")}
+              className="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            >
+              {copy.output === "svg" ? "Download DXF" : "Download SVG"}
+            </button>
+          )}
           <button
-            onClick={handleDownload}
+            onClick={() => handleDownload(mode === "faces" ? "dxf" : copy.output)}
             className="px-5 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
           >
-            Download DXF
+            {mode === "faces" || copy.output === "dxf" ? "Download DXF" : "Download SVG"}
           </button>
         </div>
       </div>
@@ -276,7 +325,7 @@ export default function MeshToDxfTool({
           <div>
             <p className="text-sm font-medium mb-2">What to export</p>
             <div className="grid grid-cols-2 gap-2">
-              {(["section", "faces"] as const).map((m) => (
+              {(copy.output === "svg" ? (["section"] as const) : (["section", "faces"] as const)).map((m) => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
@@ -299,8 +348,28 @@ export default function MeshToDxfTool({
 
           {mode === "section" && (
             <div>
+              <p className="text-sm font-medium mb-2">Cut across</p>
+              <div className="grid grid-cols-3 gap-2 mb-1">
+                {(["z", "y", "x"] as const).map((a) => (
+                  <button
+                    key={a}
+                    onClick={() => setAxis(a)}
+                    className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
+                      axis === a
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300"
+                        : "border-zinc-300 dark:border-zinc-700 hover:border-blue-400"
+                    }`}
+                  >
+                    {a.toUpperCase()}
+                    {a === "z" ? " · top" : a === "y" ? " · front" : " · side"}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-4">
+                Part modelled standing up? Cut across Y or X to get its face-on profile.
+              </p>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-medium">Cut height (Z)</label>
+                <label className="text-sm font-medium">Cut position ({axis.toUpperCase()})</label>
                 <span className="text-xs font-mono text-zinc-500">{z.toFixed(2)} mm</span>
               </div>
               <input
@@ -361,9 +430,9 @@ export default function MeshToDxfTool({
       </div>
 
       <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-3xl">
-        A 2D section is a genuine slice through the model at the height you pick —
-        not a flattened silhouette, and not a redrawn CAD sketch. Curved walls
-        change shape with height, so pick the height that matters for your cut.
+        A 2D section is a genuine slice through the model at the position you pick —
+        not a flattened silhouette, and not a redrawn CAD sketch. Curved or tapered
+        walls change shape along the cut axis, so pick the position that matters for your cut.
       </p>
     </section>
   );
