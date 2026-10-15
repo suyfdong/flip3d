@@ -210,6 +210,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                   Drag to rotate · scroll to zoom · right-drag to pan
                 </p>
+                <LoadNotes object={object} />
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <button
@@ -310,5 +311,36 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
         </>
       )}
     </>
+  );
+}
+
+// One-line facts about how the file was read, so users know what they're
+// looking at (flattened Bambu parts, point cloud vs mesh, splat preview).
+function LoadNotes({ object }: { object: THREE.Object3D | null }) {
+  if (!object) return null;
+  const notes: string[] = [];
+  const parts = object.userData.flattenedParts as number | undefined;
+  if (parts) {
+    notes.push(
+      `Bambu/Orca multi-part 3MF — merged ${parts} internal object file${parts === 1 ? "" : "s"} so the whole model shows.`,
+    );
+  }
+  const pc = object.userData.pointCloud as
+    | { points: number; splat: boolean; color: boolean }
+    | undefined;
+  if (pc) {
+    notes.push(
+      pc.splat
+        ? `3D Gaussian Splat — previewed as ${pc.points.toLocaleString("en-US")} colored points (base color only, not a full splat render).`
+        : `Point cloud — ${pc.points.toLocaleString("en-US")} points, ${pc.color ? "with the scan's own colors" : "no color data"}, no faces.`,
+    );
+  }
+  if (!notes.length) return null;
+  return (
+    <ul className="mt-2 space-y-1 text-xs text-emerald-700 dark:text-emerald-400">
+      {notes.map((n) => (
+        <li key={n}>✓ {n}</li>
+      ))}
+    </ul>
   );
 }

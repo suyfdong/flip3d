@@ -69,13 +69,16 @@ function resultToGroup(result: OcctResult, fallbackName: string): THREE.Group {
       geometry.computeVertexNormals();
     }
 
+    // Keep the CAD file's own part color when it has one (occt reports sRGB 0–1).
     const material = new THREE.MeshStandardMaterial({
       color: BRAND_COLOR,
       metalness: 0.1,
       roughness: 0.6,
     });
+    if (mesh.color) material.color.setRGB(...mesh.color, THREE.SRGBColorSpace);
     const threeMesh = new THREE.Mesh(geometry, material);
     threeMesh.name = mesh.name ?? "";
+    if (mesh.color) threeMesh.userData.keepColor = true;
     group.add(threeMesh);
   }
 

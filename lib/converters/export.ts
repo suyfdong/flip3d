@@ -6,11 +6,13 @@ import { PLYExporter } from "three/examples/jsm/exporters/PLYExporter.js";
 import type { Format } from "./formats";
 import { MIME_TYPES } from "./formats";
 import { exportTo3MF } from "./3mf-writer";
+import { assertHasSurface } from "./stats";
 
 export async function exportToBlob(
   object: THREE.Object3D,
   format: Format,
 ): Promise<Blob> {
+  if (format === "stl" || format === "3mf") assertHasSurface(object);
   switch (format) {
     case "stl": {
       const result = new STLExporter().parse(object, { binary: true });

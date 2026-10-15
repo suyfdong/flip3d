@@ -156,7 +156,8 @@ export default function MeshViewer({ object, compact = false, theme }: Props) {
     // Re-tint the current object's materials so the theme covers the mesh too.
     if (currentObjectRef.current) {
       currentObjectRef.current.traverse((child) => {
-        if (!(child instanceof THREE.Mesh)) return;
+        if (!(child instanceof THREE.Mesh || child instanceof THREE.Points)) return;
+        if (child.userData.keepColor) return;
         const mat = child.material;
         const apply = (m: THREE.Material) => {
           if ("color" in m && m.color instanceof THREE.Color) {
@@ -189,7 +190,8 @@ export default function MeshViewer({ object, compact = false, theme }: Props) {
     // Apply theme mesh color to the freshly-added object too.
     if (themeSpec) {
       object.traverse((child) => {
-        if (!(child instanceof THREE.Mesh)) return;
+        if (!(child instanceof THREE.Mesh || child instanceof THREE.Points)) return;
+        if (child.userData.keepColor) return;
         const mat = child.material;
         const apply = (m: THREE.Material) => {
           if ("color" in m && m.color instanceof THREE.Color) {
@@ -232,9 +234,19 @@ export default function MeshViewer({ object, compact = false, theme }: Props) {
       />
       {!compact && stats && (
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-zinc-600 dark:text-zinc-400">
-          <Stat label="triangles" value={stats.triangles.toLocaleString()} />
-          <Stat label="vertices" value={stats.vertices.toLocaleString()} />
-          <Stat label="meshes" value={stats.meshes.toLocaleString()} />
+          {stats.points > 0 && stats.meshes === 0 ? (
+            <>
+              <Stat label="points" value={stats.points.toLocaleString()} />
+              <Stat label="faces" value="0 (point cloud)" />
+              <Stat label="meshes" value="0" />
+            </>
+          ) : (
+            <>
+              <Stat label="triangles" value={stats.triangles.toLocaleString()} />
+              <Stat label="vertices" value={stats.vertices.toLocaleString()} />
+              <Stat label="meshes" value={stats.meshes.toLocaleString()} />
+            </>
+          )}
           <Stat
             label="dimensions"
             value={`${stats.bbox.x} × ${stats.bbox.y} × ${stats.bbox.z}`}
