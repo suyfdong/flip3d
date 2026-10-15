@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { computeStats, type ModelStats } from "@/lib/converters";
 import { THEME_SPECS, type EmbedTheme } from "@/lib/embed-themes";
 
@@ -16,6 +17,12 @@ type Props = {
   unitLabel?: string;
   /** Override the file's up axis for display (Z-up files are stood upright). */
   upAxis?: "y" | "z";
+  /**
+   * Play the model's own animation clips (GLB / FBX). Off by default: converter
+   * pages export what the viewer shows, and a mid-animation pose would leak
+   * into the exported mesh.
+   */
+  playAnimations?: boolean;
 };
 
 type Measurement = { points: THREE.Vector3[]; distance: number | null };
@@ -55,6 +62,7 @@ export default function MeshViewer({
   measure = false,
   unitLabel = "mm",
   upAxis,
+  playAnimations = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -64,6 +72,11 @@ export default function MeshViewer({
   const currentObjectRef = useRef<THREE.Object3D | null>(null);
   const gridHelperRef = useRef<THREE.GridHelper | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+  const envRef = useRef<THREE.Texture | null>(null);
+  const [clips, setClips] = useState<THREE.AnimationClip[]>([]);
+  const [clipIndex, setClipIndex] = useState(0);
+  const [clipPlaying, setClipPlaying] = useState(true);
 
   const [stats, setStats] = useState<ModelStats | null>(null);
   const [measurement, setMeasurement] = useState<Measurement>({ points: [], distance: null });
@@ -112,8 +125,17 @@ export default function MeshViewer({
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
+    // Image-based lighting for PBR materials kept from GLB files — metallic
+    // surfaces read as black with only point/directional lights.
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    envRef.current = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+
+    const clock = new THREE.Clock();
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
+      const dt = clock.getDelta();
+      mixerRef.current?.update(dt);
       controls.update();
       renderer.render(scene, camera);
     };
@@ -144,6 +166,8 @@ export default function MeshViewer({
         cancelAnimationFrame(animationFrameRef.current);
       }
       controls.dispose();
+      envRef.current?.dispose();
+      envRef.current = null;
       renderer.dispose();
       if (renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
@@ -221,6 +245,11 @@ export default function MeshViewer({
 
     // Stats in the file's own axes, before any display rotation.
     setStats(computeStats(object));
+    scene.environment = object.userData.pbr ? envRef.current : null;
+    scene.environmentIntensity = 0.9;
+    setClips(object.animations?.length ? [...object.animations] : []);
+    setClipIndex(0);
+    setClipPlaying(true);
 
     const box = new THREE.Box3().setFromObject(object);
     const center = new THREE.Vector3();
@@ -332,6 +361,21 @@ export default function MeshViewer({
     };
   }, [measure, object, upAxis]);
 
+  // Drive the selected clip. Stops (and resets the pose) when turned off.
+  useEffect(() => {
+    if (!object || !playAnimations || clips.length === 0) return;
+    const mixer = new THREE.AnimationMixer(object);
+    mixerRef.current = mixer;
+    const action = mixer.clipAction(clips[Math.min(clipIndex, clips.length - 1)]);
+    action.play();
+    action.paused = !clipPlaying;
+    return () => {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(object);
+      mixerRef.current = null;
+    };
+  }, [object, playAnimations, clips, clipIndex, clipPlaying]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="relative flex-1 min-h-0 flex flex-col">
@@ -361,6 +405,34 @@ export default function MeshViewer({
                 {measurement.points.length === 1
                   ? "Click a second point"
                   : "Click two points on the model to measure"}
+              </span>
+            )}
+          </div>
+        )}
+        {playAnimations && clips.length > 0 && (
+          <div className="absolute left-3 bottom-3 flex items-center gap-2 rounded-lg bg-white/90 dark:bg-zinc-900/90 px-2 py-1.5 text-xs shadow border border-zinc-200 dark:border-zinc-700">
+            <button
+              onClick={() => setClipPlaying((p) => !p)}
+              className="px-2 py-0.5 rounded border border-zinc-300 dark:border-zinc-600"
+              aria-label={clipPlaying ? "Pause animation" : "Play animation"}
+            >
+              {clipPlaying ? "❚❚" : "▶"}
+            </button>
+            {clips.length > 1 ? (
+              <select
+                value={clipIndex}
+                onChange={(e) => setClipIndex(Number(e.target.value))}
+                className="bg-transparent max-w-[12rem]"
+              >
+                {clips.map((c, i) => (
+                  <option key={i} value={i}>
+                    {c.name || `Animation ${i + 1}`}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-zinc-600 dark:text-zinc-300 max-w-[12rem] truncate">
+                {clips[0].name || "Animation"}
               </span>
             )}
           </div>

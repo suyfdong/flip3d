@@ -10,9 +10,9 @@ import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/glb-viewer/`;
 const title =
-  "GLB Viewer Online — Free .GLB File Viewer & glTF Viewer | No Signup";
+  "GLB Viewer Online — Open .GLB Files on Windows 11 & Mac, Free | glTF Viewer";
 const description =
-  "Free online GLB viewer and .glb file viewer. Open a .glb or .gltf file and view the 3D model in your browser — rotate, zoom, inspect. Works after Windows 11 removed the built-in 3D Viewer. 100% local, no upload, no signup.";
+  "Open .glb and .gltf files online with their textures, materials and animations — no 3D Viewer app needed on Windows 11 or Mac. Free, 100% local, no upload.";
 
 export const metadata: Metadata = {
   title,
@@ -40,11 +40,11 @@ const config: ViewerConfig = {
   eyebrow: "GLB · glTF · Online File Viewer",
   heading: "Online GLB & glTF Viewer",
   intro:
-    "Drop a .glb or .gltf file to open it in a fast 3D viewer — drag to rotate, scroll to zoom, and inspect the model. Free, instant, and 100% local: your file never leaves the browser.",
+    "Drop a .glb or .gltf file to see it with its own textures and materials, play its animations, hide or isolate parts, and measure it. Works the same on Windows 11, Mac and Linux — free, instant, and the file never leaves your browser.",
   about: [
     "Got a .glb file and nothing that opens it? This page is the whole answer — no app, no account, no upload.",
     "This is the fallback a lot of people land on after Windows 11 dropped the built-in 3D Viewer app that used to preview .glb files. An online GLB viewer needs no install and no admin rights, so it also works on locked-down work machines.",
-    "Views GLB and glTF 2.0 — the standard format for web, AR and asset pipelines. Self-contained .glb files load most reliably.",
+    "Views GLB and glTF 2.0 — the standard format for web, AR, game and AI 3D-generator output. Textures and PBR materials (metal, roughness) are shown as authored, with image-based lighting so metallic surfaces don't render black; animation clips play with a pause / clip picker, and the parts panel lists the model's nodes.",
     "Everything runs on your device with WebGL. There's no upload, no account, and no file-size paywall.",
     "A single .gltf that references external .bin or texture files may render geometry only, since those side files aren't included in one upload — .glb bundles everything and is preferred.",
     "Need it for printing or editing? Convert the GLB to STL, OBJ or 3MF below.",
@@ -60,7 +60,19 @@ const config: ViewerConfig = {
     },
     {
       q: "Does Windows 10 or 11 have a built-in 3D viewer for .glb files?",
-      a: "Windows 10 shipped a 3D Viewer app that previewed .glb and .fbx, but Microsoft removed it from the default Windows 11 install, so a fresh Windows 11 machine has nothing that opens a .glb. You can still install 3D Viewer from the Microsoft Store, or just drop the file into this page — no install, no admin rights needed.",
+      a: "Windows 10 shipped a 3D Viewer app that previewed .glb and .fbx, but it isn't part of a fresh Windows 11 install and Microsoft has deprecated it, so you can't count on having it. This page does the same job in any browser — drop the .glb in, no install and no admin rights needed, which also makes it work on locked-down work PCs.",
+    },
+    {
+      q: "How do I view GLB files on Windows 11?",
+      a: "Open this page in Edge or Chrome and drag the .glb from File Explorer into the box above. It renders straight away with textures and animations — nothing to install from the Store, and nothing is uploaded.",
+    },
+    {
+      q: "Does the viewer show textures and play animations?",
+      a: "Yes. Embedded textures and PBR materials are kept exactly as stored in the GLB, and if the file contains animation clips the first one plays automatically, with pause and a clip picker in the corner. Models that have no material assigned are shown in a neutral blue.",
+    },
+    {
+      q: "Can I open GLB files from AI 3D generators?",
+      a: "Yes. Image-to-3D and text-to-3D tools usually export textured .glb files; drop one here to check the mesh and texture before you print or edit it, and use the GLB to STL converter when you need a printable mesh.",
     },
     {
       q: "Can I view a whole folder of .glb files at once?",

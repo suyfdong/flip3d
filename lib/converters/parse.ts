@@ -35,11 +35,23 @@ export async function parseToObject(
         new GLTFLoader().parse(
           buffer,
           "",
-          (gltf) => resolve(gltf.scene),
+          (gltf) => {
+            // Keep the clips on the root so the viewer can play them.
+            gltf.scene.animations = gltf.animations;
+            resolve(gltf.scene);
+          },
           (event) => reject(new Error(event.message || "Failed to parse GLB")),
         );
       });
-      applyBrandMaterial(scene);
+      // A GLB's materials and textures are the point of the format (AI-generated
+      // models especially) — keep them. Only glTF's built-in default material
+      // (no material assigned in the file) gets the brand color.
+      keepNativeOrBrand(scene, (m) => !isGltfDefaultMaterial(m));
+      let kept = false;
+      scene.traverse((n) => {
+        if (n.userData.keepColor) kept = true;
+      });
+      if (kept) scene.userData.pbr = true;
       return scene;
     }
     case "3mf": {
@@ -125,6 +137,21 @@ function keepNativeOrBrand(
     mats.forEach((m) => m?.dispose());
     child.material = DEFAULT_MATERIAL.clone();
   });
+}
+
+// GLTFLoader's createDefaultMaterial(): unnamed white MeshStandardMaterial with
+// metalness 1 / roughness 1 and no maps — what a primitive gets when the file
+// assigns no material.
+function isGltfDefaultMaterial(m: THREE.Material): boolean {
+  return (
+    m instanceof THREE.MeshStandardMaterial &&
+    !m.name &&
+    !m.map &&
+    !m.vertexColors &&
+    m.metalness === 1 &&
+    m.roughness === 1 &&
+    m.color.getHex() === 0xffffff
+  );
 }
 
 // Bambu / Orca 3MFs use the production extension: the root model holds no

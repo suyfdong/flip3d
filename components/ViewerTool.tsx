@@ -261,6 +261,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
                   measure={measuring}
                   unitLabel={unitLabelFor(object)}
                   upAxis={upAxis ?? undefined}
+                  playAnimations
                 />
               </div>
 
