@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { takeFile } from "@/lib/file-handoff";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
@@ -83,7 +84,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   }, [object]);
 
   const handleFile = useCallback(
-    async (buffer: ArrayBuffer, name: string) => {
+    async (buffer: ArrayBuffer, name: string, source: "drop" | "handoff" = "drop") => {
       setStatus("loading");
       setErrorMsg(null);
       try {
@@ -92,7 +93,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
         setUpAxis(null);
         setFileName(name);
         setStatus("idle");
-        trackFileUploaded(format, "drop");
+        trackFileUploaded(format, source);
       } catch (err) {
         const msg =
           err instanceof Error
@@ -105,6 +106,17 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
     },
     [format],
   );
+
+  // ?handoff=1 — the homepage's "Open in X Viewer" button stashed the file
+  // it already had, so the visitor doesn't drop it a second time.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("handoff")) return;
+    // Strip the flag first so a re-run (StrictMode, refresh) doesn't re-take.
+    window.history.replaceState(null, "", window.location.pathname);
+    takeFile().then((f) => {
+      if (f) handleFile(f.buffer, f.name, "handoff");
+    });
+  }, [handleFile]);
 
   // ?url=… — the "Open in Flip3D" badge inside embedded viewers lands here
   // with the same model, so the visitor gets it full-size instead of a logo.

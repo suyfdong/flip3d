@@ -25,7 +25,7 @@ function track(event: string, params: Record<string, unknown>) {
 
 export function trackFileUploaded(
   format: string,
-  source: "drop" | "sample" | "url",
+  source: "drop" | "sample" | "url" | "handoff",
 ) {
   // Param must NOT be named "source": gtag treats it as a campaign source and
   // overwrites session attribution (showed up in GA4 as source "drop" / (not set)).

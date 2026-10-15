@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as THREE from "three";
@@ -20,6 +20,8 @@ import {
 import { JsonLd } from "@/components/JsonLd";
 import { softwareAppSchema } from "@/lib/schema";
 import { SITE_URL } from "@/lib/seo";
+import { VIEWER_PATH_BY_FORMAT } from "@/lib/viewer-url";
+import { stashFile } from "@/lib/file-handoff";
 import {
   trackFileUploaded,
   trackSampleLoaded,
@@ -157,6 +159,8 @@ export default function Home() {
   const [unsupportedExt, setUnsupportedExt] = useState<string | null>(null);
   const [status, setStatus] = useState<ConvertStatus>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Original bytes of the loaded file, so "Open in viewer" can hand them over.
+  const fileBuffer = useRef<ArrayBuffer | null>(null);
 
   useEffect(() => {
     return () => {
@@ -184,6 +188,7 @@ export default function Home() {
       const parsed = await parseToObject(buffer, fmt);
       // useEffect cleanup disposes the previous object on state change.
       setObject(parsed);
+      fileBuffer.current = buffer;
       setFileName(name);
       setSourceFormat(fmt);
       setTargetFormat(fmt === "stl" ? "obj" : "stl");
@@ -440,6 +445,16 @@ export default function Home() {
                 </div>
               )}
 
+              {sourceFormat && (
+                <ViewerHint
+                  format={sourceFormat}
+                  onOpen={async () => {
+                    if (fileBuffer.current) await stashFile(fileName, fileBuffer.current);
+                    window.location.href = `${VIEWER_PATH_BY_FORMAT[sourceFormat]}?handoff=1`;
+                  }}
+                />
+              )}
+
               <div className="h-[60vh] sm:h-[480px] lg:h-[560px]">
                 <MeshViewer object={object} />
               </div>
@@ -643,6 +658,33 @@ function StepCard({ n, title, desc }: { n: number; title: string; desc: string }
       <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xs mx-auto">
         {desc}
       </p>
+    </div>
+  );
+}
+
+/** What the dedicated viewer adds over the homepage preview, per format. */
+const VIEWER_EXTRAS: Partial<Record<Format, string>> = {
+  "3mf": "plates, filament colors, painted parts and the slicer thumbnail",
+  ply: "point-cloud and Gaussian-splat details, element list and measuring",
+  step: "the assembly parts list (hide / isolate parts) and measuring",
+  iges: "the assembly parts list (hide / isolate parts) and measuring",
+  glb: "animations, PBR lighting and measuring",
+};
+
+function ViewerHint({ format, onOpen }: { format: Format; onOpen: () => void }) {
+  const extras = VIEWER_EXTRAS[format] ?? "measuring, an upright toggle and model details";
+  const label = FORMAT_LABELS[format];
+  return (
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 mb-4 flex items-center justify-between gap-3 flex-wrap text-sm">
+      <span className="text-zinc-600 dark:text-zinc-400">
+        Just want to look? The {label} Viewer shows {extras}.
+      </span>
+      <button
+        onClick={onOpen}
+        className="px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 font-medium"
+      >
+        Open in {label} Viewer →
+      </button>
     </div>
   );
 }
