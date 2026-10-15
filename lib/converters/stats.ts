@@ -72,3 +72,37 @@ export function assertHasSurface(object: THREE.Object3D): void {
     );
   }
 }
+
+/**
+ * Run fn with the object detached from its parent, so world matrices equal the
+ * file's own frame. The viewer wraps objects in a display-only rotation (Z-up
+ * files stood upright); exports and geometry analysis must not inherit it.
+ */
+export function inOwnFrame<T>(object: THREE.Object3D, fn: () => T): T {
+  const parent = object.parent;
+  if (!parent) {
+    object.updateMatrixWorld(true);
+    return fn();
+  }
+  const index = parent.children.indexOf(object);
+  parent.remove(object);
+  object.updateMatrixWorld(true);
+  const restore = () => {
+    parent.add(object);
+    // Keep the original child order (add() appends).
+    parent.children.splice(parent.children.indexOf(object), 1);
+    parent.children.splice(index, 0, object);
+    object.updateMatrixWorld(true);
+  };
+  try {
+    const out = fn();
+    if (out instanceof Promise) {
+      return out.finally(restore) as T;
+    }
+    restore();
+    return out;
+  } catch (err) {
+    restore();
+    throw err;
+  }
+}

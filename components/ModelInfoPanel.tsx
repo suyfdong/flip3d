@@ -41,7 +41,7 @@ function Swatch({ color }: { color: string }) {
   );
 }
 
-function ThreeMFInfo({ meta }: { meta: ThreeMFMeta }) {
+function ThreeMFInfo({ meta, painted }: { meta: ThreeMFMeta; painted: boolean }) {
   const [thumb, setThumb] = useState<string | null>(null);
   useEffect(() => {
     if (!meta.thumbnail) return;
@@ -75,7 +75,9 @@ function ThreeMFInfo({ meta }: { meta: ThreeMFMeta }) {
             ))}
           </ul>
           <p className="text-[11px] text-zinc-400 mt-1.5">
-            Objects are tinted with their assigned filament. Per-face color painting isn&apos;t shown.
+            {painted
+              ? "Painted colors are shown per triangle; very fine paint detail inside a triangle is simplified to its main color."
+              : "Each object is tinted with the filament it's assigned to."}
           </p>
         </div>
       )}
@@ -197,7 +199,7 @@ export default function ModelInfoPanel({ object }: { object: THREE.Object3D | nu
   return (
     <div className="space-y-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
       <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">File details</p>
-      {meta && <ThreeMFInfo meta={meta} />}
+      {meta && <ThreeMFInfo meta={meta} painted={!!object.userData.paintedMeshes} />}
       {ply && <PlyInfo header={ply} />}
       {hasParts && <PartsList object={object} />}
     </div>

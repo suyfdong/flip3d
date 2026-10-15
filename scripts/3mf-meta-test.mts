@@ -4,6 +4,7 @@
 import JSZip from "jszip";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { read3MFMeta, colorForObject } from "../lib/converters/3mf-meta";
+import { decodePaintState, readPaintedMeshes } from "../lib/converters/3mf-paint";
 
 let pass = 0;
 let fail = 0;
@@ -121,6 +122,16 @@ plain.file("3D/3dmodel.model", `<model unit="millimeter" xmlns="http://schemas.m
 const pm = await read3MFMeta(await plain.generateAsync({ type: "uint8array" }));
 ok(pm.filaments.length === 0 && pm.objects.length === 0 && !pm.application, "plain 3MF has no slicer meta");
 ok(colorForObject(pm, "1") === undefined, "no filament → no color");
+
+// Paint decoding — values taken from a real Bambu Studio 7-color export.
+const cases: [string, number][] = [["4", 1], ["8", 2], ["0C", 3], ["1C", 4], ["2C", 5], ["3C", 6], ["4C", 7], ["44043", 1], ["40003", 0], ["", 0]];
+for (const [hex, want] of cases) ok(decodePaintState(hex) === want, `paint ${hex} → ${decodePaintState(hex)} (want ${want})`);
+const paintedXml = `<model><resources><object id="7" type="model"><mesh><vertices><vertex x="1" y="2" z="3"/><vertex x="0" y="0" z="0"/><vertex x="1" y="0" z="0"/></vertices><triangles><triangle v1="0" v2="1" v3="2" paint_color="8"/><triangle v1="0" v2="2" v3="1"/><triangle v1="1" v2="2" v3="0" slic3rpe:mmu_segmentation="4C"/></triangles></mesh></object><object id="8" type="model"><mesh><vertices><vertex x="0" y="0" z="0"/></vertices><triangles><triangle v1="0" v2="0" v3="0"/></triangles></mesh></object></resources></model>`;
+const pm2 = readPaintedMeshes(paintedXml);
+ok(pm2.length === 1 && pm2[0].objectId === "7", "only painted objects returned");
+ok(pm2[0]?.triCount === 3 && Array.from(pm2[0].states).join() === "2,0,7", `states ${pm2[0] && Array.from(pm2[0].states)}`);
+ok(pm2[0]?.firstVertex.join() === "1,2,3", "first vertex");
+ok(readPaintedMeshes("<model/>").length === 0, "no paint → empty");
 
 mkdirSync(".tmp-e2e", { recursive: true });
 writeFileSync(".tmp-e2e/bambu-two-filament.3mf", bambu);

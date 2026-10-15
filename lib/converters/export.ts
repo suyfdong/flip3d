@@ -6,9 +6,16 @@ import { PLYExporter } from "three/examples/jsm/exporters/PLYExporter.js";
 import type { Format } from "./formats";
 import { MIME_TYPES } from "./formats";
 import { exportTo3MF } from "./3mf-writer";
-import { assertHasSurface } from "./stats";
+import { assertHasSurface, inOwnFrame } from "./stats";
 
 export async function exportToBlob(
+  object: THREE.Object3D,
+  format: Format,
+): Promise<Blob> {
+  return inOwnFrame(object, () => exportInFrame(object, format));
+}
+
+async function exportInFrame(
   object: THREE.Object3D,
   format: Format,
 ): Promise<Blob> {

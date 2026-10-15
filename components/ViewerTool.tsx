@@ -71,6 +71,8 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   // Set when the model came from ?url= — "Do more" links then carry it along.
   const [modelUrl, setModelUrl] = useState<string | null>(null);
   const [measuring, setMeasuring] = useState(false);
+  // null = use the file's own convention; otherwise the user's choice.
+  const [upAxis, setUpAxis] = useState<"y" | "z" | null>(null);
 
   // Dispose the previous object whenever it's replaced or on unmount — without
   // this, revisiting/leaving the page leaks geometry + GPU buffers.
@@ -87,6 +89,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
       try {
         const parsed = await parseToObject(buffer, format);
         setObject(parsed);
+        setUpAxis(null);
         setFileName(name);
         setStatus("idle");
         trackFileUploaded(format, "drop");
@@ -110,6 +113,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
       try {
         const parsed = await parseToObject(buffer, format);
         setObject(parsed);
+        setUpAxis(null);
         setFileName(name);
         setStatus("idle");
         trackFileUploaded(format, "url");
@@ -126,6 +130,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
   const handleSample = useCallback(() => {
     setObject(makeSample());
+    setUpAxis(null);
     setFileName(`sample.${format}`);
     setStatus("idle");
     setErrorMsg(null);
@@ -134,6 +139,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
   const handleReset = () => {
     setMeasuring(false);
+    setUpAxis(null);
     setObject(null);
     setFileName("");
     setModelUrl(null);
@@ -217,6 +223,18 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <button
+                  onClick={() =>
+                    setUpAxis((u) => {
+                      const current = u ?? (object?.userData.upAxis === "z" ? "z" : "y");
+                      return current === "z" ? "y" : "z";
+                    })
+                  }
+                  title="Model lying on its side? Switch which axis points up."
+                  className="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                >
+                  ⤾ Flip upright
+                </button>
+                <button
                   onClick={() => setMeasuring((m) => !m)}
                   aria-pressed={measuring}
                   className={`px-4 py-2 text-sm rounded-lg border ${
@@ -238,7 +256,12 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
               <div className="h-[55vh] sm:h-[480px] lg:h-[560px] order-2 lg:order-1">
-                <MeshViewer object={object} measure={measuring} unitLabel={unitLabelFor(object)} />
+                <MeshViewer
+                  object={object}
+                  measure={measuring}
+                  unitLabel={unitLabelFor(object)}
+                  upAxis={upAxis ?? undefined}
+                />
               </div>
 
               <div className="order-1 lg:order-2 space-y-4">

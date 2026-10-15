@@ -14,6 +14,8 @@ type Props = {
   measure?: boolean;
   /** Label for model units in the measurement readout (e.g. "mm"). */
   unitLabel?: string;
+  /** Override the file's up axis for display (Z-up files are stood upright). */
+  upAxis?: "y" | "z";
 };
 
 type Measurement = { points: THREE.Vector3[]; distance: number | null };
@@ -25,24 +27,24 @@ function fitCamera(
   width: number,
   height: number,
 ) {
-  const box = new THREE.Box3().setFromObject(object);
-  const size = new THREE.Vector3();
-  box.getSize(size);
-  const maxDim = Math.max(size.x, size.y, size.z) || 1;
-
+  // Fit the bounding sphere, so the model fits from any orbit angle and a
+  // viewport of any aspect (the narrower half-angle is the constraint).
+  object.updateMatrixWorld(true);
+  const sphere = new THREE.Box3().setFromObject(object).getBoundingSphere(new THREE.Sphere());
+  const radius = sphere.radius || 1;
   const aspect = Math.max(width / height, 0.0001);
-  const halfFov = (camera.fov / 2) * (Math.PI / 180);
-  const fitHeightDistance = maxDim / 2 / Math.tan(halfFov);
-  const fitWidthDistance = fitHeightDistance / aspect;
-  const distance = Math.max(fitHeightDistance, fitWidthDistance) * 1.6;
+  const halfV = (camera.fov / 2) * (Math.PI / 180);
+  const halfH = Math.atan(Math.tan(halfV) * aspect);
+  const distance = (radius / Math.sin(Math.min(halfV, halfH))) * 1.05;
 
-  camera.position.set(distance * 0.85, distance * 0.6, distance);
+  const dir = new THREE.Vector3(0.85, 0.6, 1).normalize();
+  camera.position.copy(sphere.center).addScaledVector(dir, distance);
   camera.near = Math.max(distance / 100, 0.01);
   camera.far = distance * 100;
   camera.aspect = aspect;
   camera.updateProjectionMatrix();
-  camera.lookAt(0, 0, 0);
-  controls.target.set(0, 0, 0);
+  camera.lookAt(sphere.center);
+  controls.target.copy(sphere.center);
   controls.update();
 }
 
@@ -52,6 +54,7 @@ export default function MeshViewer({
   theme,
   measure = false,
   unitLabel = "mm",
+  upAxis,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -216,13 +219,26 @@ export default function MeshViewer({
       });
     }
 
+    // Stats in the file's own axes, before any display rotation.
+    setStats(computeStats(object));
+
     const box = new THREE.Box3().setFromObject(object);
     const center = new THREE.Vector3();
     box.getCenter(center);
     object.position.sub(center);
 
-    scene.add(object);
-    currentObjectRef.current = object;
+    // Display-only: Z-up files (STL/3MF/STEP) stand up in our Y-up scene.
+    // The rotation lives on a wrapper so exports keep the file's axes.
+    const holder = new THREE.Group();
+    holder.name = "__flip3d_view";
+    if ((upAxis ?? object.userData.upAxis) === "z") holder.rotation.x = -Math.PI / 2;
+    holder.add(object);
+    // Sit the model on the grid instead of letting the grid cut through it.
+    holder.updateMatrixWorld(true);
+    holder.position.y -= new THREE.Box3().setFromObject(holder).min.y;
+    holder.updateMatrixWorld(true);
+    scene.add(holder);
+    currentObjectRef.current = holder;
 
     fitCamera(
       camera,
@@ -231,9 +247,7 @@ export default function MeshViewer({
       container.clientWidth || 1,
       container.clientHeight || 1,
     );
-
-    setStats(computeStats(object));
-  }, [object]);
+  }, [object, upAxis]);
 
   // Two-click measuring. Markers/line draw on top (no depth test) and live in
   // their own group so clearing never touches the model.
@@ -294,8 +308,10 @@ export default function MeshViewer({
         const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(picked), lineMat);
         overlay.add(line);
       }
+      // Report deltas in the file's axes, not the (possibly rotated) view's.
+      const toFile = (p: THREE.Vector3) => (object.parent ? object.parent.worldToLocal(p.clone()) : p.clone());
       setMeasurement({
-        points: [...picked],
+        points: picked.map(toFile),
         distance: picked.length === 2 ? picked[0].distanceTo(picked[1]) : null,
       });
     };
@@ -314,7 +330,7 @@ export default function MeshViewer({
       markerMat.dispose();
       lineMat.dispose();
     };
-  }, [measure, object]);
+  }, [measure, object, upAxis]);
 
   return (
     <div className="flex flex-col h-full">

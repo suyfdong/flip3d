@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { analyzeGeometry, type MeshIssues } from "./analyze";
-import { assertHasSurface } from "@/lib/converters/stats";
+import { assertHasSurface, inOwnFrame } from "@/lib/converters/stats";
 
 export type RepairReport = {
   before: MeshIssues;
@@ -13,6 +13,10 @@ export type RepairReport = {
 // operates on a single geometry — that's the contract STL/PLY expect anyway.
 // Exported so the print-readiness checker can reuse the same flatten step.
 export function flattenToGeometry(object: THREE.Object3D): THREE.BufferGeometry {
+  return inOwnFrame(object, () => flattenInFrame(object));
+}
+
+function flattenInFrame(object: THREE.Object3D): THREE.BufferGeometry {
   assertHasSurface(object);
   const geometries: THREE.BufferGeometry[] = [];
   object.updateMatrixWorld(true);

@@ -20,7 +20,9 @@ export async function parseToObject(
     case "stl": {
       const geometry = new STLLoader().parse(buffer);
       geometry.computeVertexNormals();
-      return new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
+      const mesh = new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
+      mesh.userData.upAxis = "z"; // 3D-printing convention: Z is up
+      return mesh;
     }
     case "obj": {
       const text = new TextDecoder("utf-8").decode(buffer);
@@ -67,8 +69,10 @@ export async function parseToObject(
           });
         });
       }
+      if (meta?.filaments.length) await applyPaintedColors(group, flat, meta);
       if (flattenedParts > 0) group.userData.flattenedParts = flattenedParts;
       if (meta) group.userData.threeMF = meta;
+      group.userData.upAxis = "z";
       return group;
     }
     case "ply": {
@@ -76,6 +80,8 @@ export async function parseToObject(
     }
     case "step": {
       const { parseStepFile } = await import("./step");
+      // No reliable up-axis convention across CAD tools (SolidWorks is Y-up,
+      // many others Z-up) — keep the file's frame; the viewer has a toggle.
       return parseStepFile(buffer);
     }
     case "iges": {
@@ -136,6 +142,79 @@ async function flattenProduction3MF(
   const { sanitize3MF } = await import("./3mf-sanitizer");
   const { blob, report } = await sanitize3MF(new Blob([buffer]));
   return { buffer: await blob.arrayBuffer(), flattenedParts: report.mergedModelFiles };
+}
+
+// Bambu / Orca / PrusaSlicer "paint" multi-material per triangle. The loader
+// keeps triangle order, so a mesh is matched to its painted object by triangle
+// count + first vertex, then recolored per face (non-indexed, vertex colors).
+async function applyPaintedColors(
+  group: THREE.Object3D,
+  flat: ArrayBuffer,
+  meta: import("./3mf-meta").ThreeMFMeta,
+): Promise<void> {
+  const { default: JSZip } = await import("jszip");
+  const zip = await JSZip.loadAsync(flat);
+  const entry = zip.file("3D/3dmodel.model") ?? zip.file(/^3D\/[^/]+\.model$/i)[0];
+  if (!entry) return;
+  const { readPaintedMeshes } = await import("./3mf-paint");
+  const { colorForObject } = await import("./3mf-meta");
+  const painted = readPaintedMeshes(await entry.async("string"));
+  if (!painted.length) return;
+
+  const palette = meta.filaments.map((f) => new THREE.Color(f.color));
+  const done = new Map<string, THREE.BufferGeometry>();
+  group.updateMatrixWorld(true);
+  group.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const geo = node.geometry as THREE.BufferGeometry;
+    const index = geo.getIndex();
+    const pos = geo.getAttribute("position");
+    if (!index || !pos) {
+      const cached = done.get(geo.uuid);
+      if (cached) node.geometry = cached;
+      return;
+    }
+    const triCount = index.count / 3;
+    const v0 = [pos.getX(0), pos.getY(0), pos.getZ(0)];
+    const hit = painted.find(
+      (p) => p.triCount === triCount && p.firstVertex.every((c, i) => Math.abs(c - v0[i]) < 1e-3),
+    );
+    if (!hit) return;
+
+    // Unpainted faces use the object's own filament.
+    let objectId: string | undefined;
+    node.traverseAncestors((a) => {
+      if (!objectId && a.userData.objectId) objectId = a.userData.objectId;
+    });
+    const baseHex = (objectId && colorForObject(meta, objectId)) || meta.filaments[0].color;
+    const base = new THREE.Color(baseHex);
+
+    let flatGeo = done.get(geo.uuid);
+    if (!flatGeo) {
+      flatGeo = geo.toNonIndexed();
+      const colors = new Float32Array(triCount * 9);
+      for (let t = 0; t < triCount; t++) {
+        const s = hit.states[t];
+        const c = (s > 0 && palette[s - 1]) || base;
+        for (let k = 0; k < 3; k++) {
+          colors[t * 9 + k * 3] = c.r;
+          colors[t * 9 + k * 3 + 1] = c.g;
+          colors[t * 9 + k * 3 + 2] = c.b;
+        }
+      }
+      flatGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      flatGeo.computeVertexNormals();
+      done.set(geo.uuid, flatGeo);
+      geo.dispose();
+    }
+    node.geometry = flatGeo;
+    const old = node.material as THREE.Material;
+    old.dispose();
+    node.material = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xffffff, metalness: 0.05, roughness: 0.7 });
+    node.userData.keepColor = true;
+    node.userData.painted = true;
+  });
+  if (done.size) group.userData.paintedMeshes = done.size;
 }
 
 // 3D Gaussian Splat PLYs store color as spherical-harmonic DC terms.

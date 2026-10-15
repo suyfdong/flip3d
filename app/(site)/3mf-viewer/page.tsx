@@ -44,7 +44,7 @@ const config: ViewerConfig = {
     "Opens 3MF files — the 3D Manufacturing Format that Bambu Studio, PrusaSlicer, Cura and Windows 3D tools use. A .3mf is a zip package holding the mesh plus print metadata.",
     "Everything runs on your device with WebGL. There's no upload, no account, and no file-size paywall.",
     "Multi-part Bambu Studio / Orca projects store each object in a separate internal file (the 3MF production extension). The viewer merges them before drawing, so the whole project shows — not just the first part.",
-    "Slicer projects keep color per filament slot, not in the mesh. The viewer reads the project's filament list and tints each object with the filament it's assigned to; colors stored in the 3MF itself (materials / color groups) are shown as-is. Per-face color painting isn't drawn yet.",
+    "Slicer projects keep color per filament slot, not in the mesh. The viewer reads the project's filament list, paints each object with its assigned filament, and draws multi-color painting (Bambu Studio / Orca paint, PrusaSlicer MMU painting) triangle by triangle. Colors stored in the 3MF itself (materials / color groups) are shown as-is.",
     "The side panel lists the slicer and version, printer model, units, plate and object counts, filaments, and the embedded plate thumbnail. Tick objects on and off, or isolate one, from the parts list. Use Measure to click two points and read the distance in the file's units.",
     "Need to slice or edit it elsewhere? Convert the 3MF to STL or OBJ, or re-pack it for another slicer, using the links by the viewer.",
   ],
@@ -71,7 +71,7 @@ const config: ViewerConfig = {
     },
     {
       q: "Does the 3MF viewer show filament colors?",
-      a: "Yes, at the object level. Bambu, Orca and PrusaSlicer projects list their filaments and which slot each object prints with; the viewer tints every object with that filament color and shows the filament list (color and type) in the side panel. Colors written into the mesh itself are shown as-is. Per-face painted colors are not drawn yet.",
+      a: "Yes. Bambu Studio, Orca and PrusaSlicer projects list their filaments and which slot each object — or each painted triangle — prints with. The viewer colors objects by their filament and draws multi-color painting per triangle, and lists the filaments (color and type) in the side panel. Very fine paint strokes inside a single triangle are simplified to that triangle's main color.",
     },
     {
       q: "Can I see the plates, printer and thumbnail inside a 3MF?",
