@@ -29,6 +29,10 @@ export const metadata: Metadata = {
 
 const FAQ = [
   {
+    q: "Can you convert a PNG to 3MF?",
+    a: "Yes. A PNG is flat, so the 3D shape has to come from the image itself, and there are two honest ways: for a photo or drawing, brightness becomes height (a relief, or a lithophane you light from behind); for a logo or icon with a transparent background, the opaque shape rises as a flat-topped solid and the background stays at the base. This page detects a transparent background and switches to the flat logo shape automatically. It won't reconstruct a full 3D object from a picture — no image-to-3MF tool honestly can from one photo.",
+  },
+  {
     q: "How do I convert a PNG to 3MF?",
     a: "Drop your .png above, choose relief or lithophane, set the width and thickness, then download the 3MF. Brightness becomes height, and the file is written with real millimetre units.",
   },
@@ -42,7 +46,11 @@ const FAQ = [
   },
   {
     q: "What happens to transparent areas of the PNG?",
-    a: "Transparent pixels are treated as the lightest value, so they flatten to the base of the model instead of spiking. That makes cut-out PNGs with a transparent background work well — the subject rises and the background stays flat.",
+    a: "They stay at the base thickness, in every mode. If the PNG has a transparent background, \"Flat logo shape\" is switched on: the opaque part rises flat to the full height you set, with soft edges following the PNG's anti-aliasing — ideal for logos, keychains and signs. Turn it off to let brightness inside the shape set the height instead.",
+  },
+  {
+    q: "How do I open the 3MF in Bambu Studio and print it in two colors?",
+    a: "In Bambu Studio (or Orca / PrusaSlicer) use File → Import and pick the .3mf; it arrives at the millimetre size you chose here. The file is a single-color solid. The common way to get a two-color logo or keychain is a filament change by height: in the preview, move the layer slider to the first layer of the raised shape and add a color change there, so the base prints in one color and the logo in another. For more colors, use the slicer's color-painting tool on the object.",
   },
   {
     q: "Is the PNG to 3MF converter free?",

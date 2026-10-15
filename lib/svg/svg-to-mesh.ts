@@ -178,6 +178,7 @@ export function svgToMesh(svgText: string, opts: SvgExtrudeOptions): SvgMeshResu
     side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(merged, mat);
+  mesh.userData.upAxis = "z"; // extruded along Z, lying on the print bed
 
   const triangles = merged.attributes.position.count / 3;
 

@@ -127,6 +127,7 @@ function finish(
       side: THREE.DoubleSide,
     }),
   );
+  mesh.userData.upAxis = "z"; // extruded along Z, lying on the print bed
 
   return {
     mesh,

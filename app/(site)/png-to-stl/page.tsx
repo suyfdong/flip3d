@@ -42,7 +42,11 @@ const FAQ = [
   },
   {
     q: "What happens to transparency in a PNG?",
-    a: "Transparent (alpha) areas are treated as the base level, so cut-out PNGs keep a clean flat background instead of a raised block. Opaque areas are raised by their brightness.",
+    a: "Transparent (alpha) areas always stay at the base level, so a cut-out PNG keeps a clean flat background instead of a raised block. When the PNG has a transparent background, \"Flat logo shape\" turns on automatically and the opaque shape rises flat to full height; switch it off to raise it by brightness instead.",
+  },
+  {
+    q: "Can I turn a logo PNG into a 3D printable keychain or sign?",
+    a: "Yes. Export the logo as a PNG with a transparent background, drop it here, and keep \"Flat logo shape\" on: the logo becomes a flat-topped raised solid on a thin base plate. Set the width to your keychain size and a base of 1–2 mm. Add the key-ring hole in your slicer with a negative cylinder (a transparent circle in the PNG only drops to the base plate, it doesn't cut through). For a two-color print, add a filament change at the layer where the logo starts.",
   },
   {
     q: "Why does my PNG STL come out almost flat?",

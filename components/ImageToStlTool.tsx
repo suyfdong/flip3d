@@ -13,6 +13,8 @@ import {
   RESOLUTION_MAX,
   type HeightmapMode,
   type ImageToMeshOptions,
+  sampleLuminance,
+  hasTransparentBackground,
 } from "@/lib/heightmap/image-to-mesh";
 import {
   trackFileUploaded,
@@ -163,6 +165,8 @@ export default function ImageToStlTool({
   // Only PLY and GLB can carry per-vertex colour, so "keep colours" swaps the
   // export target instead of writing an STL that silently loses it.
   const [colorFormat, setColorFormat] = useState<"ply" | "glb">("ply");
+  // Cut-out PNG (logo, icon) — offer / default to the flat logo shape.
+  const [transparentBg, setTransparentBg] = useState(false);
 
   // Dispose the previous mesh whenever it's replaced or on unmount.
   useEffect(() => {
@@ -208,7 +212,18 @@ export default function ImageToStlTool({
         }
         imageRef.current = img;
         setFileName(name);
-        setOpts({ ...MODE_DEFAULTS[mode], keepColor: defaultKeepColor });
+        let cutout = false;
+        try {
+          cutout = hasTransparentBackground(sampleLuminance(img, 60));
+        } catch {
+          cutout = false;
+        }
+        setTransparentBg(cutout);
+        setOpts({
+          ...MODE_DEFAULTS[mode],
+          keepColor: defaultKeepColor,
+          shapeFromAlpha: cutout && mode === "relief",
+        });
         setImageVersion((v) => v + 1);
         if (origin === "drop") trackFileUploaded("stl", "drop");
         else trackSampleLoaded("stl");
@@ -261,6 +276,7 @@ export default function ImageToStlTool({
     setFileName("");
     setStatus("idle");
     setErrorMsg(null);
+    setTransparentBg(false);
     setOpts({ ...MODE_DEFAULTS[defaultMode], keepColor: defaultKeepColor });
   };
 
@@ -283,7 +299,11 @@ export default function ImageToStlTool({
   ) => setOpts((o) => ({ ...o, [key]: value }));
 
   const setMode = (mode: HeightmapMode) =>
-    setOpts((o) => ({ ...MODE_DEFAULTS[mode], keepColor: o.keepColor }));
+    setOpts((o) => ({
+      ...MODE_DEFAULTS[mode],
+      keepColor: o.keepColor,
+      shapeFromAlpha: transparentBg && mode === "relief",
+    }));
 
   const loaded = imageRef.current !== null;
 
@@ -417,10 +437,30 @@ export default function ImageToStlTool({
                   onChange={(v) => set("resolution", v)}
                 />
 
+                {transparentBg && (
+                  <div className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-3">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={opts.shapeFromAlpha}
+                        onChange={(e) => set("shapeFromAlpha", e.target.checked)}
+                        className="rounded border-zinc-300 dark:border-zinc-600"
+                      />
+                      Flat logo shape
+                    </label>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1">
+                      Transparent background detected. On: the opaque shape rises flat to full
+                      height (logos, keychains, signs). Off: height follows brightness. Transparent
+                      areas stay at the base either way.
+                    </p>
+                  </div>
+                )}
+
                 <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={opts.invert}
+                    disabled={opts.shapeFromAlpha}
                     onChange={(e) => set("invert", e.target.checked)}
                     className="rounded border-zinc-300 dark:border-zinc-600"
                   />

@@ -35,6 +35,12 @@ export type ImageToMeshOptions = {
    * when this is on rather than silently dropping the colour.
    */
   keepColor: boolean;
+  /**
+   * Logo mode: height comes from opacity instead of brightness — opaque pixels
+   * rise to full height as a flat-topped shape, transparent ones stay at the
+   * base. The tool turns this on when a PNG has a transparent background.
+   */
+  shapeFromAlpha: boolean;
 };
 
 export const MODE_DEFAULTS: Record<HeightmapMode, ImageToMeshOptions> = {
@@ -46,6 +52,7 @@ export const MODE_DEFAULTS: Record<HeightmapMode, ImageToMeshOptions> = {
     resolution: 200,
     invert: false,
     keepColor: false,
+    shapeFromAlpha: false,
   },
   lithophane: {
     mode: "lithophane",
@@ -55,6 +62,7 @@ export const MODE_DEFAULTS: Record<HeightmapMode, ImageToMeshOptions> = {
     resolution: 250,
     invert: true,
     keepColor: false,
+    shapeFromAlpha: false,
   },
 };
 
@@ -73,6 +81,8 @@ export type Heightfield = {
    * printed colours matching the source image.
    */
   rgb: Float32Array;
+  /** Opacity in [0,1] per pixel (1 = opaque). Absent = fully opaque. */
+  alpha?: Float32Array;
 };
 
 /**
@@ -118,20 +128,22 @@ export function sampleLuminance(
   canvas.height = h;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Could not get a 2D canvas context");
-  // White backdrop so transparent PNG areas read as the lightest value
-  // (= base thickness) instead of black spikes.
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, w, h);
+  // Draw onto a transparent canvas so the PNG's alpha survives — it's
+  // composited over white per pixel below and kept as `alpha` for the height.
+  // (A white fill here used to erase the alpha before it could be read.)
+  ctx.clearRect(0, 0, w, h);
   ctx.drawImage(source, 0, 0, w, h);
 
   const { data } = ctx.getImageData(0, 0, w, h);
   const lum = new Float32Array(w * h);
   const rgb = new Float32Array(w * h * 3);
+  const alpha = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) {
     const r = data[i * 4];
     const g = data[i * 4 + 1];
     const b = data[i * 4 + 2];
     const a = data[i * 4 + 3] / 255;
+    alpha[i] = a;
     // Composite over white for partial alpha.
     const lr = r * a + 255 * (1 - a);
     const lg = g * a + 255 * (1 - a);
@@ -142,7 +154,24 @@ export function sampleLuminance(
     rgb[i * 3 + 2] = SRGB_TO_LINEAR[Math.round(lb)];
   }
 
-  return { width: w, height: h, lum, rgb };
+  return { width: w, height: h, lum, rgb, alpha };
+}
+
+/** Share of pixels that are mostly transparent (alpha < 0.5). */
+export function transparentShare(field: Heightfield): number {
+  if (!field.alpha) return 0;
+  let n = 0;
+  for (let i = 0; i < field.alpha.length; i++) if (field.alpha[i] < 0.5) n++;
+  return n / field.alpha.length;
+}
+
+/**
+ * A PNG with a real transparent background (cut-out logo, icon, sticker): some
+ * but not all of it transparent. Drives the logo-mode default.
+ */
+export function hasTransparentBackground(field: Heightfield): boolean {
+  const s = transparentShare(field);
+  return s > 0.02 && s < 0.98;
 }
 
 const BRAND_BLUE = 0x3b82f6;
@@ -155,7 +184,7 @@ export function heightfieldToMesh(
   field: Heightfield,
   opts: ImageToMeshOptions,
 ): THREE.Mesh {
-  const { width: w, height: h, lum, rgb } = field;
+  const { width: w, height: h, lum, rgb, alpha } = field;
   const withColor = opts.keepColor && rgb.length === w * h * 3;
   const range = Math.max(0.01, opts.maxThicknessMM - opts.baseThicknessMM);
   const scale = opts.widthMM / (w - 1); // mm per pixel step, same on X and Y
@@ -166,8 +195,20 @@ export function heightfieldToMesh(
   // when viewed from +Z.
   const topZ = (x: number, y: number): number => {
     const srcRow = h - 1 - y;
-    let f = lum[srcRow * w + x];
-    if (opts.invert) f = 1 - f;
+    const i = srcRow * w + x;
+    const a = alpha ? alpha[i] : 1;
+    let f: number;
+    if (opts.shapeFromAlpha) {
+      // Logo: opaque = full height, partial alpha ramps the edge.
+      f = a;
+    } else {
+      f = lum[i];
+      if (opts.invert) f = 1 - f;
+      // Transparent pixels always sit at the base. (Composited over white
+      // they'd otherwise read as the brightest value and become the tallest
+      // part of a relief — the background rising around a sunken logo.)
+      f *= a;
+    }
     return opts.baseThicknessMM + f * range;
   };
 
@@ -255,7 +296,9 @@ export function heightfieldToMesh(
     roughness: 0.75,
     side: THREE.DoubleSide,
   });
-  return new THREE.Mesh(geo, mat);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.userData.upAxis = "z"; // plate lies on XY, thickness along Z (print-bed frame)
+  return mesh;
 }
 
 export type MeshResult = {
