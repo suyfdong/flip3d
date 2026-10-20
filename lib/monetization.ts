@@ -4,7 +4,7 @@
 // each network comes through.
 
 /** AdSense publisher ID, e.g. "ca-pub-1234567890123456". */
-export const ADSENSE_CLIENT: string = "";
+export const ADSENSE_CLIENT: string = "ca-pub-9041836440635279";
 
 /**
  * AdSense ad-unit slot IDs (created in AdSense → Ads → By ad unit after
