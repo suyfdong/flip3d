@@ -189,7 +189,9 @@ npx tsc --noEmit     # TS 检查
 - **occt-import-js 7.3 MB WASM**：lazy 通过 `dynamic import` 在 step.ts 加载，并通过 `locateFile` 指向 `/wasm/occt-import-js.wasm`
 - **Satori (OG image) 多子节点 div 必须显式 `display: flex/none/contents`**，否则 build 报 "Expected explicit display"
 
-## 当前状态速查（2026-10-15 更新 · 下次先读 `../progress.md` 末尾「2026-10-15 收工」）
+## 当前状态速查（2026-10-20 更新 · 下次先读 `../progress.md` 末尾「2026-10-20 变现基建」）
+
+- ✅ 10/20 变现基建：广告/联盟 ID 全在 `lib/monetization.ts`（空 = 不渲染）。**约束**：embed iframe 永不出广告（AdSense 脚本只在 `(site)` layout）；Adsterra 只做 Banner、不接 Popunder/Social Bar/Direct Link；广告位每页最多 1 个、在工具下方；联盟链接必须带 `rel="sponsored"` + 披露。AdSense/Awin 审核中，进度见 progress.md。
 
 - ✅ 10/15 起 viewer 按搜索意图重做（详见下方「Viewer 要点」），新增 `/stl-to-svg/`，首页 → viewer 带文件跳转。
 - ✅ Node 测试 **244/244**：`npx tsx scripts/{dxf,print-check,stl-editor,render,3mf-meta,heightmap}-test.mts`（114/26/9/45/36/14）。真实样本在 `.tmp-e2e/`（gitignored）：`pouring-cat.3mf`（MakerWorld 7 色涂色）、`bambu-*.3mf`、`f3d/Cube02ProfileMini.3mf`、`scan-pointcloud.ply` / `splat.ply` / `color-mesh.ply`、`as1_pe_203.stp`。
