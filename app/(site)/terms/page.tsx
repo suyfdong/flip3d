@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/terms/`;
-const LAST_UPDATED = "May 13, 2026";
+const LAST_UPDATED = "October 20, 2026";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Flip3D",
@@ -41,9 +41,10 @@ export default function TermsPage() {
             TL;DR
           </p>
           <p className="text-sm">
-            Flip3D is free, provided as-is. Use it for anything legal. We
-            can&apos;t promise it&apos;ll never break or that conversions are
-            100% lossless. Keep backups of important files.
+            Flip3D is free, provided as-is, and supported by ads and affiliate
+            links. Use it for anything legal. We can&apos;t promise it&apos;ll
+            never break or that conversions are 100% lossless. Keep backups of
+            important files.
           </p>
         </div>
 
@@ -102,8 +103,32 @@ export default function TermsPage() {
           loss, file corruption, lost time, or any other harm.
         </p>
 
+        <h2
+          id="advertising"
+          className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-8 mb-3 scroll-mt-20"
+        >
+          6. Ads and affiliate links
+        </h2>
+        <p>
+          Flip3D is free to use and paid for by advertising and affiliate
+          commissions. Ads are served by third parties (Google AdSense and
+          Adsterra); we don&apos;t choose individual ads and don&apos;t endorse
+          the products in them. Some links to retailers, such as the Bambu Lab
+          store, are affiliate links and are labeled as such: if you buy
+          after clicking one, we may earn a commission at no extra cost to
+          you. Affiliate relationships never change what our tools do or what
+          our reference pages recommend. Details on cookies are in the{" "}
+          <Link
+            href="/privacy/"
+            className="text-blue-600 dark:text-blue-400 underline hover:no-underline"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </p>
+
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-8 mb-3">
-          6. Open source
+          7. Open source
         </h2>
         <p>
           The Flip3D web application source code is available on{" "}
@@ -120,7 +145,7 @@ export default function TermsPage() {
         </p>
 
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-8 mb-3">
-          7. Changes
+          8. Changes
         </h2>
         <p>
           We may update these terms occasionally. Material changes will bump
@@ -129,7 +154,7 @@ export default function TermsPage() {
         </p>
 
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-8 mb-3">
-          8. Contact
+          9. Contact
         </h2>
         <p>
           Questions: open an issue on{" "}

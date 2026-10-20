@@ -107,8 +107,10 @@ export default function AboutPage() {
         </h2>
         <p>
           No signup, no email capture, no premium tier locked behind a
-          paywall. If we ever add anything paid, it will be additional — every
-          tool that&apos;s free today stays free.
+          paywall. The site is paid for by a few banner ads (placed below the
+          tools, never inside them, no pop-ups) and by clearly labeled
+          affiliate links. If we ever add anything paid, it will be
+          additional — every tool that&apos;s free today stays free.
         </p>
 
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-8 mb-3">

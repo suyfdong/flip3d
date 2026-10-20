@@ -83,3 +83,7 @@ export function trackRendered(sourceExt: string, imageFormat: string) {
     pair: `${sourceExt}-to-${imageFormat}`,
   });
 }
+
+export function trackAffiliateClick(merchant: string, placement: string) {
+  track("affiliate_click", { merchant, placement });
+}

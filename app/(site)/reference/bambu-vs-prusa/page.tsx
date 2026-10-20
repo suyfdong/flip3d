@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
+import BambuAffiliateNote from "@/components/BambuAffiliateNote";
 import { SITE_URL } from "@/lib/seo";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, faqPageSchema } from "@/lib/schema";
@@ -217,6 +219,8 @@ export default function Page() {
         </div>
       </section>
 
+      <AdSlot className="mb-14" />
+
       <section className="mb-14">
         <h2 className="text-2xl font-bold tracking-tight mb-5">
           The real pain points (and how to dodge them)
@@ -265,25 +269,30 @@ export default function Page() {
 
       <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-6 mb-8">
         <h2 className="text-xl font-bold tracking-tight mb-3">
-          Coming soon: dedicated Bambu ↔ Prusa converter
+          Convert a 3MF between Bambu Studio and PrusaSlicer
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">
-          We&apos;re shipping a focused tool that converts Bambu Studio .3mf
-          files into PrusaSlicer-compatible .3mf (and vice versa), preserving
-          geometry and color where possible. Target: W4 of our public
-          roadmap.
+          Two free in-browser tools strip the vendor-specific metadata that
+          makes the other slicer reject or misread the file, and hand back a
+          clean .3mf that keeps your geometry. Nothing is uploaded.
         </p>
-        <p className="text-sm">
-          <a
-            href="https://github.com/suyfdong/flip3d/issues"
-            target="_blank"
-            rel="noopener"
-            className="text-blue-600 dark:text-blue-400 underline hover:no-underline"
+        <div className="flex flex-wrap gap-2 text-sm">
+          <Link
+            href="/tools/bambu-3mf-to-prusa/"
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium hover:opacity-90"
           >
-            Watch the GitHub repo
-          </a>{" "}
-          to be notified when it ships.
-        </p>
+            Bambu 3MF → Prusa
+          </Link>
+          <Link
+            href="/tools/prusa-3mf-to-bambu/"
+            className="px-4 py-2 rounded-lg border border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+          >
+            Prusa 3MF → Bambu
+          </Link>
+        </div>
+        <BambuAffiliateNote placement="bambu_vs_prusa" className="mt-4">
+          Comparing printers? Current Bambu Lab models and prices are on the
+        </BambuAffiliateNote>
       </section>
 
       <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">

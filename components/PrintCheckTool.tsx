@@ -6,6 +6,7 @@ import Link from "next/link";
 import * as THREE from "three";
 import Dropzone, { SUPPORTED_FORMATS } from "@/components/Dropzone";
 import UrlParamLoader from "@/components/UrlParamLoader";
+import BambuAffiliateNote from "@/components/BambuAffiliateNote";
 import {
   parseToObject,
   detectFormat,
@@ -322,6 +323,11 @@ export default function PrintCheckTool() {
                       Solid volume ≈ {report.volumeCm3.toFixed(1)} cm³
                     </p>
                   )}
+                  <BambuAffiliateNote placement="print_checker" className="mt-2">
+                    {report.bedFits.every((b) => b.fits)
+                      ? "Shopping for a printer? Compare models on the"
+                      : "Need a bigger build volume? Larger-format printers are on the"}
+                  </BambuAffiliateNote>
                 </div>
 
                 {hasTopologyIssue && (

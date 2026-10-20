@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PrivacyChoicesButton from "@/components/PrivacyChoicesButton";
 
 export default function SiteFooter() {
   return (
@@ -170,6 +171,7 @@ export default function SiteFooter() {
         </div>
         <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 flex-wrap gap-2">
           <p>© {new Date().getFullYear()} Flip3D · Built in public</p>
+          <PrivacyChoicesButton />
           <p className="font-mono">three.js · jszip · all client-side</p>
         </div>
       </div>

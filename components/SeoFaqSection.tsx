@@ -4,6 +4,7 @@
 // without touching the interactive component.
 
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, faqPageSchema } from "@/lib/schema";
 import { SITE_URL } from "@/lib/seo";
@@ -48,6 +49,8 @@ export default function SeoFaqSection({
           { name: crumbName, url: crumbUrl },
         ])}
       />
+
+      <AdSlot />
 
       {about && about.length > 0 && (
         <section className="border-t border-zinc-200 dark:border-zinc-800 py-14">

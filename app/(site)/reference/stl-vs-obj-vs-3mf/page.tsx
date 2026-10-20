@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
 import { SITE_URL } from "@/lib/seo";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, faqPageSchema } from "@/lib/schema";
@@ -250,6 +251,8 @@ export default function Page() {
           </table>
         </div>
       </section>
+
+      <AdSlot className="mb-14" />
 
       <section className="mb-14">
         <h2 className="text-2xl font-bold tracking-tight mb-5">

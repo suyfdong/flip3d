@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { takeFile } from "@/lib/file-handoff";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
 import { parseToObject, disposeObject, type Format } from "@/lib/converters";
@@ -313,6 +314,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
       {!loaded && (
         <>
+          <AdSlot />
           <section className="border-t border-zinc-200 dark:border-zinc-800 py-14 bg-zinc-50 dark:bg-zinc-950/50">
             <div className="max-w-3xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold tracking-tight mb-5">

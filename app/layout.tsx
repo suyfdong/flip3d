@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 import { JsonLd } from "@/components/JsonLd";
 import { websiteSchema } from "@/lib/schema";
+import { ADSENSE_CLIENT, CONSENT_REGIONS } from "@/lib/monetization";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,6 +18,12 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://flip3d.app";
+
+// Consent Mode v2 defaults: in the EEA/UK/CH, Google tags start "denied" and
+// Google's consent message (served with AdSense) updates them. Only emitted
+// once AdSense is live — without the message nobody there could opt back in.
+const CONSENT_DEFAULTS = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500,region:${JSON.stringify(CONSENT_REGIONS)}});`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -103,6 +111,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      {ADSENSE_CLIENT && (
+        <Script id="consent-defaults" strategy="beforeInteractive">
+          {CONSENT_DEFAULTS}
+        </Script>
+      )}
       <body className="min-h-full flex flex-col bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
         <JsonLd data={websiteSchema()} />
         {children}

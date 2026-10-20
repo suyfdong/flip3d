@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
 import { VIEWER_PATH_BY_FORMAT } from "@/lib/viewer-url";
 import * as THREE from "three";
 import Dropzone from "@/components/Dropzone";
@@ -368,6 +369,7 @@ export default function ConverterPage({ from, to, content }: Props) {
 
       {!object && (
         <>
+          <AdSlot />
           <section className="border-t border-zinc-200 dark:border-zinc-800 py-14">
             <div className="max-w-3xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold tracking-tight mb-6">
