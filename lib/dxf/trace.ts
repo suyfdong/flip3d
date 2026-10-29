@@ -102,8 +102,13 @@ function alphaMask(
 ): { mask: Uint8Array; ink: number } | null {
   const { data, width, height } = img;
   const n = width * height;
+  // Cut at half the strongest alpha, not a fixed 128: a shape drawn entirely
+  // semi-transparent (alpha 60 on 0) is still a shape. Fully opaque art → 128.
+  let maxAlpha = 0;
+  for (let p = 0; p < n; p++) maxAlpha = Math.max(maxAlpha, data[p * 4 + 3]);
+  const cut = Math.max(1, Math.ceil(maxAlpha / 2));
   let opaque = 0;
-  for (let p = 0; p < n; p++) if (data[p * 4 + 3] >= 128) opaque++;
+  for (let p = 0; p < n; p++) if (data[p * 4 + 3] >= cut) opaque++;
   // Need both sides present, each at least 0.5% of the image.
   if (opaque < n * 0.005 || n - opaque < n * 0.005) return null;
 
@@ -113,7 +118,7 @@ function alphaMask(
     const srcRow = (height - 1 - y) * width;
     const dstRow = y * width;
     for (let x = 0; x < width; x++) {
-      const isInk = data[(srcRow + x) * 4 + 3] >= 128;
+      const isInk = data[(srcRow + x) * 4 + 3] >= cut;
       const v = (invert ? !isInk : isInk) ? 1 : 0;
       mask[dstRow + x] = v;
       ink += v;
@@ -301,6 +306,19 @@ export function simplify(pts: Point2[], epsilon: number): Point2[] {
 function simplifyClosed(pts: Point2[], epsilon: number): Point2[] {
   if (epsilon <= 0 || pts.length < 4) return pts.slice();
 
+  // A loop thinner than epsilon (1–2 px line art) or smaller than it (tiny
+  // icon at high simplify) collapses to a 2-point sliver and gets dropped —
+  // the whole drawing then fails with "No shapes survived". Back the
+  // tolerance off for that loop until it keeps its shape.
+  const area = Math.abs(signedArea(pts));
+  for (let eps = epsilon; eps >= 0.25; eps /= 2) {
+    const out = rdpClosed(pts, eps);
+    if (out.length >= 3 && Math.abs(signedArea(out)) >= area * 0.5) return out;
+  }
+  return pts.slice();
+}
+
+function rdpClosed(pts: Point2[], epsilon: number): Point2[] {
   let cx = 0, cy = 0;
   for (const [x, y] of pts) {
     cx += x;

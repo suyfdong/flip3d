@@ -104,6 +104,30 @@ function describeEmptySvg(svgText: string): string {
   return `No fillable shapes found (${paths} shape element${paths === 1 ? "" : "s"}, ${text} text, ${image} image). Shapes may be hidden, zero-size, or made only of straight 2-point lines — give them a closed outline and a fill.`;
 }
 
+/**
+ * The bitmap inside an SVG that is only an `<image>` wrapper (common when a
+ * PNG is "saved as SVG"), so the tool can hand it to Image to STL instead of
+ * dead-ending. Only inline data: URIs — an external href can't be fetched
+ * reliably from the browser. Returns null when there is no such bitmap.
+ */
+export function extractEmbeddedRaster(
+  svgText: string,
+): { bytes: Uint8Array; ext: "png" | "jpg" | "webp" } | null {
+  const m = svgText.match(
+    /<image\b[^>]*?\bhref\s*=\s*["']\s*data:image\/(png|jpe?g|webp);base64,([^"']+)["']/i,
+  );
+  if (!m) return null;
+  try {
+    const bin = atob(m[2].replace(/\s+/g, ""));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const kind = m[1].toLowerCase();
+    return { bytes, ext: kind === "png" ? "png" : kind === "webp" ? "webp" : "jpg" };
+  } catch {
+    return null;
+  }
+}
+
 export function svgToMesh(svgText: string, opts: SvgExtrudeOptions): SvgMeshResult {
   const data = new SVGLoader().parse(svgText);
 

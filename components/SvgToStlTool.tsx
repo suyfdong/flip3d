@@ -15,8 +15,10 @@ import {
   DEPTH_MAX,
   BASE_MAX,
   SAMPLE_SVG,
+  extractEmbeddedRaster,
   type SvgExtrudeOptions,
 } from "@/lib/svg/svg-to-mesh";
+import { stashFile } from "@/lib/file-handoff";
 import {
   trackFileUploaded,
   trackSampleLoaded,
@@ -134,6 +136,19 @@ export default function SvgToStlTool() {
   ) => setOpts((o) => ({ ...o, [key]: value }));
 
   const loaded = svgRef.current !== null;
+
+  // An SVG that only wraps a bitmap has nothing to extrude, but the bitmap
+  // itself works in Image to STL — offer to carry it over instead of a dead end.
+  const embedded =
+    status === "error" && svgRef.current ? extractEmbeddedRaster(svgRef.current) : null;
+  const openEmbedded = async () => {
+    if (!embedded) return;
+    const base = fileName.replace(/\.[^.]+$/, "") || "image";
+    const buf = embedded.bytes.slice().buffer;
+    if (await stashFile(`${base}.${embedded.ext}`, buf)) {
+      window.location.href = "/image-to-stl/?handoff=1";
+    }
+  };
 
   return (
     <>
@@ -253,6 +268,14 @@ export default function SvgToStlTool() {
             {errorMsg && (
               <div className="mt-4 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-sm">
                 ⚠️ {errorMsg}
+                {embedded && (
+                  <button
+                    onClick={openEmbedded}
+                    className="mt-3 block px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-medium hover:opacity-90"
+                  >
+                    Use the embedded image in Image to STL →
+                  </button>
+                )}
               </div>
             )}
           </>

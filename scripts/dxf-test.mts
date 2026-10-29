@@ -203,6 +203,27 @@ console.log("\n[9] Trace — invert + threshold guards");
   check("all-ink throws a helpful error", threw.includes("Invert"), threw.slice(0, 40));
 }
 
+console.log("\n[9b] Trace — thin lines and faint alpha survive");
+{
+  // 1 px wide stripes: every loop is thinner than the default 1.2 px
+  // tolerance, which used to flatten them to 2 points and drop the drawing.
+  const stripes = img(40, 40, (x) => x % 4 === 1);
+  const r = traceImage(stripes, pxOpts(40, { simplifyPx: 1.2 }));
+  check("1 px stripes all traced", r.loopCount === 10, `${r.loopCount}`);
+  check("stripe keeps its area", near(Math.abs(signedArea(r.polylines[0].points)), 40), `${signedArea(r.polylines[0].points)}`);
+
+  // 3 px dot at the slider's max simplify.
+  const dot = img(8, 8, (x, y) => x >= 3 && x <= 5 && y >= 3 && y <= 5);
+  const d = traceImage(dot, pxOpts(8, { simplifyPx: 6 }));
+  check("small dot survives max simplify", d.loopCount === 1, `${d.loopCount}`);
+
+  // Shape drawn at alpha 60 on a fully transparent canvas.
+  const faint = img(20, 20, (x, y) => (x - 10) ** 2 + (y - 10) ** 2 < 36);
+  for (let p = 0; p < 400; p++) faint.data[p * 4 + 3] = faint.data[p * 4] === 0 ? 60 : 0;
+  const f = traceImage(faint, pxOpts(20, { simplifyPx: 0.5 }));
+  check("semi-transparent shape traced via alpha", f.loopCount === 1, `${f.loopCount}`);
+}
+
 console.log("\n[10] Otsu auto threshold");
 {
   // Half the pixels at 30, half at 220 ⇒ the cut should land between them.

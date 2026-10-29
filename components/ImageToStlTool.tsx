@@ -22,6 +22,7 @@ import {
   trackImageConverted,
   trackConvertError,
 } from "@/lib/analytics";
+import { takeFile } from "@/lib/file-handoff";
 
 const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
   ssr: false,
@@ -201,7 +202,7 @@ export default function ImageToStlTool({
       source: Blob | HTMLCanvasElement,
       name: string,
       mode: HeightmapMode,
-      origin: "drop" | "sample",
+      origin: "drop" | "sample" | "handoff",
     ) => {
       try {
         let img: ImageBitmap | HTMLCanvasElement;
@@ -225,8 +226,8 @@ export default function ImageToStlTool({
           shapeFromAlpha: cutout && mode === "relief",
         });
         setImageVersion((v) => v + 1);
-        if (origin === "drop") trackFileUploaded("stl", "drop");
-        else trackSampleLoaded("stl");
+        if (origin === "sample") trackSampleLoaded("stl");
+        else trackFileUploaded("stl", origin);
       } catch {
         setErrorMsg("That image couldn't be decoded. Try a PNG, JPG or WebP.");
         setStatus("error");
@@ -236,7 +237,7 @@ export default function ImageToStlTool({
   );
 
   const handleFile = useCallback(
-    (buffer: ArrayBuffer, name: string) => {
+    (buffer: ArrayBuffer, name: string, origin: "drop" | "handoff" = "drop") => {
       const ext = name.split(".").pop()?.toLowerCase() ?? "png";
       const type =
         ext === "jpg" || ext === "jpeg"
@@ -244,10 +245,20 @@ export default function ImageToStlTool({
           : ext === "webp"
             ? "image/webp"
             : "image/png";
-      void loadImage(new Blob([buffer], { type }), name, defaultMode, "drop");
+      void loadImage(new Blob([buffer], { type }), name, defaultMode, origin);
     },
     [loadImage, defaultMode],
   );
+
+  // ?handoff=1 — SVG to STL found the SVG was only a wrapper around a bitmap
+  // and passed that bitmap here, so the visitor doesn't have to extract it.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("handoff")) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    takeFile().then((f) => {
+      if (f) handleFile(f.buffer, f.name, "handoff");
+    });
+  }, [handleFile]);
 
   const handleSample = useCallback(() => {
     const c = document.createElement("canvas");
