@@ -206,6 +206,8 @@ npx tsc --noEmit     # TS 检查
 - **取景**用外接球（`MeshViewer.fitCamera`），算之前先 `updateMatrixWorld(true)`。
 - **首页 → viewer**：`lib/file-handoff.ts` 用 IndexedDB 暂存文件（sessionStorage 装不下大 3MF/STEP，最长 10 分钟，读一次即删）；viewer 读到 `?handoff=1` 自动打开，GA4 记 `input_method=handoff`。
 - 侧栏 `ModelInfoPanel`：3MF 信息、PLY 文件头、零件树（隐藏 / 只看此零件）。**只有专门的 viewer 页才有**，首页和转换页没有。
+- **剖切**（`MeshViewer` 的 `section` prop，2026-11-02）：一个 `THREE.Plane` 挂到所有材质的 `clippingPlanes` + `renderer.localClippingEnabled`；截面用 BackSide 红色 MeshBasicMaterial 的"盖子"网格显示为实心。**盖子放在独立的 scene group 里，每帧从源网格同步 matrixWorld/可见性，不挂进模型树**（否则零件列表、隐藏/只看、导出都会把它们当成零件）。轴向和读数都用文件自身坐标系（`boxInParentFrame`，经过显示包装层换算），3MF 的 Z 轴朝上也正确。测量会跳过被切掉的一侧；点到盖子上时用 `ray.intersectPlane` 落到剖切面上。DoubleSide 材质在剖切期间临时改成 FrontSide，关闭时还原。
+- **点云**：泼溅 PLY 读入时丢掉 alpha<0.1 的点（logit 空间比较）；纯点云取景用中位数中心 + 95 分位半径，但仅在明显比外接球紧的时候才用（干净的扫描保持精确取景）。
 
 ## 状态速查（2026-08-20 Day 12，历史）
 
