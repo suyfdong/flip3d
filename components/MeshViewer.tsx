@@ -27,6 +27,34 @@ type Props = {
 
 type Measurement = { points: THREE.Vector3[]; distance: number | null };
 
+// Scans and splats carry stray points far from the subject; a bounding sphere
+// over all of them leaves the subject tiny. Frame the median center and the
+// 95th-percentile distance instead (sampled, so it stays fast on millions).
+function robustPointCloudSphere(object: THREE.Object3D): THREE.Sphere | null {
+  let points: THREE.Points | null = null;
+  let meshes = 0;
+  object.traverse((c) => {
+    if (c instanceof THREE.Points) points = points ? points : c;
+    else if (c instanceof THREE.Mesh) meshes++;
+  });
+  const pts = points as THREE.Points | null;
+  if (!pts || meshes) return null;
+  const pos = pts.geometry.getAttribute("position");
+  if (!pos || pos.count < 1000) return null;
+  const step = Math.max(1, Math.floor(pos.count / 20000));
+  const v = new THREE.Vector3();
+  const xs: number[] = [], ys: number[] = [], zs: number[] = [];
+  for (let i = 0; i < pos.count; i += step) {
+    v.fromBufferAttribute(pos, i).applyMatrix4(pts.matrixWorld);
+    xs.push(v.x); ys.push(v.y); zs.push(v.z);
+  }
+  const median = (a: number[]) => a.slice().sort((p, q) => p - q)[a.length >> 1];
+  const center = new THREE.Vector3(median(xs), median(ys), median(zs));
+  const d = xs.map((x, i) => Math.hypot(x - center.x, ys[i] - center.y, zs[i] - center.z)).sort((p, q) => p - q);
+  const radius = d[Math.floor(d.length * 0.95)];
+  return radius > 0 ? new THREE.Sphere(center, radius) : null;
+}
+
 function fitCamera(
   camera: THREE.PerspectiveCamera,
   controls: OrbitControls,
@@ -37,7 +65,13 @@ function fitCamera(
   // Fit the bounding sphere, so the model fits from any orbit angle and a
   // viewport of any aspect (the narrower half-angle is the constraint).
   object.updateMatrixWorld(true);
-  const sphere = new THREE.Box3().setFromObject(object).getBoundingSphere(new THREE.Sphere());
+  let sphere = new THREE.Box3().setFromObject(object).getBoundingSphere(new THREE.Sphere());
+  // Only trust the robust fit when outliers really inflate the bounds;
+  // a clean scan keeps the exact sphere so nothing gets clipped.
+  const robust = robustPointCloudSphere(object);
+  if (robust && robust.radius * 1.15 < sphere.radius * 0.8) {
+    sphere = new THREE.Sphere(robust.center, robust.radius * 1.15);
+  }
   const radius = sphere.radius || 1;
   const aspect = Math.max(width / height, 0.0001);
   const halfV = (camera.fov / 2) * (Math.PI / 180);

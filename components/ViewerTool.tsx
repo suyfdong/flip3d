@@ -381,12 +381,14 @@ function LoadNotes({ object }: { object: THREE.Object3D | null }) {
     );
   }
   const pc = object.userData.pointCloud as
-    | { points: number; splat: boolean; color: boolean }
+    | { points: number; splat: boolean; color: boolean; hidden?: number }
     | undefined;
   if (pc) {
     notes.push(
       pc.splat
-        ? `3D Gaussian Splat — previewed as ${pc.points.toLocaleString("en-US")} colored points (base color only, not a full splat render).`
+        ? `3D Gaussian Splat — previewed as ${pc.points.toLocaleString("en-US")} colored points (base color only, not a full splat render)${
+            pc.hidden ? `; ${pc.hidden.toLocaleString("en-US")} near-transparent ones skipped` : ""
+          }.`
         : `Point cloud — ${pc.points.toLocaleString("en-US")} points, ${pc.color ? "with the scan's own colors" : "no color data"}, no faces.`,
     );
   }

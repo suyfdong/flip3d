@@ -272,8 +272,24 @@ function parsePly(buffer: ArrayBuffer): THREE.Object3D {
   const plyHeader = parsePlyHeader(header);
   const isSplat = /property\s+\S+\s+f_dc_0\b/.test(header);
   const loader = new PLYLoader();
-  if (isSplat) loader.setCustomPropertyNameMapping({ shDc: ["f_dc_0", "f_dc_1", "f_dc_2"] });
-  const geometry = loader.parse(buffer);
+  const hasOpacity = isSplat && /property\s+\S+\s+opacity\b/.test(header);
+  if (isSplat) {
+    loader.setCustomPropertyNameMapping({
+      shDc: ["f_dc_0", "f_dc_1", "f_dc_2"],
+      ...(hasOpacity ? { splatOpacity: ["opacity"] } : {}),
+    });
+  }
+  let geometry = loader.parse(buffer);
+  let hiddenSplats = 0;
+
+  if (isSplat && hasOpacity) {
+    const filtered = dropTransparentSplats(geometry);
+    hiddenSplats = filtered.hidden;
+    if (filtered.hidden) {
+      geometry.dispose();
+      geometry = filtered.geometry;
+    }
+  }
   const position = geometry.getAttribute("position");
 
   if (isSplat) {
@@ -313,7 +329,7 @@ function parsePly(buffer: ArrayBuffer): THREE.Object3D {
       }),
     );
     points.userData.keepColor = hasColor;
-    points.userData.pointCloud = { points: position.count, splat: isSplat, color: hasColor };
+    points.userData.pointCloud = { points: position.count, splat: isSplat, color: hasColor, hidden: hiddenSplats };
     points.userData.ply = plyHeader;
     return points;
   }
@@ -331,6 +347,40 @@ function parsePly(buffer: ArrayBuffer): THREE.Object3D {
   const plain = new THREE.Mesh(geometry, DEFAULT_MATERIAL.clone());
   plain.userData.ply = plyHeader;
   return plain;
+}
+
+// A trained splat is mostly near-invisible Gaussians (~38% below alpha 0.1 in
+// the Mip-NeRF 360 bonsai scene). Drawn as solid points they turn into haze
+// and far-off floaters that also blow up the camera framing, so skip them.
+const SPLAT_MIN_ALPHA = 0.1;
+
+function dropTransparentSplats(geometry: THREE.BufferGeometry): {
+  geometry: THREE.BufferGeometry;
+  hidden: number;
+} {
+  const opacity = geometry.getAttribute("splatOpacity");
+  geometry.deleteAttribute("splatOpacity");
+  if (!opacity) return { geometry, hidden: 0 };
+  // Stored as a logit; alpha = sigmoid(v). Compare in logit space.
+  const minLogit = Math.log(SPLAT_MIN_ALPHA / (1 - SPLAT_MIN_ALPHA));
+  const n = opacity.count;
+  const keep: number[] = [];
+  for (let i = 0; i < n; i++) if (opacity.getX(i) >= minLogit) keep.push(i);
+  // Never hide everything (odd exporters may store opacity differently).
+  if (keep.length === n || keep.length === 0) return { geometry, hidden: 0 };
+
+  const out = new THREE.BufferGeometry();
+  for (const name of Object.keys(geometry.attributes)) {
+    const src = geometry.getAttribute(name);
+    const size = src.itemSize;
+    const arr = new Float32Array(keep.length * size);
+    for (let k = 0; k < keep.length; k++) {
+      const i = keep[k];
+      for (let c = 0; c < size; c++) arr[k * size + c] = src.getComponent(i, c);
+    }
+    out.setAttribute(name, new THREE.BufferAttribute(arr, size));
+  }
+  return { geometry: out, hidden: n - keep.length };
 }
 
 function applyBrandMaterial(root: THREE.Object3D): void {
