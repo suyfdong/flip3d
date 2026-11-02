@@ -10,7 +10,7 @@ import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/step-viewer/`;
 const title =
-  "STEP Viewer Online — Free & Private | Assemblies, Parts & Measure";
+  "STEP File Viewer Online — Free, No Upload | Assemblies, Parts & Measure";
 const description =
   "View STEP/STP files online: browse the assembly tree, isolate parts, see part colors and measure distances. Free, and nothing is uploaded — safe for NDA parts.";
 
@@ -38,7 +38,7 @@ const config: ViewerConfig = {
   formatLabel: "STEP",
   accept: [".step", ".stp"],
   eyebrow: "STEP · STP · CAD Viewer",
-  heading: "Online STEP Viewer",
+  heading: "Online STEP File Viewer",
   intro:
     "Drop a .step or .stp file to see it in 3D with its original part colors, browse the assembly tree, hide or isolate parts, and measure distances. Free, no CAD software, and the file never leaves your browser.",
   about: [

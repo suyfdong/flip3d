@@ -9,7 +9,7 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/3mf-viewer/`;
-const title = "3MF Viewer — Open Bambu Studio & PrusaSlicer .3mf Files Online";
+const title = "3MF File Viewer — Free Online | Bambu Studio & PrusaSlicer Colors, Plates";
 const description =
   "Open Bambu Studio, Orca & PrusaSlicer .3mf files online: objects in filament colors, plates, printer, thumbnail and measuring. Free, 100% local.";
 
@@ -37,7 +37,7 @@ const config: ViewerConfig = {
   formatLabel: "3MF",
   accept: [".3mf"],
   eyebrow: "3MF · 3D Viewer",
-  heading: "Online 3MF Viewer",
+  heading: "Online 3MF File Viewer",
   intro:
     "Drop a .3mf from Bambu Studio, Orca, PrusaSlicer or Cura. Every object shows in its assigned filament color, with the plates, printer, filament list and slicer thumbnail beside it — and you can measure parts. Free, and the file never leaves your browser.",
   about: [

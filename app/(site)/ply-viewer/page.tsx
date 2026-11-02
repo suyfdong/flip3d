@@ -9,7 +9,7 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/ply-viewer/`;
-const title = "PLY Viewer — Open .PLY Point Clouds, 3D Scans & Splats Online";
+const title = "PLY File Viewer — Free Online | Point Clouds, 3D Scans & Splats";
 const description =
   "Free online PLY viewer for 3D scans, point clouds and meshes — keeps scan colors, previews Gaussian splats, measures distances. 100% local, no upload.";
 
@@ -37,7 +37,7 @@ const config: ViewerConfig = {
   formatLabel: "PLY",
   accept: [".ply"],
   eyebrow: "PLY · 3D Viewer",
-  heading: "Online PLY Viewer",
+  heading: "Online PLY File Viewer",
   intro:
     "Drop a .ply scan, point cloud, mesh or Gaussian splat. Point clouds draw as points in the scan's own colors, colored meshes keep their vertex colors, and you can measure between any two points. Free, and the file never leaves your browser.",
   about: [
