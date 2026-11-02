@@ -27,7 +27,7 @@ const NOTES: Record<string, string> = {
   "ply-viewer": "open PLY meshes, point clouds and Gaussian-splat PLY (shown as coloured points)",
   "glb-viewer": "view GLB/glTF with PBR materials, textures and built-in animations",
   "3mf-viewer": "open Bambu Studio / PrusaSlicer / Orca 3MF projects, including multi-part and painted multi-colour files; shows plates, filaments and colours",
-  "step-viewer": "open STEP CAD files online: assembly part tree, hide/isolate parts, measure",
+  "step-viewer": "open STEP CAD files online: assembly part tree, hide/isolate parts, X/Y/Z cross-section, measure",
   "stp-viewer": "same STEP engine for .stp files",
   "iges-viewer": "open IGES/IGS CAD files in the browser",
   "dae-viewer": "open Collada DAE files",

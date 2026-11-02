@@ -87,3 +87,8 @@ export function trackRendered(sourceExt: string, imageFormat: string) {
 export function trackAffiliateClick(merchant: string, placement: string) {
   track("affiliate_click", { merchant, placement });
 }
+
+/** Viewer tool toggled on (section / measure), to see which tools get used. */
+export function trackViewerTool(tool: "section" | "measure", format: string) {
+  track("viewer_tool", { tool, file_format: format });
+}

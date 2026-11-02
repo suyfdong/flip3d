@@ -12,7 +12,7 @@ const URL = `${SITE_URL}/step-viewer/`;
 const title =
   "STEP File Viewer Online — Free, No Upload | Assemblies, Parts & Measure";
 const description =
-  "View STEP/STP files online: browse the assembly tree, isolate parts, see part colors and measure distances. Free, and nothing is uploaded — safe for NDA parts.";
+  "View STEP/STP files online: browse the assembly tree, isolate parts, cut a cross-section and measure distances. Free, and nothing is uploaded — safe for NDA parts.";
 
 export const metadata: Metadata = {
   title,
@@ -40,13 +40,14 @@ const config: ViewerConfig = {
   eyebrow: "STEP · STP · CAD Viewer",
   heading: "Online STEP File Viewer",
   intro:
-    "Drop a .step or .stp file to see it in 3D with its original part colors, browse the assembly tree, hide or isolate parts, and measure distances. Free, no CAD software, and the file never leaves your browser.",
+    "Drop a .step or .stp file to see it in 3D with its original part colors, browse the assembly tree, hide or isolate parts, cut a section to look inside, and measure distances. Free, no CAD software, and the file never leaves your browser.",
   about: [
     "Opens STEP (AP203 / AP214 / AP242) and the .stp extension — the neutral CAD exchange format written by SolidWorks, Fusion 360, CATIA, Inventor and Onshape.",
     "The B-rep solid is tessellated in your browser by an OpenCascade WASM engine, so the first file takes a few seconds to load the engine — after that it's instant.",
     "Everything runs on your device. There's no upload, no account, and no file-size paywall — useful when the CAD file is under NDA.",
     "The parts panel mirrors the file's assembly structure (sub-assemblies → parts) with their names; untick a part to hide it or click “only” to isolate it. Part colors from the CAD file are kept.",
     "Measure: click two points on any surface to get the distance and X/Y/Z offsets in millimeters — files saved in inches are converted on import.",
+    "Section: cut the model along X, Y or Z and drag the plane through it. The cut faces are filled in red so walls, bores and internal parts read as solid, and you can measure across the cut to check a wall thickness.",
     "It doesn't show the parametric feature history or PMI annotations (GD&T, tolerances), and measuring is point-to-point rather than hole diameters or angles.",
     "Need the model elsewhere? Convert the STEP to STL, OBJ, GLB, 3MF or PLY below.",
   ],
@@ -70,6 +71,10 @@ const config: ViewerConfig = {
     {
       q: "Can I measure a STEP file online?",
       a: "Yes. Click Measure and pick two points on the model; you get the straight-line distance and the X/Y/Z offsets in millimeters. It's point-to-point measuring on the tessellated surface — enough to check overall sizes and clearances, not a replacement for CAD inspection tools.",
+    },
+    {
+      q: "Can I see a cross-section of a STEP file?",
+      a: "Yes. Click Section, pick the X, Y or Z axis and drag the slider to move the cutting plane; ⇄ keeps the other side. The cut faces are filled in red so you can see wall thickness, bores and how parts sit inside the assembly. Turn on Measure while sectioning and clicks on the red face land exactly on the cut, so you can measure a wall. It's a visual section of the tessellated model, not a 2D drawing — for a DXF of a cut, use STEP to DXF.",
     },
     {
       q: "Is my CAD file uploaded to a server?",

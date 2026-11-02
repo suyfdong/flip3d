@@ -12,7 +12,7 @@ const URL = `${SITE_URL}/stp-viewer/`;
 const title =
   "Free STP File Viewer Online — Private, No Upload | Parts List & Measure";
 const description =
-  "Free online STP file viewer. Open a .stp in your browser, browse its parts, see original colors and measure distances — no SolidWorks, nothing uploaded.";
+  "Free online STP file viewer. Open a .stp in your browser, browse its parts, see original colors, cut a cross-section and measure distances — no SolidWorks, nothing uploaded.";
 
 export const metadata: Metadata = {
   title,
@@ -45,7 +45,7 @@ const config: ViewerConfig = {
     "Opens .stp files (and the identical .step extension) exported by SolidWorks, Fusion 360, Inventor, CATIA, Creo and Onshape.",
     "No CAD seat required — the solid is tessellated locally by an OpenCascade WASM engine, so a supplier part can be reviewed on any laptop.",
     "Nothing is uploaded, so confidential or NDA-covered parts stay on your machine.",
-    "You get the part list from the file (hide or isolate any part), the original part colors, and a two-point Measure tool that reads in millimeters — enough to check a supplier part's overall size or a clearance.",
+    "You get the part list from the file (hide or isolate any part), the original part colors, a Section tool that cuts the part along X, Y or Z to show walls and internal parts, and a two-point Measure tool that reads in millimeters — enough to check a supplier part's overall size, a clearance or a wall thickness.",
     "Not included: the feature history, GD&T / tolerance annotations, and hole-diameter or angle measuring.",
     "Once you can see it, convert the .stp to STL for printing or to OBJ/GLB for downstream tools below.",
   ],
@@ -68,7 +68,7 @@ const config: ViewerConfig = {
     },
     {
       q: "Can I measure or edit the part here?",
-      a: "You can measure: click Measure, then two points on the part, and read the distance and X/Y/Z offsets in millimeters. You can also hide or isolate parts from the parts list. Editing isn't possible in a viewer — convert the .stp to a mesh and resize it in the free STL Editor, or check it in the 3D Print Checker.",
+      a: "You can measure: click Measure, then two points on the part, and read the distance and X/Y/Z offsets in millimeters. Click Section to cut the part along X, Y or Z and see inside; measuring across the red cut face gives a wall thickness. You can also hide or isolate parts from the parts list. Editing isn't possible in a viewer — convert the .stp to a mesh and resize it in the free STL Editor, or check it in the 3D Print Checker.",
     },
     {
       q: "How do I turn a .stp file into an STL?",

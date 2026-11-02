@@ -23,9 +23,39 @@ type Props = {
    * into the exported mesh.
    */
   playAnimations?: boolean;
+  /** Cut the model with a movable plane and fill the cut so walls read solid. */
+  section?: boolean;
 };
 
 type Measurement = { points: THREE.Vector3[]; distance: number | null };
+
+type SectionAxis = "x" | "y" | "z";
+const SECTION_AXES: Record<SectionAxis, THREE.Vector3> = {
+  x: new THREE.Vector3(1, 0, 0),
+  y: new THREE.Vector3(0, 1, 0),
+  z: new THREE.Vector3(0, 0, 1),
+};
+const SECTION_CAP_COLOR = 0xdc2626;
+
+function isShown(o: THREE.Object3D): boolean {
+  for (let n: THREE.Object3D | null = o; n; n = n.parent) if (!n.visible) return false;
+  return true;
+}
+
+/** Bounds of `object` in its parent's frame — the file's own axes. */
+function boxInParentFrame(object: THREE.Object3D): THREE.Box3 {
+  const parent = object.parent;
+  object.updateWorldMatrix(true, true);
+  const world = new THREE.Box3().setFromObject(object);
+  if (!parent || world.isEmpty()) return world;
+  const out = new THREE.Box3();
+  const p = new THREE.Vector3();
+  for (let i = 0; i < 8; i++) {
+    p.set(i & 1 ? world.max.x : world.min.x, i & 2 ? world.max.y : world.min.y, i & 4 ? world.max.z : world.min.z);
+    out.expandByPoint(parent.worldToLocal(p));
+  }
+  return out;
+}
 
 // Scans and splats carry stray points far from the subject; a bounding sphere
 // over all of them leaves the subject tiny. Frame the median center and the
@@ -97,6 +127,7 @@ export default function MeshViewer({
   unitLabel = "mm",
   upAxis,
   playAnimations = false,
+  section = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -114,6 +145,14 @@ export default function MeshViewer({
 
   const [stats, setStats] = useState<ModelStats | null>(null);
   const [measurement, setMeasurement] = useState<Measurement>({ points: [], distance: null });
+
+  const [sectionAxis, setSectionAxis] = useState<SectionAxis>("x");
+  const [sectionPos, setSectionPos] = useState(0.5);
+  const [sectionFlip, setSectionFlip] = useState(false);
+  const [sectionAt, setSectionAt] = useState<number | null>(null);
+  const sectionPlaneRef = useRef<THREE.Plane | null>(null);
+  const capGroupRef = useRef<THREE.Group | null>(null);
+  const capSyncRef = useRef<(() => void) | null>(null);
 
   const themeSpec = theme ? THEME_SPECS[theme] : null;
 
@@ -171,6 +210,7 @@ export default function MeshViewer({
       const dt = clock.getDelta();
       mixerRef.current?.update(dt);
       controls.update();
+      capSyncRef.current?.();
       renderer.render(scene, camera);
     };
     animate();
@@ -355,9 +395,23 @@ export default function MeshViewer({
         -((e.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(ndc, camera);
-      const hit = raycaster
-        .intersectObject(object, true)
-        .find((h) => h.object.visible && !overlay.children.includes(h.object));
+      // With a section on, skip what the plane cut away, and let clicks on the
+      // red cut face land exactly on the plane (so wall thickness can be read).
+      const plane = sectionPlaneRef.current;
+      const caps = capGroupRef.current;
+      const targets = caps ? [object, caps] : [object];
+      let hit = raycaster
+        .intersectObjects(targets, true)
+        .find(
+          (h) =>
+            h.object.visible &&
+            !overlay.children.includes(h.object) &&
+            (!plane || h.object.userData.sectionCap || plane.distanceToPoint(h.point) >= -1e-6),
+        );
+      if (hit && plane && hit.object.userData.sectionCap) {
+        const onPlane = raycaster.ray.intersectPlane(plane, new THREE.Vector3());
+        hit = onPlane ? { ...hit, point: onPlane } : undefined;
+      }
       if (!hit) return;
       if (picked.length === 2) {
         picked = [];
@@ -394,6 +448,98 @@ export default function MeshViewer({
       lineMat.dispose();
     };
   }, [measure, object, upAxis]);
+
+  // Section view: one clipping plane on every material, plus back-face "caps"
+  // drawn in a flat color so the cut reads as solid material. Caps live in
+  // their own group (not inside the model) so parts lists, hiding and exports
+  // never see them; their transforms/visibility are synced every frame.
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    const scene = sceneRef.current;
+    if (!section || !renderer || !scene || !object) return;
+
+    const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+    sectionPlaneRef.current = plane;
+    renderer.localClippingEnabled = true;
+
+    const touched: { mat: THREE.Material; prev: THREE.Plane[] | null; prevSide: THREE.Side }[] = [];
+    const capMat = new THREE.MeshBasicMaterial({
+      color: SECTION_CAP_COLOR,
+      side: THREE.BackSide,
+      clippingPlanes: [plane],
+    });
+    const caps = new THREE.Group();
+    caps.name = "__flip3d_section_caps";
+    const pairs: { src: THREE.Object3D; cap: THREE.Mesh }[] = [];
+
+    object.traverse((child) => {
+      if (!(child instanceof THREE.Mesh || child instanceof THREE.Points)) return;
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      for (const m of mats) {
+        if (!m || touched.some((t) => t.mat === m)) continue;
+        touched.push({ mat: m, prev: m.clippingPlanes, prevSide: m.side });
+        m.clippingPlanes = [plane];
+        // Double-sided surfaces would show their inside instead of the cap.
+        if (child instanceof THREE.Mesh && m.side === THREE.DoubleSide) m.side = THREE.FrontSide;
+        m.needsUpdate = true;
+      }
+      if (child instanceof THREE.Mesh) {
+        const cap = new THREE.Mesh(child.geometry, capMat);
+        cap.matrixAutoUpdate = false;
+        cap.userData.sectionCap = true;
+        caps.add(cap);
+        pairs.push({ src: child, cap });
+      }
+    });
+    scene.add(caps);
+    capGroupRef.current = caps;
+    capSyncRef.current = () => {
+      for (const { src, cap } of pairs) {
+        cap.matrix.copy(src.matrixWorld);
+        cap.matrixWorld.copy(src.matrixWorld);
+        cap.visible = isShown(src);
+      }
+    };
+
+    return () => {
+      capSyncRef.current = null;
+      capGroupRef.current = null;
+      sectionPlaneRef.current = null;
+      scene.remove(caps);
+      capMat.dispose();
+      for (const t of touched) {
+        t.mat.clippingPlanes = t.prev;
+        t.mat.side = t.prevSide;
+        t.mat.needsUpdate = true;
+      }
+      renderer.localClippingEnabled = false;
+      setSectionAt(null);
+    };
+  }, [section, object, upAxis]);
+
+  // Move the plane. Axis and offset are in the file's own frame (the same
+  // axes the measure readout uses), then mapped through the display wrapper.
+  useEffect(() => {
+    const plane = sectionPlaneRef.current;
+    if (!section || !plane || !object) return;
+    const parent = object.parent;
+    const box = boxInParentFrame(object);
+    if (box.isEmpty()) return;
+    const i = sectionAxis === "x" ? 0 : sectionAxis === "y" ? 1 : 2;
+    const lo = box.min.getComponent(i);
+    const hi = box.max.getComponent(i);
+    const at = lo + (hi - lo) * sectionPos;
+    const localNormal = SECTION_AXES[sectionAxis].clone().multiplyScalar(sectionFlip ? 1 : -1);
+    const localPoint = box.getCenter(new THREE.Vector3()).setComponent(i, at);
+    const worldPoint = parent ? parent.localToWorld(localPoint.clone()) : localPoint.clone();
+    const worldNormal = parent
+      ? localNormal.applyQuaternion(parent.getWorldQuaternion(new THREE.Quaternion()))
+      : localNormal;
+    plane.setFromNormalAndCoplanarPoint(worldNormal.normalize(), worldPoint);
+    // Report the cut position in file units relative to the model's origin
+    // (undo the centering offset applied when the model was placed).
+    setSectionAt(at - object.position.getComponent(i));
+  }, [section, sectionAxis, sectionPos, sectionFlip, object, upAxis]);
 
   // Drive the selected clip. Stops (and resets the pose) when turned off.
   useEffect(() => {
@@ -441,6 +587,53 @@ export default function MeshViewer({
                   : "Click two points on the model to measure"}
               </span>
             )}
+          </div>
+        )}
+        {section && object && (
+          <div className="absolute right-3 top-3 w-56 rounded-lg bg-white/90 dark:bg-zinc-900/90 px-3 py-2 text-xs shadow border border-zinc-200 dark:border-zinc-700 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium text-red-600 dark:text-red-400">Section</span>
+              <div className="flex gap-1" role="group" aria-label="Section axis">
+                {(["x", "y", "z"] as SectionAxis[]).map((a) => (
+                  <button
+                    key={a}
+                    onClick={() => setSectionAxis(a)}
+                    aria-pressed={sectionAxis === a}
+                    className={`w-7 py-0.5 rounded border font-mono uppercase ${
+                      sectionAxis === a
+                        ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                        : "border-zinc-300 dark:border-zinc-600"
+                    }`}
+                  >
+                    {a}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setSectionFlip((f) => !f)}
+                  title="Keep the other side"
+                  className="px-1.5 py-0.5 rounded border border-zinc-300 dark:border-zinc-600"
+                >
+                  ⇄
+                </button>
+              </div>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.002}
+              value={sectionPos}
+              onChange={(e) => setSectionPos(Number(e.target.value))}
+              aria-label="Section position"
+              className="w-full accent-red-600"
+            />
+            <div className="text-zinc-500 dark:text-zinc-400">
+              {sectionAxis.toUpperCase()} ={" "}
+              <span className="font-mono text-zinc-800 dark:text-zinc-200">
+                {sectionAt === null ? "–" : formatLength(sectionAt)}
+              </span>{" "}
+              {unitLabel}
+            </div>
           </div>
         )}
         {playAnimations && clips.length > 0 && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { takeFile } from "@/lib/file-handoff";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -14,6 +14,7 @@ import {
   trackFileUploaded,
   trackSampleLoaded,
   trackConvertError,
+  trackViewerTool,
 } from "@/lib/analytics";
 
 const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
@@ -73,8 +74,18 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
   // Set when the model came from ?url= — "Do more" links then carry it along.
   const [modelUrl, setModelUrl] = useState<string | null>(null);
   const [measuring, setMeasuring] = useState(false);
+  const [sectioning, setSectioning] = useState(false);
   // null = use the file's own convention; otherwise the user's choice.
   const [upAxis, setUpAxis] = useState<"y" | "z" | null>(null);
+
+  // Section view needs real surfaces; point clouds have nothing to cut.
+  const hasSurface = useMemo(() => {
+    let found = false;
+    object?.traverse((c) => {
+      if (c instanceof THREE.Mesh) found = true;
+    });
+    return found;
+  }, [object]);
 
   // Dispose the previous object whenever it's replaced or on unmount — without
   // this, revisiting/leaving the page leaks geometry + GPU buffers.
@@ -152,6 +163,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
 
   const handleReset = () => {
     setMeasuring(false);
+    setSectioning(false);
     setUpAxis(null);
     setObject(null);
     setFileName("");
@@ -247,8 +259,32 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
                 >
                   ⤾ Flip upright
                 </button>
+                {hasSurface && (
+                  <button
+                    onClick={() =>
+                      setSectioning((on) => {
+                        if (!on) trackViewerTool("section", format);
+                        return !on;
+                      })
+                    }
+                    aria-pressed={sectioning}
+                    title="Cut the model with a plane to see inside"
+                    className={`px-4 py-2 text-sm rounded-lg border ${
+                      sectioning
+                        ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300"
+                        : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                    }`}
+                  >
+                    ✂ {sectioning ? "Sectioning" : "Section"}
+                  </button>
+                )}
                 <button
-                  onClick={() => setMeasuring((m) => !m)}
+                  onClick={() =>
+                    setMeasuring((m) => {
+                      if (!m) trackViewerTool("measure", format);
+                      return !m;
+                    })
+                  }
                   aria-pressed={measuring}
                   className={`px-4 py-2 text-sm rounded-lg border ${
                     measuring
@@ -272,6 +308,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
                 <MeshViewer
                   object={object}
                   measure={measuring}
+                  section={sectioning && hasSurface}
                   unitLabel={unitLabelFor(object)}
                   upAxis={upAxis ?? undefined}
                   playAnimations
