@@ -86,6 +86,7 @@ export default function Page() {
         related={[
           { href: "/dxf-to-stl/", title: "DXF to STL", desc: "Extrude this drawing into a printable solid" },
           { href: "/stl-to-dxf/", title: "STL to DXF", desc: "Section a 3D model into a 2D drawing" },
+          { href: "/dxf-to-svg/", title: "DXF to SVG", desc: "Save this drawing as a true-size SVG" },
           { href: "/jpg-to-dxf/", title: "JPG to DXF", desc: "Trace an image into DXF polylines" },
           { href: "/step-viewer/", title: "STEP Viewer", desc: "Open 3D CAD files the same way" },
         ]}

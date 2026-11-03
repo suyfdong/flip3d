@@ -99,6 +99,8 @@ export default function SiteFooter() {
               <li><Link href="/step-to-dxf/" className="hover:text-blue-600 dark:hover:text-blue-400">STEP to DXF</Link></li>
               <li><Link href="/dxf-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">DXF to STL</Link></li>
               <li><Link href="/dxf-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">DXF Viewer</Link></li>
+              <li><Link href="/svg-to-dxf/" className="hover:text-blue-600 dark:hover:text-blue-400">SVG to DXF</Link></li>
+              <li><Link href="/dxf-to-svg/" className="hover:text-blue-600 dark:hover:text-blue-400">DXF to SVG</Link></li>
               <li><Link href="/svg-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">SVG to STL</Link></li>
               <li><Link href="/jpeg-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">JPEG to STL</Link></li>
               <li><Link href="/image-to-color-stl/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Image to Color STL ⭐</Link></li>

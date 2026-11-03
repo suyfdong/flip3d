@@ -162,6 +162,8 @@ export const DXF_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "step-to-dxf", title: "STEP to DXF" },
   { slug: "dxf-to-stl", title: "DXF to STL" },
   { slug: "dxf-viewer", title: "Online DXF Viewer" },
+  { slug: "svg-to-dxf", title: "SVG to DXF" },
+  { slug: "dxf-to-svg", title: "DXF to SVG" },
 ];
 
 // 3D → raster image renderers. Not mesh conversion: the model is rendered

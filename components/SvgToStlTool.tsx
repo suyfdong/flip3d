@@ -289,7 +289,8 @@ export default function SvgToStlTool() {
             <ol className="text-sm text-zinc-700 dark:text-zinc-300 space-y-2 list-decimal pl-6 mb-8">
               <li>
                 Drop an SVG above. Paths need a <strong>fill</strong> — outline-only
-                (stroke) SVGs have no area to extrude.
+                (stroke) SVGs have no area to extrude. Cutting it on a laser instead?
+                Use <Link href="/svg-to-dxf/" className="text-blue-600 dark:text-blue-400 hover:underline">SVG to DXF</Link>.
               </li>
               <li>
                 Set the physical width and the extrude depth (thickness). Holes and

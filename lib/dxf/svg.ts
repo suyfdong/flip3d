@@ -15,6 +15,13 @@ export type SvgWriteOptions = {
   /** Stroke width in drawing units. 0.1 mm reads as a hairline in laser software. */
   strokeWidth?: number;
   title?: string;
+  /**
+   * "cut" (default): hairline strokes, no fill — what laser software expects.
+   * "fill": closed loops become one even-odd filled path (holes stay holes),
+   * for Cricut print-then-cut, web graphics or a quick visual; open paths are
+   * still drawn as strokes since they have no inside to fill.
+   */
+  style?: "cut" | "fill";
 };
 
 function n(v: number): string {
@@ -46,17 +53,41 @@ export function writeSvgPolylines(polys: Polyline[], opts: SvgWriteOptions = {})
   const h = Math.max(maxY - minY, 1e-6);
   const stroke = opts.strokeWidth ?? (units === "mm" ? 0.1 : 0.004);
 
-  const paths = usable.map((p) => {
-    const d = p.points
+  const pathData = (p: Polyline) =>
+    p.points
       .map(([x, y], i) => `${i === 0 ? "M" : "L"}${n(x - minX)} ${n(maxY - y)}`)
-      .join(" ");
-    return `  <path d="${d}${p.closed ? " Z" : ""}"/>`;
-  });
+      .join(" ") + (p.closed ? " Z" : "");
 
-  return [
+  const head = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<svg xmlns="http://www.w3.org/2000/svg" width="${n(w)}${units}" height="${n(h)}${units}" viewBox="0 0 ${n(w)} ${n(h)}">`,
     opts.title ? `  <title>${esc(opts.title)}</title>` : "",
+  ];
+
+  if (opts.style === "fill") {
+    const closed = usable.filter((p) => p.closed);
+    const open = usable.filter((p) => !p.closed);
+    return [
+      ...head,
+      closed.length
+        ? `  <path fill="#000000" fill-rule="evenodd" stroke="none" d="${closed.map(pathData).join(" ")}"/>`
+        : "",
+      open.length
+        ? `  <g fill="none" stroke="#000000" stroke-width="${n(stroke)}" stroke-linejoin="round" stroke-linecap="round">\n${open
+            .map((p) => `    <path d="${pathData(p)}"/>`)
+            .join("\n")}\n  </g>`
+        : "",
+      `</svg>`,
+      "",
+    ]
+      .filter((l) => l !== "")
+      .join("\n");
+  }
+
+  const paths = usable.map((p) => `  <path d="${pathData(p)}"/>`);
+
+  return [
+    ...head,
     `  <g fill="none" stroke="#000000" stroke-width="${n(stroke)}" stroke-linejoin="round" stroke-linecap="round">`,
     ...paths.map((p) => "  " + p),
     `  </g>`,

@@ -92,3 +92,12 @@ export function trackAffiliateClick(merchant: string, placement: string) {
 export function trackViewerTool(tool: "section" | "measure", format: string) {
   track("viewer_tool", { tool, file_format: format });
 }
+
+/** 2D vector conversions (SVG ↔ DXF) — free-string formats like trackConvertError. */
+export function trackVectorConverted(from: string, to: string) {
+  track("file_converted", {
+    source_format: from,
+    target_format: to,
+    pair: `${from}-to-${to}`,
+  });
+}

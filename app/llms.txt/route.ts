@@ -62,6 +62,8 @@ const NOTES: Record<string, string> = {
   "step-to-dxf": "section a STEP model into a 2D DXF profile",
   "dxf-to-stl": "extrude DXF outlines into a 3D STL at a chosen thickness",
   "dxf-viewer": "open and inspect DXF drawings online (blocks/inserts supported)",
+  "svg-to-dxf": "convert SVG to a true-size R12 DXF for laser / CNC / AutoCAD (fills and strokes become cut paths)",
+  "dxf-to-svg": "convert DXF to a true-size SVG — hairline cut lines for LightBurn/Glowforge/Cricut, or filled shapes",
   // Render
   "stl-to-jpg": "render an STL to a JPG image (front/iso/top views)",
   "obj-to-png": "render an OBJ to PNG, transparent background optional",
