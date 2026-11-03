@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/embed/`;
 
 export const metadata: Metadata = {
-  title: "Embed a 3D Model Viewer — Free iframe | Flip3D",
+  title: "Embed a 3D Model Viewer — Free iframe",
   description:
     "Embed an interactive 3D model viewer on any website with one line of HTML. Supports STL, OBJ, GLB, 3MF, PLY, and STEP. No signup, no fees.",
   alternates: { canonical: URL },

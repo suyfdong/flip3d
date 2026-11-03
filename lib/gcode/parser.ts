@@ -36,6 +36,53 @@ const SLICER_FINGERPRINTS: Array<{ slicer: string; pattern: RegExp }> = [
   { slicer: "SuperSlicer", pattern: /SuperSlicer/i },
 ];
 
+/**
+ * Points along a G2 (clockwise) / G3 (counter-clockwise) arc in the XY plane,
+ * excluding the start and ending exactly on (ex, ey). Centre from I/J offsets,
+ * or from R (negative R = the long way round), following Marlin's maths.
+ * Chords are at most 0.5 mm; a zero-length arc with I/J is a full circle.
+ */
+export function arcPoints(
+  px: number, py: number, ex: number, ey: number,
+  I: number, J: number, R: number | null, clockwise: boolean,
+): Array<[number, number]> {
+  let cx: number, cy: number;
+  if (R !== null && I === 0 && J === 0) {
+    const dx = ex - px, dy = ey - py;
+    const d = Math.hypot(dx, dy);
+    if (d === 0) return [[ex, ey]];
+    const h2 = (R - d / 2) * (R + d / 2);
+    const h = h2 > 0 ? Math.sqrt(h2) : 0;
+    const sign = clockwise !== R < 0 ? -1 : 1;
+    cx = (px + ex) / 2 + sign * h * (-dy / d);
+    cy = (py + ey) / 2 + sign * h * (dx / d);
+  } else {
+    cx = px + I;
+    cy = py + J;
+  }
+  const r = Math.hypot(px - cx, py - cy);
+  if (r === 0) return [[ex, ey]];
+  const a0 = Math.atan2(py - cy, px - cx);
+  const a1 = Math.atan2(ey - cy, ex - cx);
+  let sweep = a1 - a0;
+  const fullCircle = Math.abs(ex - px) < 1e-9 && Math.abs(ey - py) < 1e-9;
+  if (clockwise) {
+    if (sweep >= 0 || fullCircle) sweep -= 2 * Math.PI;
+    if (fullCircle) sweep = -2 * Math.PI;
+  } else {
+    if (sweep <= 0 || fullCircle) sweep += 2 * Math.PI;
+    if (fullCircle) sweep = 2 * Math.PI;
+  }
+  const n = Math.min(720, Math.max(1, Math.ceil((Math.abs(sweep) * r) / 0.5)));
+  const out: Array<[number, number]> = [];
+  for (let k = 1; k < n; k++) {
+    const a = a0 + (sweep * k) / n;
+    out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  }
+  out.push([ex, ey]);
+  return out;
+}
+
 export function parseGcode(text: string): ParsedGcode {
   const lines = text.split(/\r?\n/);
   const moves: GcodeMove[] = [];
@@ -87,10 +134,54 @@ export function parseGcode(text: string): ParsedGcode {
     const code = (semi >= 0 ? raw.slice(0, semi) : raw).trim();
     if (!code) continue;
 
-    const tokens = code.split(/\s+/);
-    const cmd = tokens[0].toUpperCase();
+    // Some firmwares/slicers omit spaces ("G1X10Y5") — split before each letter.
+    const tokens = code.replace(/([A-Za-z])/g, " $1").trim().split(/\s+/);
+    // G00/G01/G02/G03 are the same commands as G0..G3.
+    const cmd = tokens[0].toUpperCase().replace(/^G0(\d)$/, "G$1");
 
-    if (cmd === "G0" || cmd === "G1") {
+    if (cmd === "G2" || cmd === "G3") {
+      // Arc move (arc fitting in Bambu Studio / OrcaSlicer / PrusaSlicer).
+      const px = x, py = y, pz = z, pe = e;
+      let ex = x, ey = y, ez = z, ee = e;
+      let I = 0, J = 0, R: number | null = null;
+      for (let t = 1; t < tokens.length; t++) {
+        const letter = tokens[t][0]?.toUpperCase();
+        const val = parseFloat(tokens[t].slice(1));
+        if (!Number.isFinite(val)) continue;
+        if (letter === "X") ex = absoluteMode ? val : px + val;
+        else if (letter === "Y") ey = absoluteMode ? val : py + val;
+        else if (letter === "Z") ez = absoluteMode ? val : pz + val;
+        else if (letter === "E") ee = absoluteExtrusion ? val : pe + val;
+        else if (letter === "F") f = val;
+        else if (letter === "I") I = val;
+        else if (letter === "J") J = val;
+        else if (letter === "R") R = val;
+      }
+      const pts = arcPoints(px, py, ex, ey, I, J, R, cmd === "G2");
+      const n = pts.length;
+      let sx = px, sy = py, sz = pz, se = pe;
+      for (let k = 0; k < n; k++) {
+        const t = (k + 1) / n;
+        const [ax, ay] = pts[k];
+        const az = pz + (ez - pz) * t;
+        const ae = pe + (ee - pe) * t;
+        const dx = ax - sx, dy = ay - sy, dz = az - sz, de = ae - se;
+        if (dx !== 0 || dy !== 0 || dz !== 0 || de !== 0) {
+          const isExtrusion = de > 0 && (dx !== 0 || dy !== 0);
+          moves.push({ x: ax, y: ay, z: az, e: ae, f, dx, dy, dz, de, isExtrusion, layer, lineIndex: i, px: sx, py: sy, pz: sz });
+          if (isExtrusion) {
+            if (ax < bboxMin[0]) bboxMin[0] = ax;
+            if (ay < bboxMin[1]) bboxMin[1] = ay;
+            if (az < bboxMin[2]) bboxMin[2] = az;
+            if (ax > bboxMax[0]) bboxMax[0] = ax;
+            if (ay > bboxMax[1]) bboxMax[1] = ay;
+            if (az > bboxMax[2]) bboxMax[2] = az;
+          }
+        }
+        sx = ax; sy = ay; sz = az; se = ae;
+      }
+      x = ex; y = ey; z = ez; e = ee;
+    } else if (cmd === "G0" || cmd === "G1") {
       const px = x;
       const py = y;
       const pz = z;

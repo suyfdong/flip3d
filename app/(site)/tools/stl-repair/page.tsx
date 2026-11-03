@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/tools/stl-repair/`;
 
 export const metadata: Metadata = {
-  title: "Free Online STL Repair — Mesh Cleanup in Your Browser | Flip3D",
+  title: "Free Online STL Repair — Mesh Cleanup in Your Browser",
   description:
     "Welds duplicate vertices, removes degenerate triangles, detects holes and non-manifold edges. Fixes the most common 'slicer can't read this STL' issues. Free, instant, 100% local.",
   alternates: { canonical: URL },

@@ -63,15 +63,34 @@ export default function GcodeSimulator() {
     setStatus("loading");
     setErrorMsg(null);
     try {
-      const text = new TextDecoder("utf-8").decode(buffer);
+      let text: string;
+      let shownName = name;
+      if (name.toLowerCase().endsWith(".3mf")) {
+        // Bambu Studio / Orca "sliced file" (.gcode.3mf): the G-code lives in
+        // Metadata/plate_N.gcode inside the zip.
+        const JSZip = (await import("jszip")).default;
+        const zip = await JSZip.loadAsync(buffer);
+        const plates = Object.keys(zip.files)
+          .filter((f) => /^Metadata\/plate_\d+\.gcode$/i.test(f))
+          .sort((a, b) => parseInt(a.replace(/\D/g, ""), 10) - parseInt(b.replace(/\D/g, ""), 10));
+        if (!plates.length) {
+          throw new Error(
+            "This 3MF has no sliced G-code inside — it's a project file. Open it in the 3MF Viewer, or slice it and export the plate sliced file (.gcode.3mf).",
+          );
+        }
+        text = await zip.files[plates[0]].async("string");
+        shownName = plates.length > 1 ? `${name} · ${plates[0].split("/")[1]} (of ${plates.length} plates)` : name;
+      } else {
+        text = new TextDecoder("utf-8").decode(buffer);
+      }
       const result = parseGcode(text);
       if (!result.moves.length) {
         throw new Error(
-          "No G0/G1 motion commands detected — is this really a G-code file?",
+          "No motion commands (G0–G3) found — is this really a G-code file?",
         );
       }
       setParsed(result);
-      setFileName(name);
+      setFileName(shownName);
       // Start at full progress so users see the whole print first, then
       // they can scrub backwards. The visible slider thumb makes scrubbing
       // obvious.
@@ -125,7 +144,7 @@ export default function GcodeSimulator() {
               </p>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
                 <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
-                  G-code Simulator
+                  G-code Viewer &amp; Simulator
                 </span>
               </h1>
               <p className="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
@@ -136,10 +155,10 @@ export default function GcodeSimulator() {
             </div>
 
             <div className="max-w-2xl mx-auto">
-              <Dropzone onFileLoaded={handleFile} accept={[".gcode", ".gco", ".g"]} />
+              <Dropzone onFileLoaded={handleFile} accept={[".gcode", ".gco", ".g", ".3mf"]} />
               <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-3 text-center">
                 Bambu Studio / PrusaSlicer / OrcaSlicer / Cura outputs all
-                supported.
+                supported, arc moves included.
               </p>
 
               <div className="mt-4 flex items-center justify-center gap-2 text-sm">
@@ -223,7 +242,7 @@ export default function GcodeSimulator() {
                   </span>
                 </div>
                 <span className="text-zinc-700 dark:text-zinc-300 font-mono text-xs tabular-nums">
-                  {progressPct}% · layer {currentLayer ?? 0} /{" "}
+                  {progressPct}% · layer {/* layers are 0-based internally; −1 = start G-code */ Math.max(0, (currentLayer ?? -1) + 1)} /{" "}
                   {stats?.layerCount ?? 0}
                 </span>
               </div>

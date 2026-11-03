@@ -7,7 +7,7 @@ import { SITE_URL } from "@/lib/seo";
 const URL = `${SITE_URL}/tools/print-checker/`;
 
 export const metadata: Metadata = {
-  title: "3D Print Checker — Is Your STL Printable? Free Online | Flip3D",
+  title: "3D Print Checker — Is Your STL Printable? Free Online",
   description:
     "Drop an STL, OBJ or 3MF and get an instant pre-flight check: watertight, manifold, size & units, overhangs, and whether it fits your print bed. Free, 100% local, no upload.",
   alternates: { canonical: URL },

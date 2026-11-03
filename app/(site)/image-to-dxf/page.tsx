@@ -64,6 +64,10 @@ const FAQ = [
     q: "Does the image get uploaded?",
     a: "No. There is no server and no upload. Decoding and tracing both run on your device, and nothing is stored.",
   },
+  {
+    q: "Can I convert an image to DWG?",
+    a: "Not directly — DWG is AutoCAD's closed format and no browser tool can write it reliably. You don't need it, though: AutoCAD opens this DXF natively (File → Open, or INSERT it into a drawing), and you can then save it as DWG with File → Save As. The geometry comes through unchanged.",
+  },
 ];
 
 export default function Page() {

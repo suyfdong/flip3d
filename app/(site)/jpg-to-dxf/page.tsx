@@ -68,6 +68,10 @@ const FAQ = [
     q: "Does my image get uploaded to a server?",
     a: "No. There is no server and no upload. The image is decoded and traced entirely on your device, and nothing is stored.",
   },
+  {
+    q: "Can I convert a JPG to DWG for AutoCAD?",
+    a: "Convert it to DXF here, then open the DXF in AutoCAD and use File → Save As → DWG. DWG is Autodesk's closed format, so the reliable route is DXF — which AutoCAD reads natively — rather than a converter that guesses at DWG internals.",
+  },
 ];
 
 export default function Page() {

@@ -64,6 +64,10 @@ const FAQ = [
     q: "Is my PNG uploaded anywhere?",
     a: "No. There's no server and no upload — the file is decoded and traced entirely in your browser, and nothing is stored.",
   },
+  {
+    q: "Can I convert a PNG to DWG?",
+    a: "Yes, in two steps: trace the PNG to DXF here, then open the DXF in AutoCAD (or DraftSight / BricsCAD) and save it as DWG. DXF is the open exchange format every CAD program reads, so nothing is lost on the way.",
+  },
 ];
 
 export default function Page() {

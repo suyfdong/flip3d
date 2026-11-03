@@ -197,7 +197,7 @@ npx tsc --noEmit     # TS 检查
 - ✅ 10/20 变现基建：广告/联盟 ID 全在 `lib/monetization.ts`（空 = 不渲染）。**约束**：embed iframe 永不出广告（AdSense 脚本只在 `(site)` layout）；Adsterra 只做 Banner、不接 Popunder/Social Bar/Direct Link；广告位每页最多 1 个、在工具下方；联盟链接必须带 `rel="sponsored"` + 披露。AdSense/Awin 审核中，进度见 progress.md。
 
 - ✅ 10/15 起 viewer 按搜索意图重做（详见下方「Viewer 要点」），新增 `/stl-to-svg/`，首页 → viewer 带文件跳转。
-- ✅ Node 测试：`npx tsx scripts/{dxf,print-check,stl-editor,render,3mf-meta,heightmap,vector,simplify}-test.mts`（dxf 118 · vector 28 · simplify 26 · 其余见各脚本）。**three 类型判断用 `isMesh` / `isPoints` / `isLineCurve` 等鸭子类型，别用 `instanceof`**（tsx 下会加载两份 three，instanceof 失效）。真实样本在 `.tmp-e2e/`（gitignored）：`pouring-cat.3mf`（MakerWorld 7 色涂色）、`bambu-*.3mf`、`f3d/Cube02ProfileMini.3mf`、`scan-pointcloud.ply` / `splat.ply` / `color-mesh.ply`、`as1_pe_203.stp`。
+- ✅ Node 测试：`npx tsx scripts/{dxf,print-check,stl-editor,render,3mf-meta,heightmap,vector,simplify,gcode}-test.mts`（dxf 118 · vector 28 · simplify 26 · gcode 16 · 其余见各脚本）。**three 类型判断用 `isMesh` / `isPoints` / `isLineCurve` 等鸭子类型，别用 `instanceof`**（tsx 下会加载两份 three，instanceof 失效）。真实样本在 `.tmp-e2e/`（gitignored）：`pouring-cat.3mf`（MakerWorld 7 色涂色）、`bambu-*.3mf`、`f3d/Cube02ProfileMini.3mf`、`scan-pointcloud.ply` / `splat.ply` / `color-mesh.ply`、`as1_pe_203.stp`。
 - 分发由用户用自己账号发（dev.to / GitHub / Stack Exchange），我负责找帖子、核实、起草，草稿放 `../launch/`。**Reddit、付费目录不碰。回复要短，2–4 句，先读楼上再写，不复述已有内容；SE 回答必须写 disclosure。**
 
 ### Viewer 要点（2026-10-15 加）
