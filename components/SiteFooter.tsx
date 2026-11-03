@@ -113,6 +113,7 @@ export default function SiteFooter() {
               <li><Link href="/jpeg-to-stl/" className="hover:text-blue-600 dark:hover:text-blue-400">JPEG to STL</Link></li>
               <li><Link href="/image-to-color-stl/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Image to Color STL ⭐</Link></li>
               <li><Link href="/png-to-3mf/" className="hover:text-blue-600 dark:hover:text-blue-400">PNG to 3MF</Link></li>
+              <li><Link href="/image-to-3mf/" className="hover:text-blue-600 dark:hover:text-blue-400">Image to 3MF</Link></li>
             </ul>
           </div>
           <div>

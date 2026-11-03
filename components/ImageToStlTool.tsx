@@ -136,6 +136,29 @@ const OBJ_COPY: Partial<Record<ImageToStlVariant, { title: string; intro: string
   },
 };
 
+// Overrides when the page outputs 3MF. Without these, /png-to-3mf rendered
+// "PNG to STL" as its H1 and promised "download an STL".
+const TMF_COPY: Partial<Record<ImageToStlVariant, { eyebrow: string; title: string; intro: string }>> = {
+  image: {
+    eyebrow: "Image → 3MF · Heightmap",
+    title: "Image to 3MF",
+    intro:
+      "Turn a JPG, PNG or WebP into a printable 3MF — a relief, a lithophane or a flat logo — at the exact millimetre size you set. Drop an image and download a 3MF for Bambu Studio, PrusaSlicer or Orca. Free, 100% local.",
+  },
+  png: {
+    eyebrow: "PNG → 3MF · Heightmap",
+    title: "PNG to 3MF",
+    intro:
+      "Convert a PNG into a printable 3MF. Transparent areas flatten to the base; brightness becomes height. Drop your PNG and download a 3MF that opens at the right size in any slicer — free, in your browser.",
+  },
+  jpg: {
+    eyebrow: "JPG → 3MF · Heightmap",
+    title: "JPG to 3MF",
+    intro:
+      "Convert a JPG photo into a printable 3MF relief or lithophane. Brightness becomes height. Drop your JPG and download a 3MF — free, no upload, no signup.",
+  },
+};
+
 export default function ImageToStlTool({
   defaultMode = "relief",
   variant = "image",
@@ -148,8 +171,9 @@ export default function ImageToStlTool({
   /** Start with per-vertex colour on (the /image-to-color-stl landing). */
   defaultKeepColor?: boolean;
 }) {
-  const objCopy = targetFormat === "obj" ? OBJ_COPY[variant] : undefined;
-  const copy = objCopy ? { ...VARIANT_COPY[variant], ...objCopy } : VARIANT_COPY[variant];
+  const formatCopy =
+    targetFormat === "obj" ? OBJ_COPY[variant] : targetFormat === "3mf" ? TMF_COPY[variant] : undefined;
+  const copy = formatCopy ? { ...VARIANT_COPY[variant], ...formatCopy } : VARIANT_COPY[variant];
   const tgtLabel = targetFormat.toUpperCase();
   const imageRef = useRef<ImageBitmap | HTMLCanvasElement | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
@@ -587,6 +611,19 @@ export default function ImageToStlTool({
                       href: "/obj-to-stl/",
                       title: "OBJ → STL",
                       desc: "Convert the result to a print-ready STL",
+                    },
+                  ]
+                : targetFormat === "3mf"
+                ? [
+                    {
+                      href: "/image-to-stl/",
+                      title: "Image → STL",
+                      desc: "Same tool, STL output",
+                    },
+                    {
+                      href: "/3mf-viewer/",
+                      title: "3MF Viewer",
+                      desc: "Check the 3MF before slicing",
                     },
                   ]
                 : [

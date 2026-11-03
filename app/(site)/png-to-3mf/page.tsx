@@ -77,6 +77,7 @@ export default function Page() {
         ]}
         faq={FAQ}
         related={[
+          { href: "/image-to-3mf/", title: "Image to 3MF", desc: "JPG and WebP photos too" },
           { href: "/png-to-stl/", title: "PNG to STL", desc: "Same relief, STL output" },
           { href: "/image-to-color-stl/", title: "Image to Color STL", desc: "Keep the image's colors (PLY / GLB)" },
           { href: "/stl-to-3mf/", title: "STL to 3MF", desc: "Already have an STL? Repackage it" },

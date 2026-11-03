@@ -49,6 +49,7 @@ const NOTES: Record<string, string> = {
   "png-to-obj": "PNG to OBJ relief mesh",
   "jpg-to-obj": "JPG to OBJ relief mesh",
   "png-to-3mf": "PNG to 3MF relief (3MF keeps real units)",
+  "image-to-3mf": "JPG / PNG / WebP to a printable 3MF relief, lithophane or flat logo (real mm units)",
   "image-to-color-stl": "image to a coloured relief; exports PLY/GLB because STL cannot store colour",
   "photo-to-stl": "3D print a photo as a relief or lithophane",
   "picture-to-stl": "picture to STL relief",

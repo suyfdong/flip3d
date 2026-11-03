@@ -139,6 +139,7 @@ export const IMAGE_ROUTES: Array<{ slug: string; title: string }> = [
   // Same heightmap, 3MF output. 3MF is units-aware where STL is not, and the
   // query has its own (tiny but very low-KD) cluster.
   { slug: "png-to-3mf", title: "PNG to 3MF" },
+  { slug: "image-to-3mf", title: "Image to 3MF" },
   // "image to color stl" is its own intent: people want colour out, and STL
   // has no colour channel. The page says so and exports PLY/GLB instead.
   { slug: "image-to-color-stl", title: "Image to Color STL" },
