@@ -31,6 +31,8 @@ const NOTES: Record<string, string> = {
   "stp-viewer": "same STEP engine for .stp files",
   "iges-viewer": "open IGES/IGS CAD files in the browser",
   "dae-viewer": "open Collada DAE files",
+  "usdz-viewer": "open Apple USDZ (AR Quick Look) files on Windows / Linux / Mac with textures; convert to GLB/OBJ/STL",
+  "wrl-viewer": "open WRL / VRML 2.0 files (KiCad board models, CAD exports) with colours; convert to STL/GLB/OBJ",
   // Tools
   "bambu-3mf-to-prusa": "make a Bambu Studio 3MF open correctly in PrusaSlicer (flattens production-extension object references)",
   "prusa-3mf-to-bambu": "convert a PrusaSlicer 3MF so Bambu Studio imports it",

@@ -14,6 +14,8 @@ export const VIEWER_PATH_BY_FORMAT: Record<Format, string> = {
   iges: "/iges-viewer/",
   fbx: "/fbx-viewer/",
   dae: "/dae-viewer/",
+  usdz: "/usdz-viewer/",
+  wrl: "/wrl-viewer/",
 };
 
 /**

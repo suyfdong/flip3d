@@ -98,7 +98,9 @@ async function exportInFrame(
     case "step":
     case "iges":
     case "fbx":
-    case "dae": {
+    case "dae":
+    case "usdz":
+    case "wrl": {
       throw new Error(
         `${format.toUpperCase()} export isn't supported — Flip3D imports these formats but exports only mesh formats (STL, OBJ, GLB, 3MF, PLY).`,
       );

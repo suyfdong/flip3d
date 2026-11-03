@@ -106,6 +106,30 @@ export async function parseToObject(
       applyBrandMaterial(group);
       return group;
     }
+    case "usdz": {
+      // Apple's AR format (USDZ = zipped USD; USDC binary or USDA text inside).
+      const { USDLoader } = await import("three/examples/jsm/loaders/USDLoader.js");
+      const group = new USDLoader().parse(buffer);
+      // Textures decode asynchronously after parse; exporters need the pixels.
+      await waitForTextures(group);
+      keepNativeOrBrand(group, (m) => hasTexture(m) || !isPlainWhite(m));
+      return group;
+    }
+    case "wrl": {
+      const { VRMLLoader } = await import("three/examples/jsm/loaders/VRMLLoader.js");
+      const text = new TextDecoder("utf-8").decode(buffer);
+      if (!/^#VRML V2\.0/.test(text.trimStart())) {
+        throw new Error(
+          /^#VRML V1\.0/.test(text.trimStart())
+            ? "This is a VRML 1.0 file — only VRML 2.0 / VRML97 is supported. Re-export it as VRML 2.0 (most CAD tools offer \"VRML97\")."
+            : "This doesn't look like a VRML file — it should start with \"#VRML V2.0 utf8\".",
+        );
+      }
+      const scene = new VRMLLoader().parse(text, "");
+      // VRML files often carry their own colours (CAD exports, molecules).
+      keepNativeOrBrand(scene, (m) => hasTexture(m) || !isPlainWhite(m) || (m as THREE.MeshStandardMaterial).vertexColors === true);
+      return scene;
+    }
     case "dae": {
       const { ColladaLoader } = await import(
         "three/examples/jsm/loaders/ColladaLoader.js"
@@ -118,6 +142,31 @@ export async function parseToObject(
       applyBrandMaterial(result.scene);
       return result.scene;
     }
+  }
+}
+
+function hasTexture(m: THREE.Material): boolean {
+  return Object.values(m).some((v) => (v as THREE.Texture)?.isTexture);
+}
+
+function isPlainWhite(m: THREE.Material): boolean {
+  const c = (m as THREE.MeshStandardMaterial).color;
+  return !c || (c.r > 0.99 && c.g > 0.99 && c.b > 0.99);
+}
+
+/** Wait (max 10 s) until every texture in the tree has its image decoded. */
+async function waitForTextures(root: THREE.Object3D): Promise<void> {
+  const textures: THREE.Texture[] = [];
+  root.traverse((n) => {
+    const mesh = n as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      for (const v of Object.values(m)) if ((v as THREE.Texture)?.isTexture) textures.push(v as THREE.Texture);
+    }
+  });
+  const start = Date.now();
+  while (textures.some((t) => !t.image) && Date.now() - start < 10000) {
+    await new Promise((r) => setTimeout(r, 50));
   }
 }
 

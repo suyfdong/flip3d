@@ -8,6 +8,8 @@ export const FORMATS = [
   "iges",
   "fbx",
   "dae",
+  "usdz",
+  "wrl",
 ] as const;
 export type Format = (typeof FORMATS)[number];
 
@@ -19,6 +21,8 @@ export const SOURCE_ONLY_FORMATS: ReadonlySet<Format> = new Set([
   "iges",
   "fbx",
   "dae",
+  "usdz",
+  "wrl",
 ]);
 
 export function isFormat(s: string): s is Format {
@@ -35,6 +39,7 @@ export function detectFormat(filename: string): Format | null {
   // Aliases
   if (ext === "stp") return "step";
   if (ext === "igs") return "iges";
+  if (ext === "vrml") return "wrl";
   return isFormat(ext) ? ext : null;
 }
 
@@ -48,6 +53,8 @@ export const MIME_TYPES: Record<Format, string> = {
   iges: "model/iges",
   fbx: "application/octet-stream",
   dae: "model/vnd.collada+xml",
+  usdz: "model/vnd.usdz+zip",
+  wrl: "model/vrml",
 };
 
 export const FORMAT_LABELS: Record<Format, string> = {
@@ -60,4 +67,6 @@ export const FORMAT_LABELS: Record<Format, string> = {
   iges: "IGES",
   fbx: "FBX",
   dae: "DAE",
+  usdz: "USDZ",
+  wrl: "WRL",
 };

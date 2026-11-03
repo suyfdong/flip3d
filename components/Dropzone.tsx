@@ -22,6 +22,9 @@ export const SUPPORTED_FORMATS = [
   ".stp",
   ".iges",
   ".igs",
+  ".usdz",
+  ".wrl",
+  ".vrml",
 ] as const;
 
 export default function Dropzone({

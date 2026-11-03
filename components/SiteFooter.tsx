@@ -93,6 +93,8 @@ export default function SiteFooter() {
               <li><Link href="/fbx-to-glb/" className="hover:text-blue-600 dark:hover:text-blue-400">FBX to GLB</Link></li>
               <li><Link href="/dae-to-obj/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE to OBJ</Link></li>
               <li><Link href="/dae-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">DAE Viewer</Link></li>
+              <li><Link href="/usdz-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">USDZ Viewer</Link></li>
+              <li><Link href="/wrl-viewer/" className="hover:text-blue-600 dark:hover:text-blue-400">WRL Viewer</Link></li>
               <li><Link href="/embed/" className="hover:text-blue-600 dark:hover:text-blue-400 font-medium">Embed viewer →</Link></li>
             </ul>
           </div>

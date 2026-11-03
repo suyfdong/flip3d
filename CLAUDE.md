@@ -25,12 +25,12 @@ app/
 ├── (site)/              route group：带 SiteHeader/Footer 的所有正常页面
 │   ├── layout.tsx       注入 chrome
 │   ├── page.tsx         首页
-│   ├── (converters)/    40 个 X-to-Y/page.tsx（复用 ConverterPage 模板）
+│   ├── (converters)/    50 个 X-to-Y/page.tsx（复用 ConverterPage 模板，含 usdz-to-* / wrl-to-*）
 │   ├── converters/      目录 hub（矩阵 + 分区，从 lib/seo.ts 常量生成）
 │   ├── tools/           差异化工具：bambu-3mf-to-prusa, prusa-3mf-to-bambu,
 │   │                                 gcode-simulator, stl-repair,
 │   │                                 print-checker, stl-editor
-│   ├── *-viewer/        10 个 viewer 页（复用 ViewerTool，root-level 短 URL）
+│   ├── *-viewer/        12 个 viewer 页（复用 ViewerTool，root-level 短 URL，含 usdz / wrl）
 │   ├── *-to-dxf/ dxf-*  2D/DXF 管线 9 页（含 svg-to-dxf / dxf-to-svg，VectorConvertTool）
 │   ├── stl-to-jpg/ obj-to-png/ glb-to-png/   3D→图片渲染器 3 页（RenderImageTool）
 │   ├── jpeg-to-stl/ image-to-color-stl/ png-to-3mf/  image 簇新页（复用 ImageToStlTool）
@@ -91,7 +91,7 @@ public/
 - **THREE.Object3D 必须 dispose**：所有持有 object state 的组件加 `useEffect(() => () => disposeObject(object), [object])`，否则切页累积内存爆炸
 - **Dropzone** 是受控组件：文件 → ArrayBuffer → 父组件 state → Viewer 消费
 - **MeshViewer props**：`object` + `compact?`（embed 模式去 border/min-h/stats）+ `theme?`（4 主题）
-- **SOURCE_ONLY_FORMATS** = `{step, iges, fbx, dae}`：能 parse 不能 export；ConverterPage 自动隐藏 sample 按钮、reverse link 改指首页
+- **SOURCE_ONLY_FORMATS** = `{step, iges, fbx, dae, usdz, wrl}`（usdz 用 three 的 USDLoader，含 USDC 二进制；贴图在 parse 之后异步解码，`parse.ts` 里 `waitForTextures` 等它们，否则导出 GLB 丢贴图。wrl 只收 VRML 2.0；KiCad 库模型单位是 0.1 英寸）：能 parse 不能 export；ConverterPage 自动隐藏 sample 按钮、reverse link 改指首页
 - **JSON-LD** 用 `<JsonLd data={...}>` 组件注入到任何页面（client/server 都可）；root layout 已注入 WebSite schema，每页加自己的
 
 ---

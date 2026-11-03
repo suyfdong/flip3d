@@ -59,6 +59,12 @@ export const CONVERTER_ROUTES: Array<{ from: Format; to: Format }> = [
   { from: "dae", to: "stl" }, { from: "dae", to: "obj" },
   { from: "dae", to: "glb" }, { from: "dae", to: "3mf" },
   { from: "dae", to: "ply" },
+  { from: "usdz", to: "stl" }, { from: "usdz", to: "obj" },
+  { from: "usdz", to: "glb" }, { from: "usdz", to: "3mf" },
+  { from: "usdz", to: "ply" },
+  { from: "wrl", to: "stl" }, { from: "wrl", to: "obj" },
+  { from: "wrl", to: "glb" }, { from: "wrl", to: "3mf" },
+  { from: "wrl", to: "ply" },
 ];
 
 export const REFERENCE_ROUTES: Array<{ slug: string; title: string }> = [
@@ -208,4 +214,6 @@ export const VIEWER_ROUTES: Array<{ slug: string; title: string }> = [
   { slug: "stp-viewer", title: "Free STP File Viewer" },
   { slug: "iges-viewer", title: "Online IGES Viewer" },
   { slug: "dae-viewer", title: "Online DAE (Collada) Viewer" },
+  { slug: "usdz-viewer", title: "USDZ Viewer" },
+  { slug: "wrl-viewer", title: "WRL (VRML) Viewer" },
 ];

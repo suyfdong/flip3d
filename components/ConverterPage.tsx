@@ -269,7 +269,9 @@ export default function ConverterPage({ from, to, content }: Props) {
                       ? [".iges", ".igs"]
                       : from === "glb"
                         ? [".glb", ".gltf"]
-                        : [`.${from}`]
+                        : from === "wrl"
+                          ? [".wrl", ".vrml"]
+                          : [`.${from}`]
                 }
               />
 
