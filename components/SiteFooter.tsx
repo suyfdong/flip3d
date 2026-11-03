@@ -63,6 +63,14 @@ export default function SiteFooter() {
                   STL Editor ⭐
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/tools/3d-model-compressor/"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  3D Model Compressor
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

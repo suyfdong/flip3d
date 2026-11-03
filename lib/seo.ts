@@ -113,6 +113,10 @@ export const TOOL_ROUTES: Array<{ slug: string; title: string }> = [
     slug: "stl-editor",
     title: "Free STL Editor",
   },
+  {
+    slug: "3d-model-compressor",
+    title: "3D Model Compressor",
+  },
 ];
 
 // Image → 3D (heightmap / lithophane) landing pages. Root-level short URLs

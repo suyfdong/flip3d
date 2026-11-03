@@ -25,6 +25,12 @@ type Props = {
   playAnimations?: boolean;
   /** Cut the model with a movable plane and fill the cut so walls read solid. */
   section?: boolean;
+  /**
+   * Keep the current camera when `object` is replaced by a variant of the same
+   * model (e.g. a decimated copy while dragging a slider). The first object is
+   * still framed normally.
+   */
+  preserveView?: boolean;
 };
 
 type Measurement = { points: THREE.Vector3[]; distance: number | null };
@@ -128,6 +134,7 @@ export default function MeshViewer({
   upAxis,
   playAnimations = false,
   section = false,
+  preserveView = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -135,6 +142,7 @@ export default function MeshViewer({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const currentObjectRef = useRef<THREE.Object3D | null>(null);
+  const hadObjectRef = useRef(false);
   const gridHelperRef = useRef<THREE.GridHelper | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
@@ -343,13 +351,16 @@ export default function MeshViewer({
     scene.add(holder);
     currentObjectRef.current = holder;
 
-    fitCamera(
-      camera,
-      controls,
-      object,
-      container.clientWidth || 1,
-      container.clientHeight || 1,
-    );
+    if (!(preserveView && hadObjectRef.current)) {
+      fitCamera(
+        camera,
+        controls,
+        object,
+        container.clientWidth || 1,
+        container.clientHeight || 1,
+      );
+    }
+    hadObjectRef.current = true;
   }, [object, upAxis]);
 
   // Two-click measuring. Markers/line draw on top (no depth test) and live in

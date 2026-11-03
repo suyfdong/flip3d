@@ -112,6 +112,13 @@ const QUICK_TOOLS: ToolCard[] = [
     href: "/tools/stl-editor/",
   },
   {
+    title: "3D Model Compressor",
+    desc: "Cut the triangle count of STL, OBJ or GLB files — keep the shape and textures",
+    status: "live",
+    badge: "New",
+    href: "/tools/3d-model-compressor/",
+  },
+  {
     title: "STEP / STP Viewer",
     desc: "Open CAD files in the browser — STEP, IGES, FBX, DAE. No install, no upload.",
     status: "live",

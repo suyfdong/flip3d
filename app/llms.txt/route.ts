@@ -38,6 +38,7 @@ const NOTES: Record<string, string> = {
   "stl-repair": "diagnose open and non-manifold edges; merge duplicate vertices, remove degenerate triangles, recompute normals",
   "print-checker": "check a model before printing: watertight, size, overhangs, fits the build plate of common printers",
   "stl-editor": "resize, scale to exact mm, rotate and drop to the bed, then export",
+  "3d-model-compressor": "reduce polygon count / file size of STL, OBJ, GLB, 3MF, PLY (keeps textures, closed models stay closed, shows max deviation)",
   // Image → 3D
   "image-to-stl": "turn any image into a 3D-printable relief (heightmap) STL",
   "png-to-stl": "PNG to STL relief; transparent areas can be cut out",

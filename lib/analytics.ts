@@ -101,3 +101,13 @@ export function trackVectorConverted(from: string, to: string) {
     pair: `${from}-to-${to}`,
   });
 }
+
+/** Mesh compressor download: ratio is the share of triangles kept (0–1). */
+export function trackCompressed(from: string, to: string, ratio: number) {
+  track("file_converted", {
+    source_format: from,
+    target_format: to,
+    pair: `${from}-compress-${to}`,
+    keep_ratio: Math.round(ratio * 100) / 100,
+  });
+}

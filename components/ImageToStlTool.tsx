@@ -22,7 +22,7 @@ import {
   trackImageConverted,
   trackConvertError,
 } from "@/lib/analytics";
-import { takeFile } from "@/lib/file-handoff";
+import { takeFile, stashFile } from "@/lib/file-handoff";
 
 const MeshViewer = dynamic(() => import("@/components/MeshViewer"), {
   ssr: false,
@@ -304,6 +304,21 @@ export default function ImageToStlTool({
     }
   };
 
+  // Hand the generated model to the compressor (no download + re-upload).
+  const handleCompress = async () => {
+    if (!object) return;
+    const outFormat = opts.keepColor ? colorFormat : targetFormat;
+    try {
+      const blob = await exportToBlob(object, outFormat);
+      const base = fileName.replace(/\.[^.]+$/, "") || "model";
+      if (await stashFile(`${base}-${opts.mode}.${outFormat}`, await blob.arrayBuffer())) {
+        window.location.href = "/tools/3d-model-compressor/?handoff=1";
+      }
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Could not hand the model over");
+    }
+  };
+
   const set = <K extends keyof ImageToMeshOptions>(
     key: K,
     value: ImageToMeshOptions[K],
@@ -520,9 +535,14 @@ export default function ImageToStlTool({
                   )}
                 </div>
 
-                {triangles > 350000 && (
+                {triangles > 100000 && (
                   <p className="text-xs text-amber-700 dark:text-amber-400">
-                    High triangle count — lower the detail if your slicer struggles.
+                    High triangle count ({Math.round(triangles / 1000)}k) — lower the
+                    detail, or{" "}
+                    <button onClick={handleCompress} className="underline hover:no-underline">
+                      shrink it in the 3D Model Compressor
+                    </button>{" "}
+                    (keeps the shape, cuts the file size).
                   </p>
                 )}
               </div>

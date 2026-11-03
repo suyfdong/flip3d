@@ -8,16 +8,45 @@ import { MIME_TYPES } from "./formats";
 import { exportTo3MF } from "./3mf-writer";
 import { assertHasSurface, inOwnFrame } from "./stats";
 
+export type ExportOptions = {
+  /** GLB only: downscale textures so neither side exceeds this many pixels. */
+  maxTextureSize?: number;
+  /**
+   * OBJ only: round coordinates to this many decimals. OBJExporter prints
+   * float32 values at full double precision ("0.30000001192092896"), which
+   * roughly doubles file size for no real accuracy.
+   */
+  objDecimals?: number;
+};
+
 export async function exportToBlob(
   object: THREE.Object3D,
   format: Format,
+  opts: ExportOptions = {},
 ): Promise<Blob> {
-  return inOwnFrame(object, () => exportInFrame(object, format));
+  return inOwnFrame(object, () => exportInFrame(object, format, opts));
+}
+
+/**
+ * Round the numbers on vertex lines (v / vt / vn) to `decimals` places, dropping
+ * trailing zeros. Other lines (names, faces, materials) are left alone.
+ */
+export function trimObjPrecision(text: string, decimals: number): string {
+  return text.replace(/^(v|vt|vn) (.*)$/gm, (_, tag: string, rest: string) => {
+    const nums = rest.trim().split(/\s+/).map((m) => {
+      const v = Number(m);
+      if (!Number.isFinite(v)) return m;
+      const r = v.toFixed(decimals).replace(/\.?0+$/, "");
+      return r === "-0" ? "0" : r;
+    });
+    return `${tag} ${nums.join(" ")}`;
+  });
 }
 
 async function exportInFrame(
   object: THREE.Object3D,
   format: Format,
+  opts: ExportOptions,
 ): Promise<Blob> {
   if (format === "stl" || format === "3mf") assertHasSurface(object);
   switch (format) {
@@ -30,11 +59,15 @@ async function exportInFrame(
       return new Blob([buffer], { type: MIME_TYPES.stl });
     }
     case "obj": {
-      const text = new OBJExporter().parse(object);
+      let text = new OBJExporter().parse(object);
+      if (opts.objDecimals !== undefined) text = trimObjPrecision(text, opts.objDecimals);
       return new Blob([text], { type: MIME_TYPES.obj });
     }
     case "glb": {
-      const result = await new GLTFExporter().parseAsync(object, { binary: true });
+      const result = await new GLTFExporter().parseAsync(object, {
+        binary: true,
+        ...(opts.maxTextureSize ? { maxTextureSize: opts.maxTextureSize } : {}),
+      });
       if (!(result instanceof ArrayBuffer)) {
         throw new Error("GLTFExporter returned JSON for binary export");
       }
