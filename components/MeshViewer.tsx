@@ -6,12 +6,14 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { computeStats, type ModelStats } from "@/lib/converters";
 import { THEME_SPECS, type EmbedTheme } from "@/lib/embed-themes";
+import { angleAtVertex, circleFromThreePoints } from "@/lib/measure/geometry";
+import { trackViewerTool } from "@/lib/analytics";
 
 type Props = {
   object: THREE.Object3D | null;
   compact?: boolean;
   theme?: EmbedTheme;
-  /** Click two points on the model to measure the straight-line distance. */
+  /** Click points on the model to measure distance, an angle, or a hole. */
   measure?: boolean;
   /** Label for model units in the measurement readout (e.g. "mm"). */
   unitLabel?: string;
@@ -31,9 +33,35 @@ type Props = {
    * still framed normally.
    */
   preserveView?: boolean;
+  /** Format label sent to GA when a measurement completes (e.g. "step"). */
+  toolFormat?: string;
 };
 
-type Measurement = { points: THREE.Vector3[]; distance: number | null };
+export type MeasureMode = "distance" | "angle" | "circle";
+
+type Measurement = {
+  points: THREE.Vector3[];
+  distance: number | null;
+  angle: number | null;
+  /** Radius of the circle through three picked points. */
+  radius: number | null;
+  /** Three points too close to collinear to define a circle. */
+  degenerate: boolean;
+};
+
+const EMPTY_MEASUREMENT: Measurement = {
+  points: [],
+  distance: null,
+  angle: null,
+  radius: null,
+  degenerate: false,
+};
+
+const MEASURE_MODES: { value: MeasureMode; label: string; title: string }[] = [
+  { value: "distance", label: "Distance", title: "Click two points" },
+  { value: "angle", label: "Angle", title: "Click a corner, then one point on each arm" },
+  { value: "circle", label: "⌀ Hole", title: "Click three points around the rim of a hole" },
+];
 
 type SectionAxis = "x" | "y" | "z";
 const SECTION_AXES: Record<SectionAxis, THREE.Vector3> = {
@@ -135,6 +163,7 @@ export default function MeshViewer({
   playAnimations = false,
   section = false,
   preserveView = false,
+  toolFormat = "unknown",
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -152,7 +181,8 @@ export default function MeshViewer({
   const [clipPlaying, setClipPlaying] = useState(true);
 
   const [stats, setStats] = useState<ModelStats | null>(null);
-  const [measurement, setMeasurement] = useState<Measurement>({ points: [], distance: null });
+  const [measureMode, setMeasureMode] = useState<MeasureMode>("distance");
+  const [measurement, setMeasurement] = useState<Measurement>(EMPTY_MEASUREMENT);
 
   const [sectionAxis, setSectionAxis] = useState<SectionAxis>("x");
   const [sectionPos, setSectionPos] = useState(0.5);
@@ -363,14 +393,16 @@ export default function MeshViewer({
     hadObjectRef.current = true;
   }, [object, upAxis]);
 
-  // Two-click measuring. Markers/line draw on top (no depth test) and live in
-  // their own group so clearing never touches the model.
+  // Measuring: distance (2 picks), angle (corner + 2 arm picks) or hole
+  // diameter (3 picks on a rim). Markers/lines draw on top (no depth test) and
+  // live in their own group so clearing never touches the model.
   useEffect(() => {
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
     const camera = cameraRef.current;
-    setMeasurement({ points: [], distance: null });
+    setMeasurement(EMPTY_MEASUREMENT);
     if (!measure || !renderer || !scene || !camera || !object) return;
+    const maxPoints = measureMode === "distance" ? 2 : 3;
 
     const overlay = new THREE.Group();
     overlay.renderOrder = 999;
@@ -380,6 +412,9 @@ export default function MeshViewer({
     const markerGeo = new THREE.SphereGeometry(diag / 150, 16, 12);
     const markerMat = new THREE.MeshBasicMaterial({ color: 0xf97316, depthTest: false });
     const lineMat = new THREE.LineBasicMaterial({ color: 0xf97316, depthTest: false });
+    // Blue for derived geometry (the fitted hole centre) so it reads as a
+    // result, not as one of the points the user clicked.
+    const centerMat = new THREE.MeshBasicMaterial({ color: 0x2563eb, depthTest: false });
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points = { threshold: diag / 300 };
     let picked: THREE.Vector3[] = [];
@@ -424,7 +459,7 @@ export default function MeshViewer({
         hit = onPlane ? { ...hit, point: onPlane } : undefined;
       }
       if (!hit) return;
-      if (picked.length === 2) {
+      if (picked.length >= maxPoints) {
         picked = [];
         clearOverlay();
       }
@@ -432,16 +467,68 @@ export default function MeshViewer({
       const marker = new THREE.Mesh(markerGeo, markerMat);
       marker.position.copy(hit.point);
       overlay.add(marker);
-      if (picked.length === 2) {
-        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(picked), lineMat);
-        overlay.add(line);
+
+      const addLine = (pts: THREE.Vector3[]) =>
+        overlay.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+
+      const done = picked.length === maxPoints;
+      let distance: number | null = null;
+      let angle: number | null = null;
+      let radius: number | null = null;
+      let degenerate = false;
+
+      if (measureMode === "distance") {
+        if (picked.length === 2) addLine([picked[0], picked[1]]);
+        if (done) distance = picked[0].distanceTo(picked[1]);
+      } else if (measureMode === "angle") {
+        // First pick is the corner; each further pick extends another arm.
+        if (picked.length >= 2) addLine([picked[0], picked[1]]);
+        if (picked.length === 3) addLine([picked[0], picked[2]]);
+        if (done) angle = angleAtVertex(picked[1], picked[0], picked[2]);
+      } else if (picked.length === 3) {
+        addLine([picked[0], picked[1]]);
+        addLine([picked[1], picked[2]]);
+        addLine([picked[2], picked[0]]);
+        const k = circleFromThreePoints(picked[0], picked[1], picked[2]);
+        if (k) {
+          radius = k.radius;
+          const center = new THREE.Vector3(k.center.x, k.center.y, k.center.z);
+          const normal = new THREE.Vector3(k.normal.x, k.normal.y, k.normal.z);
+          const u = new THREE.Vector3().subVectors(picked[0], center).normalize();
+          const v = new THREE.Vector3().crossVectors(normal, u).normalize();
+          const ring: THREE.Vector3[] = [];
+          for (let i = 0; i <= 64; i++) {
+            const t = (i / 64) * Math.PI * 2;
+            ring.push(
+              center
+                .clone()
+                .addScaledVector(u, Math.cos(t) * k.radius)
+                .addScaledVector(v, Math.sin(t) * k.radius),
+            );
+          }
+          addLine(ring);
+          const centerMarker = new THREE.Mesh(markerGeo, centerMat);
+          centerMarker.position.copy(center);
+          overlay.add(centerMarker);
+        } else {
+          degenerate = true;
+        }
       }
-      // Report deltas in the file's axes, not the (possibly rotated) view's.
+
+      // Report the readout in the file's axes, not the (possibly rotated) view's.
       const toFile = (p: THREE.Vector3) => (object.parent ? object.parent.worldToLocal(p.clone()) : p.clone());
       setMeasurement({
         points: picked.map(toFile),
-        distance: picked.length === 2 ? picked[0].distanceTo(picked[1]) : null,
+        distance,
+        angle,
+        radius,
+        degenerate,
       });
+      // "distance" keeps its historical event value ("measure") so the GA series
+      // stays continuous; angle/hole are new.
+      if (done && !degenerate) {
+        trackViewerTool(measureMode === "distance" ? "measure" : measureMode, toolFormat);
+      }
     };
 
     const el = renderer.domElement;
@@ -457,8 +544,9 @@ export default function MeshViewer({
       markerGeo.dispose();
       markerMat.dispose();
       lineMat.dispose();
+      centerMat.dispose();
     };
-  }, [measure, object, upAxis]);
+  }, [measure, measureMode, object, upAxis, toolFormat]);
 
   // Section view: one clipping plane on every material, plus back-face "caps"
   // drawn in a flat color so the cut reads as solid material. Caps live in
@@ -567,6 +655,23 @@ export default function MeshViewer({
     };
   }, [object, playAnimations, clips, clipIndex, clipPlaying]);
 
+  const measurePrompt =
+    measureMode === "distance"
+      ? measurement.points.length === 1
+        ? "Click a second point"
+        : "Click two points on the model to measure"
+      : measureMode === "angle"
+        ? measurement.points.length === 0
+          ? "Click the corner, then one point on each arm"
+          : measurement.points.length === 1
+            ? "Click a point on the first arm"
+            : "Click a point on the second arm"
+        : measurement.points.length === 0
+          ? "Click three points around the rim of a hole"
+          : measurement.points.length === 1
+            ? "Click a second point on the rim"
+            : "Click a third point on the rim";
+
   return (
     <div className="flex flex-col h-full">
       <div className="relative flex-1 min-h-0 flex flex-col">
@@ -579,7 +684,24 @@ export default function MeshViewer({
           }
         />
         {measure && (
-          <div className="pointer-events-none absolute left-3 top-3 rounded-lg bg-white/90 dark:bg-zinc-900/90 px-3 py-2 text-xs shadow border border-zinc-200 dark:border-zinc-700">
+          <div className="absolute left-3 top-3 max-w-[16rem] rounded-lg bg-white/90 dark:bg-zinc-900/90 px-3 py-2 text-xs shadow border border-zinc-200 dark:border-zinc-700">
+            <div className="flex items-center gap-1 mb-1.5" role="group" aria-label="Measurement mode">
+              {MEASURE_MODES.map((m) => (
+                <button
+                  key={m.value}
+                  onClick={() => setMeasureMode(m.value)}
+                  aria-pressed={measureMode === m.value}
+                  title={m.title}
+                  className={`px-1.5 py-0.5 rounded border ${
+                    measureMode === m.value
+                      ? "border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
+                      : "border-zinc-300 dark:border-zinc-600"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
             {measurement.distance !== null ? (
               <>
                 <span className="font-mono text-sm font-semibold text-orange-600 dark:text-orange-400">
@@ -591,12 +713,28 @@ export default function MeshViewer({
                   {formatLength(Math.abs(measurement.points[1].z - measurement.points[0].z))}
                 </span>
               </>
-            ) : (
+            ) : measurement.angle !== null ? (
+              <>
+                <span className="font-mono text-sm font-semibold text-orange-600 dark:text-orange-400">
+                  {measurement.angle.toFixed(1)}°
+                </span>
+                <span className="block text-zinc-500 mt-0.5">Angle at the corner you picked first</span>
+              </>
+            ) : measurement.radius !== null ? (
+              <>
+                <span className="font-mono text-sm font-semibold text-orange-600 dark:text-orange-400">
+                  ⌀ {formatLength(measurement.radius * 2)} {unitLabel}
+                </span>
+                <span className="block text-zinc-500 mt-0.5">
+                  Radius {formatLength(measurement.radius)} {unitLabel}
+                </span>
+              </>
+            ) : measurement.degenerate ? (
               <span className="text-zinc-600 dark:text-zinc-300">
-                {measurement.points.length === 1
-                  ? "Click a second point"
-                  : "Click two points on the model to measure"}
+                Those three points sit almost in a line — pick three points around the rim.
               </span>
+            ) : (
+              <span className="text-zinc-600 dark:text-zinc-300">{measurePrompt}</span>
             )}
           </div>
         )}

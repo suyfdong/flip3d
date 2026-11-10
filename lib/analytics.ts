@@ -89,7 +89,10 @@ export function trackAffiliateClick(merchant: string, placement: string) {
 }
 
 /** Viewer tool toggled on (section / measure), to see which tools get used. */
-export function trackViewerTool(tool: "section" | "measure", format: string) {
+export function trackViewerTool(
+  tool: "section" | "measure" | "angle" | "circle",
+  format: string,
+) {
   track("viewer_tool", { tool, file_format: format });
 }
 

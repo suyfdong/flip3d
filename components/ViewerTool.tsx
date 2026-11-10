@@ -311,6 +311,7 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
                   section={sectioning && hasSurface}
                   unitLabel={unitLabelFor(object)}
                   upAxis={upAxis ?? undefined}
+                  toolFormat={format}
                   playAnimations
                 />
               </div>

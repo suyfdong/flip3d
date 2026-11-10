@@ -9,7 +9,7 @@ import {
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/3mf-viewer/`;
-const title = "3MF File Viewer — Free Online | Bambu Studio & PrusaSlicer Colors, Plates";
+const title = "3MF Viewer — Free Online .3MF File Viewer";
 const description =
   "Open Bambu Studio, Orca & PrusaSlicer .3mf files online: objects in filament colors, plates, printer, thumbnail and measuring. Free, 100% local.";
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: URL },
   openGraph: {
-    title: "Online 3MF Viewer — Free, 100% Local",
+    title: "3MF Viewer Online — Free, 100% Local",
     description,
     url: URL,
     siteName: "Flip3D",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Online 3MF Viewer — Free",
+    title: "3MF Viewer Online — Free",
     description: "Open and view .3mf files in your browser. No upload, no signup.",
   },
 };
@@ -37,15 +37,15 @@ const config: ViewerConfig = {
   formatLabel: "3MF",
   accept: [".3mf"],
   eyebrow: "3MF · 3D Viewer",
-  heading: "Online 3MF File Viewer",
+  heading: "3MF Viewer Online",
   intro:
-    "Drop a .3mf from Bambu Studio, Orca, PrusaSlicer or Cura. Every object shows in its assigned filament color, with the plates, printer, filament list and slicer thumbnail beside it — and you can measure parts. Free, and the file never leaves your browser.",
+    "Drop a .3mf from Bambu Studio, Orca, PrusaSlicer or Cura. Every object shows in its assigned filament color, with the plates, printer, filament list and slicer thumbnail beside it — and you can measure distances, angles and hole diameters. Free, and the file never leaves your browser.",
   about: [
     "Opens 3MF files — the 3D Manufacturing Format that Bambu Studio, PrusaSlicer, Cura and Windows 3D tools use. A .3mf is a zip package holding the mesh plus print metadata.",
     "Everything runs on your device with WebGL. There's no upload, no account, and no file-size paywall.",
     "Multi-part Bambu Studio / Orca projects store each object in a separate internal file (the 3MF production extension). The viewer merges them before drawing, so the whole project shows — not just the first part.",
     "Slicer projects keep color per filament slot, not in the mesh. The viewer reads the project's filament list, paints each object with its assigned filament, and draws multi-color painting (Bambu Studio / Orca paint, PrusaSlicer MMU painting) triangle by triangle. Colors stored in the 3MF itself (materials / color groups) are shown as-is.",
-    "The side panel lists the slicer and version, printer model, units, plate and object counts, filaments, and the embedded plate thumbnail. Tick objects on and off, or isolate one, from the parts list. Use Measure to click two points and read the distance in the file's units.",
+    "The side panel lists the slicer and version, printer model, units, plate and object counts, filaments, and the embedded plate thumbnail. Tick objects on and off, or isolate one, from the parts list. Use Measure to pick two points for a distance, three for an angle, or three around a hole's rim for its diameter, all in the file's units.",
     "Need to slice or edit it elsewhere? Convert the 3MF to STL or OBJ, or re-pack it for another slicer, using the links by the viewer.",
   ],
   faq: [
@@ -79,7 +79,7 @@ const config: ViewerConfig = {
     },
     {
       q: "Can I measure a model in a 3MF file?",
-      a: "Yes. Click Measure, then click two points on the model to get the straight-line distance plus the X/Y/Z offsets, in the units stored in the 3MF (usually millimeters).",
+      a: "Yes. Click Measure, then click two points on the model for the straight-line distance plus X/Y/Z offsets, three points for the angle at the first point you clicked, or three points around a hole's rim for its diameter — in the units stored in the 3MF (usually millimeters).",
     },
     {
       q: "Is this a 3MF file opener for Windows and Mac?",
@@ -119,7 +119,7 @@ export default function Page() {
       <JsonLd data={faqPageSchema(config.faq)} />
       <JsonLd
         data={softwareAppSchema({
-          name: "Online 3MF Viewer",
+          name: "3MF Viewer Online",
           description,
           url: URL,
         })}

@@ -157,6 +157,8 @@ npx tsc --noEmit     # TS 检查
 - **GA4 在跨站 iframe 里一条 hit 都不发**（实测 gtag 加载、dataLayer 正常、但零网络调用），embed 曝光量只能看 **Cloudflare Web Analytics**（账号级 → Visits → Referers / Paths），角标点击看 GA4 `embed / iframe`。
 - `.github/workflows/uptime.yml` 每 30 分钟 curl **flip3d.pages.dev**（原始域名，不过 Bot Fight Mode）的首页 / embed 页 / stl-viewer 页 + 第一个 JS chunk，失败 GitHub 发邮件；另以 warning 监控 Mayako 文件的 CORS 头。边缘层（flip3d.app）用真实 headless Chromium 检查 embed 页真的渲染出 canvas + 角标；GitHub runner 是 Azure IP 会被「Challenge suspicious user agents」规则质询，所以请求带 `x-flip3d-uptime` 密钥头（GitHub Secret `UPTIME_TOKEN`），Cloudflare 第 1 条规则「Skip WAF for uptime check」按该头放行。**密钥头只能加在 flip3d.app 的请求上**（context 级 extraHTTPHeaders 会让跨域 fetch 的 CORS 预检失败）。runner 无 GPU，Chromium 需 SwiftShader 参数。
 - `/embed/stl-viewer/` 有意 `noindex,follow`（GSC「被 noindex 排除」= 正常，别修）。
+- **角标假设已判死（2026-11-10）**：`embed / iframe` 30 天仅 **6 会话**（≈0.25% 点击率、平均互动 5 秒），对比 ~2,400 次 iframe 加载。embed 只做品牌曝光，**不要再为角标做优化**；要真反链只能靠宿主页 `<a>`。
+- GSC 里 `?url=&utm_*` 的 viewer URL 显示「备用网页（有适当的规范标记）」= 正常，canonical 把它们并到无参页，是设计意图，别加 noindex / robots 屏蔽。
 
 ---
 
@@ -209,6 +211,7 @@ npx tsc --noEmit     # TS 检查
 - **取景**用外接球（`MeshViewer.fitCamera`），算之前先 `updateMatrixWorld(true)`。
 - **首页 → viewer**：`lib/file-handoff.ts` 用 IndexedDB 暂存文件（sessionStorage 装不下大 3MF/STEP，最长 10 分钟，读一次即删）；viewer 读到 `?handoff=1` 自动打开，GA4 记 `input_method=handoff`。
 - 侧栏 `ModelInfoPanel`：3MF 信息、PLY 文件头、零件树（隐藏 / 只看此零件）。**只有专门的 viewer 页才有**，首页和转换页没有。
+- **测量**（`MeshViewer` 的 `measure` prop，2026-11-10 扩三种模式）：`distance` 2 点直距 + ΔXYZ · `angle` 先点角点再点两臂（角点在**第一次点击**）· `circle` 3 点定圆 → 孔径/半径 + 蓝色圆心 + 拟合圆环。纯数学在 `lib/measure/geometry.ts`（无 three、Node 可测，`npx tsx scripts/measure-test.mts` 29 条）；`circleFromThreePoints` 近共线返回 null，UI 提示"三点几乎在一条线上"，不硬给一个巨大半径。GA `viewer_tool` 的 tool 值 = `section` / `measure` / `angle` / `circle`（distance 沿用 `measure` 保持序列连续）。
 - **剖切**（`MeshViewer` 的 `section` prop，2026-11-02）：一个 `THREE.Plane` 挂到所有材质的 `clippingPlanes` + `renderer.localClippingEnabled`；截面用 BackSide 红色 MeshBasicMaterial 的"盖子"网格显示为实心。**盖子放在独立的 scene group 里，每帧从源网格同步 matrixWorld/可见性，不挂进模型树**（否则零件列表、隐藏/只看、导出都会把它们当成零件）。轴向和读数都用文件自身坐标系（`boxInParentFrame`，经过显示包装层换算），3MF 的 Z 轴朝上也正确。测量会跳过被切掉的一侧；点到盖子上时用 `ray.intersectPlane` 落到剖切面上。DoubleSide 材质在剖切期间临时改成 FrontSide，关闭时还原。
 - **点云**：泼溅 PLY 读入时丢掉 alpha<0.1 的点（logit 空间比较）；纯点云取景用中位数中心 + 95 分位半径，但仅在明显比外接球紧的时候才用（干净的扫描保持精确取景）。
 

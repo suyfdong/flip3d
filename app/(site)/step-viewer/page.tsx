@@ -12,7 +12,7 @@ const URL = `${SITE_URL}/step-viewer/`;
 const title =
   "STEP File Viewer Online — Free, No Upload | Assemblies, Parts & Measure";
 const description =
-  "View STEP/STP files online: browse the assembly tree, isolate parts, cut a cross-section and measure distances. Free, and nothing is uploaded — safe for NDA parts.";
+  "View STEP/STP files online: browse the assembly tree, isolate parts, cut a cross-section, and measure distances, angles and hole diameters. Free, and nothing is uploaded — safe for NDA parts.";
 
 export const metadata: Metadata = {
   title,
@@ -46,7 +46,7 @@ const config: ViewerConfig = {
     "The B-rep solid is tessellated in your browser by an OpenCascade WASM engine, so the first file takes a few seconds to load the engine — after that it's instant.",
     "Everything runs on your device. There's no upload, no account, and no file-size paywall — useful when the CAD file is under NDA.",
     "The parts panel mirrors the file's assembly structure (sub-assemblies → parts) with their names; untick a part to hide it or click “only” to isolate it. Part colors from the CAD file are kept.",
-    "Measure: click two points on any surface to get the distance and X/Y/Z offsets in millimeters — files saved in inches are converted on import.",
+    "Measure: two clicks give a distance with X/Y/Z offsets, three clicks give the angle at the corner you picked first, and three clicks around a hole's rim give its diameter and radius. Everything reads in millimeters — files saved in inches are converted on import.",
     "Section: cut the model along X, Y or Z and drag the plane through it. The cut faces are filled in red so walls, bores and internal parts read as solid, and you can measure across the cut to check a wall thickness.",
     "It doesn't show the parametric feature history or PMI annotations (GD&T, tolerances), and measuring is point-to-point rather than hole diameters or angles.",
     "Need the model elsewhere? Convert the STEP to STL, OBJ, GLB, 3MF or PLY below.",
@@ -70,7 +70,7 @@ const config: ViewerConfig = {
     },
     {
       q: "Can I measure a STEP file online?",
-      a: "Yes. Click Measure and pick two points on the model; you get the straight-line distance and the X/Y/Z offsets in millimeters. It's point-to-point measuring on the tessellated surface — enough to check overall sizes and clearances, not a replacement for CAD inspection tools.",
+      a: "Yes. Click Measure, then pick two points for a distance (with X/Y/Z offsets), three points for an angle, or three points around a hole's rim for its diameter. The readout is in millimeters and comes from the tessellated surface — enough to check overall sizes, clearances and bolt-hole diameters, not a replacement for CAD inspection tools.",
     },
     {
       q: "Can I see a cross-section of a STEP file?",
