@@ -3,7 +3,7 @@ import ImageToStlTool from "@/components/ImageToStlTool";
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/lithophane-generator/`;
-const title = "Lithophane Generator — Free Online Photo to STL | No Signup Required";
+const title = "Lithophane Maker — Free Online Photo to STL | No Signup";
 const description =
   "Make a 3D-printable lithophane from a photo in your browser. Dark areas print thicker so the image appears when backlit. Tune thickness and download an STL. Free, 100% local.";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: URL },
   openGraph: {
-    title: "Lithophane Generator — Free Online Photo to STL",
+    title: "Lithophane Maker — Free Online Photo to STL",
     description,
     url: URL,
     siteName: "Flip3D",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lithophane Generator — Free Online",
+    title: "Lithophane Maker — Free Online",
     description: "Turn a photo into a printable lithophane STL. 100% local.",
   },
 };

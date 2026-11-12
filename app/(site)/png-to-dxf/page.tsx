@@ -6,7 +6,7 @@ import { softwareAppSchema } from "@/lib/schema";
 import { SITE_URL } from "@/lib/seo";
 
 const URL = `${SITE_URL}/png-to-dxf/`;
-const title = "PNG to DXF Converter — Free Online | No Signup Required";
+const title = "PNG to DXF Converter for Laser & CNC — Free, No Signup";
 const description =
   "Convert PNG to DXF in your browser. Trace a logo or graphic into DXF polylines for laser cutting and CNC — transparent areas drop out automatically. Free, instant, 100% local.";
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: URL },
   openGraph: {
-    title: "PNG to DXF — Free Online Converter",
+    title: "PNG to DXF Converter for Laser & CNC — Free",
     description,
     url: URL,
     siteName: "Flip3D",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PNG to DXF — Free Online",
+    title: "PNG to DXF Converter for Laser & CNC — Free",
     description: "Trace a PNG into DXF polylines for laser cutting. 100% local.",
   },
 };
