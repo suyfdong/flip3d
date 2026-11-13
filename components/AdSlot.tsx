@@ -13,6 +13,7 @@ import {
   type AdsterraBanner,
   adsEnabled,
 } from "@/lib/monetization";
+import { trackAdSlotShown } from "@/lib/analytics";
 
 type TcfData = {
   gdprApplies?: boolean;
@@ -96,7 +97,7 @@ function AdsenseUnit({ slot }: { slot: string }) {
   );
 }
 
-function AdsterraUnit() {
+function AdsterraUnit({ placement }: { placement: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [banner, setBanner] = useState<AdsterraBanner | null>(null);
 
@@ -107,13 +108,18 @@ function AdsterraUnit() {
       const wide = box.current.clientWidth >= 728;
       const leaderboard = ADSTERRA_BANNERS["728x90"];
       const rectangle = ADSTERRA_BANNERS["300x250"];
-      if (wide && leaderboard) setBanner(leaderboard);
-      else if (rectangle) setBanner(rectangle);
+      if (wide && leaderboard) {
+        setBanner(leaderboard);
+        trackAdSlotShown(placement, "728x90");
+      } else if (rectangle) {
+        setBanner(rectangle);
+        trackAdSlotShown(placement, "300x250");
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [placement]);
 
   return (
     <div ref={box} className="flex justify-center">
@@ -152,7 +158,7 @@ export default function AdSlot({
       <p className="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-600 text-center mb-2">
         Advertisement
       </p>
-      {ADSENSE_CLIENT && slot ? <AdsenseUnit slot={slot} /> : <AdsterraUnit />}
+      {ADSENSE_CLIENT && slot ? <AdsenseUnit slot={slot} /> : <AdsterraUnit placement={placement} />}
     </aside>
   );
 }

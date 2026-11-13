@@ -114,3 +114,15 @@ export function trackCompressed(from: string, to: string, ratio: number) {
     keep_ratio: Math.round(ratio * 100) / 100,
   });
 }
+
+/**
+ * A banner slot was wired up (not that a creative rendered — the ad iframe is
+ * sandboxed and cross-origin, so its contents are unreadable by design).
+ * Adsterra's own dashboard only shows ad impressions, and from some regions
+ * their endpoints answer 403, so this event is the way to tell "no ads in my
+ * country" apart from "the embed is broken for everyone": compare GA4
+ * ad_slot_shown by country against Adsterra impressions.
+ */
+export function trackAdSlotShown(placement: string, size: string) {
+  track("ad_slot_shown", { placement, size });
+}
