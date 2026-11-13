@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/seo";
+import { CONTACT_EMAIL, GITHUB_ISSUES_URL } from "@/lib/contact";
 
 const URL = `${SITE_URL}/privacy/`;
-const LAST_UPDATED = "October 20, 2026";
+const LAST_UPDATED = "November 14, 2026";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Flip3D",
@@ -244,16 +245,25 @@ export default function PrivacyPage() {
           Contact
         </h2>
         <p>
-          Questions or concerns: open an issue on{" "}
+          Questions or concerns about this policy, or a request about data held
+          by Google Analytics or an ad partner: email{" "}
           <a
-            href="https://github.com/suyfdong/flip3d/issues"
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="text-blue-600 dark:text-blue-400 underline hover:no-underline"
+          >
+            {CONTACT_EMAIL}
+          </a>
+          . You can also open an issue on{" "}
+          <a
+            href={GITHUB_ISSUES_URL}
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             className="text-blue-600 dark:text-blue-400 underline hover:no-underline"
           >
             GitHub
           </a>
-          .
+          . We can&apos;t delete what we never received — your 3D files are not
+          one of those things.
         </p>
       </section>
     </article>

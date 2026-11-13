@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/seo";
+import { CONTACT_EMAIL, GITHUB_ISSUES_URL } from "@/lib/contact";
 
 const URL = `${SITE_URL}/terms/`;
-const LAST_UPDATED = "October 20, 2026";
+const LAST_UPDATED = "November 14, 2026";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Flip3D",
@@ -157,11 +158,18 @@ export default function TermsPage() {
           9. Contact
         </h2>
         <p>
-          Questions: open an issue on{" "}
+          Questions: email{" "}
           <a
-            href="https://github.com/suyfdong/flip3d/issues"
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="text-blue-600 dark:text-blue-400 underline hover:no-underline"
+          >
+            {CONTACT_EMAIL}
+          </a>
+          , or open an issue on{" "}
+          <a
+            href={GITHUB_ISSUES_URL}
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             className="text-blue-600 dark:text-blue-400 underline hover:no-underline"
           >
             GitHub
