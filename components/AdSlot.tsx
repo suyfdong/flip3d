@@ -9,8 +9,8 @@ import {
   ADSENSE_CLIENT,
   ADSENSE_SLOTS,
   ADSTERRA_BANNERS,
-  ADSTERRA_SCRIPT_HOST,
   type AdPlacement,
+  type AdsterraBanner,
   adsEnabled,
 } from "@/lib/monetization";
 
@@ -66,10 +66,11 @@ function thirdPartyAdsAllowed(): Promise<boolean> {
   });
 }
 
-function adsterraDoc(key: string, width: number, height: number) {
+function adsterraDoc(b: AdsterraBanner) {
   // Each banner gets its own document because Adsterra's snippet reads a
-  // global `atOptions` and uses document.write.
-  return `<!doctype html><html><head><style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style></head><body><script>atOptions={key:${JSON.stringify(key)},format:"iframe",height:${height},width:${width},params:{}};</script><script src="https://${ADSTERRA_SCRIPT_HOST}/${encodeURIComponent(key)}/invoke.js"></script></body></html>`;
+  // global `atOptions` and uses document.write. `src` is the exact URL from
+  // the panel — Adsterra uses several hosts/paths, so it isn't reconstructed.
+  return `<!doctype html><html><head><style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style></head><body><script>atOptions={key:${JSON.stringify(b.key)},format:"iframe",height:${b.h},width:${b.w},params:{}};</script><script src="${b.src}"></script></body></html>`;
 }
 
 function AdsenseUnit({ slot }: { slot: string }) {
@@ -97,11 +98,7 @@ function AdsenseUnit({ slot }: { slot: string }) {
 
 function AdsterraUnit() {
   const box = useRef<HTMLDivElement>(null);
-  const [banner, setBanner] = useState<{
-    key: string;
-    w: number;
-    h: number;
-  } | null>(null);
+  const [banner, setBanner] = useState<AdsterraBanner | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,8 +107,8 @@ function AdsterraUnit() {
       const wide = box.current.clientWidth >= 740;
       const leaderboard = ADSTERRA_BANNERS["728x90"];
       const rectangle = ADSTERRA_BANNERS["300x250"];
-      if (wide && leaderboard) setBanner({ key: leaderboard, w: 728, h: 90 });
-      else if (rectangle) setBanner({ key: rectangle, w: 300, h: 250 });
+      if (wide && leaderboard) setBanner(leaderboard);
+      else if (rectangle) setBanner(rectangle);
     });
     return () => {
       cancelled = true;
@@ -123,7 +120,7 @@ function AdsterraUnit() {
       {banner && (
         <iframe
           title="Advertisement"
-          srcDoc={adsterraDoc(banner.key, banner.w, banner.h)}
+          srcDoc={adsterraDoc(banner)}
           width={banner.w}
           height={banner.h}
           loading="lazy"

@@ -15,18 +15,35 @@ export const ADSENSE_SLOTS: Record<"content", string> = {
 };
 
 /**
- * Adsterra *Banner* keys (Websites → Get code → Banner). Banners only:
- * Popunder / Social Bar / Direct Link / interstitial formats are deliberately
- * unsupported — they hijack the page and are what Adsterra's malvertising
- * reports are about.
+ * Adsterra *Banner* units. Banners only: Popunder / Social Bar / Direct Link /
+ * interstitial formats are deliberately unsupported — they hijack the page and
+ * are what Adsterra's malvertising reports are about.
+ *
+ * Store the whole snippet URL, not just the key. Adsterra hands accounts
+ * different shapes — `//www.highperformanceformat.com/<key>/invoke.js` for some,
+ * `https://bauval.org/22/<key>` for others — so reconstructing the URL from a
+ * host + key breaks the unit. `key` is the 32-char value that also goes into
+ * `atOptions`. Set an entry to null to disable that size.
  */
-export const ADSTERRA_BANNERS: Record<"728x90" | "300x250", string> = {
-  "728x90": "",
-  "300x250": "",
-};
+export type AdsterraBanner = { key: string; src: string; w: number; h: number };
 
-/** Host in Adsterra's banner snippet: `//<host>/<key>/invoke.js`. */
-export const ADSTERRA_SCRIPT_HOST = "www.highperformanceformat.com";
+export const ADSTERRA_BANNERS: Record<
+  "728x90" | "300x250",
+  AdsterraBanner | null
+> = {
+  "728x90": {
+    key: "883543c173893c7f28cadb3a7bebb0f2",
+    src: "https://bauval.org/22/883543c173893c7f28cadb3a7bebb0f2",
+    w: 728,
+    h: 90,
+  },
+  "300x250": {
+    key: "0ea24e38bc414c0b4136486761c0ce16",
+    src: "https://bauval.org/22/0ea24e38bc414c0b4136486761c0ce16",
+    w: 300,
+    h: 250,
+  },
+};
 
 /**
  * Bambu Lab affiliate deep-link template. `{url}` is replaced with the
