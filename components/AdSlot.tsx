@@ -104,7 +104,7 @@ function AdsterraUnit() {
     let cancelled = false;
     thirdPartyAdsAllowed().then((ok) => {
       if (cancelled || !ok || !box.current) return;
-      const wide = box.current.clientWidth >= 740;
+      const wide = box.current.clientWidth >= 728;
       const leaderboard = ADSTERRA_BANNERS["728x90"];
       const rectangle = ADSTERRA_BANNERS["300x250"];
       if (wide && leaderboard) setBanner(leaderboard);
@@ -136,7 +136,7 @@ function AdsterraUnit() {
 
 export default function AdSlot({
   placement = "content",
-  className = "max-w-3xl mx-auto px-4 sm:px-6 py-6",
+  className = "max-w-4xl mx-auto px-4 sm:px-6 py-6",
 }: {
   placement?: AdPlacement;
   /** Wrapper spacing; override when the slot sits inside a padded article. */
