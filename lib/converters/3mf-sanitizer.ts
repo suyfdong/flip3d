@@ -42,6 +42,8 @@ export type SanitizeReport = {
   mergedModelFiles: number;
   /** True when a production-extension (multi-file) structure was flattened. */
   flattenedProduction: boolean;
+  /** Non-"model" objects that were retyped so slicers accept their references. */
+  retypedObjects: number;
   inputBytes: number;
   outputBytes: number;
 };
@@ -292,6 +294,33 @@ export async function sanitize3MF(file: File | Blob): Promise<SanitizeResult> {
 
   // Assemble the new root <resources> in dependency order.
   const ordered = topoSort(allObjects);
+
+  // PrusaSlicer (and other consumers that follow the core spec strictly) only
+  // keeps objects of type "model": a <component> or <build item> that points at
+  // a "support"/"surface"/"other" object fails the whole file with "Found
+  // component with invalid object id". Bambu-lineage slicers (QIDI/Orca) mark
+  // ordinary parts as "other", so retype every *referenced* non-model object.
+  const buildItemIds = new Set<number>();
+  for (const m of rootXml.matchAll(/<item\b[^>]*>/g)) {
+    const oid = getAttr(m[0], "objectid");
+    if (oid == null) continue;
+    const g = idMap.get(`${rootPath}::${oid}`);
+    if (g !== undefined) buildItemIds.add(g);
+  }
+  const referenced = new Set<number>(buildItemIds);
+  for (const o of ordered) for (const d of o.deps) referenced.add(d);
+  let retypedObjects = 0;
+  for (const o of ordered) {
+    if (!referenced.has(o.globalId)) continue;
+    o.block = o.block.replace(/<object\b[^>]*?>/, (tag) =>
+      tag.replace(/\stype\s*=\s*"([^"]*)"/, (m, ty: string) => {
+        if (ty === "model") return m;
+        retypedObjects++;
+        return ' type="model"';
+      }),
+    );
+  }
+
   const resourcesInner =
     (preservedResources ? `    ${preservedResources}\n` : "") +
     ordered.map((o) => `    ${o.block}`).join("\n");
@@ -334,6 +363,7 @@ export async function sanitize3MF(file: File | Blob): Promise<SanitizeResult> {
       strippedNamespaces: [...strippedNs],
       mergedModelFiles: externalModelPaths.length,
       flattenedProduction: externalModelPaths.length > 0,
+      retypedObjects,
       inputBytes,
       outputBytes: blob.size,
     },
@@ -422,6 +452,9 @@ function buildRootModel(
       if (g !== undefined) {
         t = t.replace(/(\sobjectid\s*=\s*")[^"]*"/, `$1${g}"`);
       }
+      // `printable` is a Bambu/Orca extension, not a core 3MF attribute; strict
+      // readers (lib3mf-based ones) reject the file over it.
+      t = t.replace(/\sprintable\s*=\s*"[^"]*"/g, "");
       return stripPrefixedAttrs(t, stripPrefixes);
     });
     // Clean vendor attrs on the <build> tag itself.
