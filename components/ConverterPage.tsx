@@ -453,9 +453,13 @@ export default function ConverterPage({ from, to, content }: Props) {
         )}
       </section>
 
+      {/* Keep the ad mounted after a file is loaded: it used to sit inside the
+          `!object` block, so the primary use case (land, convert, leave) never
+          rendered it. One slot per page, still below the tool. */}
+      <AdSlot />
+
       {!object && (
         <>
-          <AdSlot />
           <section className="border-t border-zinc-200 dark:border-zinc-800 py-14">
             <div className="max-w-3xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold tracking-tight mb-6">

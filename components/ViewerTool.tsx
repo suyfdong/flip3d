@@ -350,9 +350,11 @@ export default function ViewerTool({ config }: { config: ViewerConfig }) {
         )}
       </section>
 
+      {/* Stays mounted after a model loads — see ConverterPage. */}
+      <AdSlot />
+
       {!loaded && (
         <>
-          <AdSlot />
           <section className="border-t border-zinc-200 dark:border-zinc-800 py-14 bg-zinc-50 dark:bg-zinc-950/50">
             <div className="max-w-3xl mx-auto px-4 sm:px-6">
               <h2 className="text-2xl font-bold tracking-tight mb-5">

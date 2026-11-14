@@ -39,6 +39,15 @@ declare global {
  * CMP on the page we fall back to the timezone and skip Europe entirely.
  */
 function thirdPartyAdsAllowed(): Promise<boolean> {
+  // No CMP ships with the site, so outside the consent regions there is
+  // nothing to wait for: mount right away instead of burning the whole poll
+  // window. On tool pages the visitor often loads a file (which used to
+  // unmount the slot) within those 3 seconds.
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+  const inConsentRegion =
+    tz.startsWith("Europe/") || tz.startsWith("Atlantic/");
+  if (!inConsentRegion && !window.__tcfapi) return Promise.resolve(true);
+
   return new Promise((resolve) => {
     const started = Date.now();
     const poll = () => {
@@ -60,8 +69,7 @@ function thirdPartyAdsAllowed(): Promise<boolean> {
         setTimeout(poll, 250);
         return;
       }
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
-      resolve(!tz.startsWith("Europe/") && !tz.startsWith("Atlantic/"));
+      resolve(!inConsentRegion);
     };
     poll();
   });
@@ -130,9 +138,14 @@ function AdsterraUnit({ placement }: { placement: string }) {
           width={banner.w}
           height={banner.h}
           loading="lazy"
-          // No allow-same-origin / allow-top-navigation: the ad can open a
-          // new tab when clicked, but can't touch or redirect this page.
-          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+          // allow-same-origin is required, not optional: a sandboxed srcdoc
+          // document is an opaque origin, so the ad request goes out with no
+          // Referer and with cookies/storage blocked. Adsterra then can't
+          // attribute the load to flip3d.app and drops its frequency cookie —
+          // impressions stay at zero. This gives the ad the same privileges an
+          // inline snippet would have. Still no allow-top-navigation, and the
+          // srcdoc document is inert until it is mounted.
+          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
           className="border-0 max-w-full"
         />
       )}
